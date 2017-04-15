@@ -1,0 +1,11 @@
+{
+  "name": "myproject",
+  "version": "1.0.0",
+  "description": "My first project",
+  "main": "index.js",
+  "dependencies": {
+    "mongodb": "~2.0"
+  },
+  "author": "Noa Peled",
+  "license": "Apache 2.0"
+}
