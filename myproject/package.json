@@ -4,8 +4,7 @@
   "description": "My first project",
   "main": "index.js",
   "dependencies": {
-    "mongodb": "~2.0",
-    "mongoose": "~4.9.4"
+    "mongodb": "~2.0"
   },
   "author": "Noa Peled",
   "license": "Apache 2.0"
