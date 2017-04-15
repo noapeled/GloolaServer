@@ -52,7 +52,7 @@ var insertDocuments = function(db, callback) {
     });
 };
 
-var MongoClient = require('mongodb').MongoClient
+var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 
 // Connection URL
