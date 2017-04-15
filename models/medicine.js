@@ -4,7 +4,6 @@
 
 var data_types = require('./data_types');
 var mongoose = require('mongoose');
-var _ = require('lodash');
 
 var MIN_MG_PER_DOSAGE = 0.001;
 
@@ -22,3 +21,4 @@ exports.MedicineSchema = MedicineSchema;
 
 var Medicine = mongoose.model('Medicine', MedicineSchema);
 exports.Medicine = Medicine;
+
