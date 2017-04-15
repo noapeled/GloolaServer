@@ -2,20 +2,21 @@
  * Created by noa on 15/04/17.
  */
 
-var LimitedLengthString = require('./data_types').LimitedLengthString;
+var data_types = require('./data_types');
 var mongoose = require('mongoose');
 var _ = require('lodash');
 
-var MedicineSchema = mongoose.Schema({
-    medicine_id: _.merge(LimitedLengthString, { required: true }),
-    medicine_names: [LimitedLengthString],
+var MedicineSchema = data_types.createSchema({
+    medicine_id: _.merge(data_types.LimitedLengthString, { required: true }),
+    medicine_names: [data_types.LimitedLengthString],
     images: [],
-    route_of_administration: _.merge(LimitedLengthString, {
+    route_of_administration: _.merge(data_types.LimitedLengthString, {
         enum: ['oral', 'intravenous']
     }),
-    dosage_form: LimitedLengthString,
-    manufacturer: LimitedLengthString,
+    dosage_form: data_types.LimitedLengthString,
+    manufacturer: data_types.LimitedLengthString,
     mg_per_dosage: { type: Number, min: [0.001, 'Too low mg per dosage'] }
 });
 
 var Medicine = mongoose.model('Medicine', MedicineSchema);
+
