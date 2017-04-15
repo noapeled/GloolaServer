@@ -7,14 +7,12 @@ var mongoose = require('mongoose');
 var _ = require('lodash');
 
 var MedicineSchema = data_types.createSchema({
-    medicine_id: _.merge(data_types.LimitedLengthString, { required: true }),
-    medicine_names: [data_types.LimitedLengthString],
+    medicine_id: { type: String, required: true, nullable: false },
+    medicine_names: [String],
     images: [],
-    route_of_administration: _.merge(data_types.LimitedLengthString, {
-        enum: ['oral', 'intravenous']
-    }),
-    dosage_form: data_types.LimitedLengthString,
-    manufacturer: data_types.LimitedLengthString,
+    route_of_administration: {type: String, enum: ['oral', 'intravenous']},
+    dosage_form: String,
+    manufacturer: String,
     mg_per_dosage: { type: Number, min: [0.001, 'Too low mg per dosage'] }
 });
 
