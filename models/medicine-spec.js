@@ -8,7 +8,7 @@ var _ = require('lodash');
 describe('Medicine', function() {
     it('should be an existing model', function() {
         var Medicine = require('./medicine.js').Medicine;
-        expect(Medicine).to.not.be.undefined;
+        expect(Medicine).to.exist;
     });
 
     it('should fail on creation of medicine without required fields', function() {
@@ -33,7 +33,7 @@ describe('Medicine', function() {
         var Medicine = require('./medicine.js').Medicine;
         var medicine = new Medicine({ medicine_id: '1234' });
         expect(medicine.hidden).to.be.false;
-        expect(medicine.creation_date).to.not.be.undefined;
+        expect(medicine.creation_date).to.exist;
     });
 
     it('should succeed on creation of medicine with all fields except basic properties', function() {
@@ -48,5 +48,11 @@ describe('Medicine', function() {
             mg_per_dosage: 1.12
         });
         expect(medicine.validateSync()).to.be.undefined;
+    });
+
+    it('should refuse too low mg. per dosage', function() {
+        var Medicine = require('./medicine.js').Medicine;
+        var error = new Medicine({ medicine_id: '1234', mg_per_dosage: 1E-6 }).validateSync();
+        expect(_.get(error, ['errors', 'mg_per_dosage', 'message'])).to.match(/^Too low mg per dosage, minimum is \d+\.?\d*$/);
     });
 });
