@@ -21,4 +21,3 @@ exports.MedicineSchema = MedicineSchema;
 
 var Medicine = mongoose.model('Medicine', MedicineSchema);
 exports.Medicine = Medicine;
-
