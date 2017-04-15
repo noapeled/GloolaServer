@@ -53,6 +53,7 @@ describe('Medicine', function() {
     it('should refuse too low mg. per dosage', function() {
         var Medicine = require('./medicine.js').Medicine;
         var error = new Medicine({ medicine_id: '1234', mg_per_dosage: 1E-6 }).validateSync();
-        expect(_.get(error, ['errors', 'mg_per_dosage', 'message'])).to.match(/^Too low mg per dosage, minimum is \d+\.?\d*$/);
+        expect(_.get(error, ['errors', 'mg_per_dosage', 'message'])).to.match(
+            /^Too low mg per dosage, minimum is \d+\.?\d*$/);
     });
 });
