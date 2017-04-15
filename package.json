@@ -1,10 +1,17 @@
 {
-  "name": "myproject",
+  "name": "gloola",
   "version": "1.0.0",
-  "description": "My first project",
-  "main": "index.js",
+  "description": "Gloola Server",
+  "author": "Noa Peled",
+  "main": "server.js",
+
+  "scripts": {
+    "test": "mocha"
+  },
 
   "dependencies": {
+    "express": "~4.15.2",
+    "body-parser": "~1.17.1",
     "lodash": "~4.17.4",
     "mongodb": "~2.0",
     "mongoose": "~4.9.4"
@@ -15,6 +22,9 @@
     "mocha": "^3.2.0"
   },
 
-  "author": "Noa Peled",
-  "license": "Apache 2.0"
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/gloolatau/GloolaServer"
+  },
+  "license": "SEE LICENSE IN license.txt"
 }
