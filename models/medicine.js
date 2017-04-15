@@ -2,12 +2,12 @@
  * Created by noa on 15/04/17.
  */
 
-var LimitedLengthString = require('./data_types').LimitedLengthString
+var LimitedLengthString = require('./data_types').LimitedLengthString;
 var mongoose = require('mongoose');
 var _ = require('lodash');
 
 var MedicineSchema = mongoose.Schema({
-    medicine_id: LimitedLengthString,
+    medicine_id: _.merge(LimitedLengthString, { required: true }),
     medicine_names: [LimitedLengthString],
     images: [],
     route_of_administration: _.merge(LimitedLengthString, {
