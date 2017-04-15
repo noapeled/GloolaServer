@@ -20,6 +20,7 @@
 
 ### Example JSON body
 The following patients takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
+
     {
       name: ["yehoram", "malkishua", "gaon"],
       birthdate: "1943-09-22",
