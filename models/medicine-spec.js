@@ -14,18 +14,39 @@ describe('Medicine', function() {
     it('should fail on creation of medicine without required fields', function() {
         var Medicine = require('./medicine.js').Medicine;
         var error = new Medicine().validateSync();
-        expect(_.isEqual(
-            _.keys(error.errors).sort(),
-            ['medicine_id', 'manufacturer', 'dosage_form', 'route_of_administration'].sort()))
-            .to.be.true;
+        expect(_.isEqual(_.keys(error.errors).sort(), ['medicine_id'].sort())).to.be.true;
     });
 
-    // it('should succeed on creation of medicine without insertion to DB', function() {
-    //     var Medicine = require('./medicine.js').Medicine;
-    //     var error = new Medicine().validateSync();
-    //     expect(_.isEqual(
-    //         _.keys(error.errors).sort(),
-    //         ['medicine_id', 'manufacturer', 'dosage_form', 'route_of_administration'].sort()))
-    //         .to.be.true;
-    // });
+    it('should fail on creation of medicine with required fields set to null', function() {
+        var Medicine = require('./medicine.js').Medicine;
+        var error = new Medicine({ medicine_id: null }).validateSync();
+        expect(_.isEqual(_.keys(error.errors).sort(), ['medicine_id'].sort())).to.be.true;
+    });
+
+    it('should succeed on creation of medicine with only required fields', function() {
+        var Medicine = require('./medicine.js').Medicine;
+        var medicine = new Medicine({ medicine_id: '1234' });
+        expect(medicine.validateSync()).to.be.undefined;
+    });
+
+    it('should have default basic properties for medicine created with only required fields', function() {
+        var Medicine = require('./medicine.js').Medicine;
+        var medicine = new Medicine({ medicine_id: '1234' });
+        expect(medicine.hidden).to.be.false;
+        expect(medicine.creation_date).to.not.be.undefined;
+    });
+
+    it('should succeed on creation of medicine with all fields except basic properties', function() {
+        var Medicine = require('./medicine.js').Medicine;
+        var medicine = new Medicine({
+            medicine_id: '1234',
+            medicine_names: ['foofoofoo', 'barbarbar'],
+            images: [],
+            route_of_administration: 'oral',
+            dosage_form: 'tablet',
+            manufacturer: 'barfoo',
+            mg_per_dosage: 1.12
+        });
+        expect(medicine.validateSync()).to.be.undefined;
+    });
 });
