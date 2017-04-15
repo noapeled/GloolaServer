@@ -5,7 +5,7 @@
     Content-Type:application/json
     
     {
-      name: [forname, middle_name1, ..., middle_nameN, surname],
+      name: [forname, middle_name1, ..., middle_nameN, surname],  # Middle names optional, forname and surname mandatory
       birthdate: ISO8601 UTC Date,
       hmo: OneOf('clalit', 'maccabi', 'meuhedet', 'leumit', null),
       email: RFC 822 address,
