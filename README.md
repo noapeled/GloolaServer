@@ -31,7 +31,7 @@ The following patients takes only one medicine: every day at 08:15pm, as well as
       medication: [{
         medicine_id: "3334123",
         dosage_size: 2,
-        frequency: [{"*", "*", "*", "20", "15"}, {"3, 7", "*", "*", "09", "00"}]  # Same as cron format
+        frequency: [{"*", "*", "*", "20", "15"}, {"3,7", "*", "*", "09", "00"}]  # Same as cron format
       }]
     }
 
