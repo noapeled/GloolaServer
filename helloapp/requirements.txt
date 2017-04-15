@@ -1,3 +1,0 @@
-django
-git+https://github.com/django-nonrel/djangotoolbox
-git+https://github.com/django-nonrel/mongodb-engine

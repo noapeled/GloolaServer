@@ -9,7 +9,7 @@ var removeAllDocuments = function(db, callback) {
         console.log("Removed all documents");
         callback(result);
     });
-}
+};
 
 var findDocuments = function(db, callback) {
     // Get the documents collection
@@ -19,10 +19,10 @@ var findDocuments = function(db, callback) {
         assert.equal(err, null);
         // assert.equal(2, docs.length);
         console.log("Found the following " + docs.length + " records");
-        console.dir(docs)
+        console.dir(docs);
         callback(docs);
     });
-}
+};
 
 var updateDocument = function(db, callback) {
     // Get the documents collection
@@ -35,7 +35,7 @@ var updateDocument = function(db, callback) {
             console.log("Updated the document with the field a equal to 2");
             callback(result);
         });
-}
+};
 
 var insertDocuments = function(db, callback) {
     // Get the documents collection
@@ -50,10 +50,10 @@ var insertDocuments = function(db, callback) {
         console.log("Inserted 3 document into the document collection");
         callback(result);
     });
-}
+};
 
 var MongoClient = require('mongodb').MongoClient
-    , assert = require('assert');
+var assert = require('assert');
 
 // Connection URL
 var url = 'mongodb://localhost:27017/myproject';
