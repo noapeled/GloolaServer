@@ -41,6 +41,7 @@ The following patients takes only one medicine: every day at 08:15pm, as well as
     
     {
       medicine_id: ascii128 encoded,
+      medicine_names: [ascii128 encoded],
       images: [TBD, leave empty for now],
       route_of_administration: ascii128 encoded,
       dosage_form: ascii128 encoded,
