@@ -6,7 +6,6 @@ require('./models/db');
 var express     =   require("express");
 var app         =   express();
 var bodyParser  =   require("body-parser");
-// var router      =   require('./router').router;
 
 var router      =   express.Router();
 var mongoose    = require('mongoose');
@@ -24,8 +23,6 @@ router.route("/users")
             });
         });
     });
-
-// exports.router = router;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
