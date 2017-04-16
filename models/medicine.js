@@ -17,7 +17,4 @@ var MedicineSchema = data_types.createSchema({
     mg_per_dosage: { type: Number, min: [MIN_MG_PER_DOSAGE, 'Too low mg per dosage, minimum is ' + MIN_MG_PER_DOSAGE] }
 });
 
-exports.MedicineSchema = MedicineSchema;
-
-var Medicine = mongoose.model('Medicine', MedicineSchema);
-exports.Medicine = Medicine;
+module.exports = mongoose.model('Medicine', MedicineSchema, 'Medicine');

@@ -38,7 +38,4 @@ var PatientSchema = data_types.createSchema({
     }]
 });
 
-exports.PatientSchema = PatientSchema;
-
-var Patient = mongoose.model('Patient', PatientSchema);
-exports.Patient = Patient;
+module.exports = mongoose.model('Patient', PatientSchema, 'Patient');

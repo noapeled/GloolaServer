@@ -11,7 +11,4 @@ var UserSchema = data_types.createSchema({
     patients: [String]
 });
 
-exports.UserSchema = UserSchema;
-
-var User = mongoose.model('User', UserSchema);
-exports.User = User;
+module.exports = mongoose.model('User', UserSchema, 'User');
