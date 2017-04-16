@@ -6,9 +6,9 @@ var data_types = require('./data_types');
 var mongoose = require('mongoose');
 require('mongoose-type-email');
 
-function regexpForCronStyleValue(numbersString) {
-    return new RegExp('^([*])|((' + numbersString + ',)*' + numbersString + ')$');
-}
+// function regexpForCronStyleValue(numbersString) {
+//     return new RegExp('^([*])|((' + numbersString + ',)*' + numbersString + ')$');
+// }
 
 var PatientSchema = data_types.createSchema({
     patient_id: { type: String, required: true },
@@ -26,12 +26,12 @@ var PatientSchema = data_types.createSchema({
             required: true,
             validate: { validator: function(v) { return v > 0 }, message: 'dosage_size must be positive' }
         },
-        frequency: [{
-            day_of_week: { type: String, match: regexpForCronStyleValue('[1-7]') },
-            month_of_year: { type: String, match: regexpForCronStyleValue('[1-12]') },
-            day_of_month: { type: String, match: regexpForCronStyleValue('[1-31]') },
-            hour: { type: String, match: regexpForCronStyleValue('[0-59]') },
-            minute: { type: String, match: regexpForCronStyleValue(('[0-23]')) }
+        frequency: [{ // TODO: validate precise cron-style patterns
+            day_of_week: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
+            month_of_year: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
+            day_of_month: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
+            hour: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
+            minute: { type: String, match: /^((\*)|((\d+,)*\d+))$/ }
         }]
     }]
 });
