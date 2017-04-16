@@ -3,6 +3,7 @@
  */
 require('./models/db');
 
+var _ = require('lodash');
 var express     =   require("express");
 var app         =   express();
 var bodyParser  =   require("body-parser");
@@ -14,8 +15,6 @@ var UserModel = require('./models/user');
 //route() will allow you to use same path for different HTTP operation.
 //So if you have same URL but with different HTTP OP such as POST,GET etc
 //Then use route() to remove redundant code.
-
-// TODO: proper HTTP response codes.
 
 router.route("/users")
     .get(function(req, res){
@@ -34,9 +33,11 @@ router.route("/users")
                 existingUser.email = req.body.email ? req.body.email : existingUser.email;
                 existingUser.password = req.body.password ? req.body.password : existingUser.password; // TODO: hash the password
                 existingUser.patients = req.body.patients ? req.body.patients : existingUser.patients;
-                existingUser.save(function(err) { res.json({
-                    "error" : err ? err : false,
-                    "message" : err ? "Error updating data" : "Updated user " + existingUser.username });
+                existingUser.save(function(err) {
+                    res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                        "error" : err ? err : false,
+                        "message" : err ? "Error updating data" : "Updated user " + existingUser.username
+                    });
                 });
             } else {
                 var newUser = new UserModel({ // TODO: deconstructing statement from req.body, ECMA6.
@@ -44,9 +45,11 @@ router.route("/users")
                     password: req.body.password,
                     patients: req.body.patients
                 });
-                newUser.save(function(err) { res.json({
-                    "error" : err ? err : false,
-                    "message" : err ? "Error creating user" : "Created user " + newUser.username });
+                newUser.save(function(err) {
+                    res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                        "error" : err ? err : false,
+                        "message" : err ? "Error creating user" : "Created user " + newUser.username
+                    });
                 });
             }
         });
