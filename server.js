@@ -19,7 +19,7 @@ router.route("/users")
     .get(function(req, res){
         mongoose.models.User.find({ }, function(err, data) {
             res.json({
-                "error" : !!err,
+                error: err ? err : false,
                 "message" : err ? "Error fetching data" : data
             });
         });
