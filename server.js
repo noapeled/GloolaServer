@@ -1,7 +1,7 @@
 /**
  * Created by noa on 15/04/17.
  */
-var db = require('./models/db');
+require('./models/db');
 
 var express     =   require("express");
 var app         =   express();
