@@ -1,16 +1,15 @@
 # GloolaServer
 
-## Add or update user
+## Add or update patient
     POST
     Content-Type:application/json
     
     {
+      patient_id: ascii128_encoded  # Better make this the Israeli ID.
       name: [forname, middle_name1, ..., middle_nameN, surname],  # Middle names optional, forname and surname mandatory
       birthdate: ISO8601 UTC Date,
       hmo: OneOf('clalit', 'maccabi', 'meuhedet', 'leumit', null),
       email: RFC 822 address,
-      username: <better make this the Israeli ID number>,
-      password: ascii128 encoded,
       medication: [{
         medicine_id,
         dosage_size: positive number,
@@ -18,21 +17,31 @@
       }]
     }
 
-### Example JSON body
-The following patients takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
+### Example patient
+The following patient takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
 
     {
+      patient_id: "0123456789"
       name: ["yehoram", "malkishua", "gaon"],
       birthdate: "1943-09-22",
       hmo: "maccabi",
       email: "yehoram.malkishua.gaon@pmail.com",
-      username: "0123456789",
-      password: "elefneshikot",
       medication: [{
         medicine_id: "3334123",
         dosage_size: 2,
         frequency: [{"*", "*", "*", "20", "15"}, {"3,7", "*", "*", "09", "00"}]  # Same as cron format
       }]
+    }
+
+
+## Add or update user
+    POST
+    Content-Type:application/json
+    
+    {
+      username: <better make this the Israeli ID number>,
+      password: ascii128 encoded,
+      patients: [patient_id]  # The patients whom this user is allowed to watch.
     }
 
 ## Add or update medicine
