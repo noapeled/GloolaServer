@@ -7,32 +7,32 @@ var _ = require('lodash');
 
 describe('Patient', function() {
     it('should be an existing model', function() {
-        var Patient = require('./patient.js').Patient;
+        var Patient = require('./patient.js');
         expect(Patient).to.exist;
     });
 
     it('should fail on creation of patient without required fields', function() {
-        var Patient = require('./patient.js').Patient;
+        var Patient = require('./patient.js');
         var error = new Patient().validateSync();
         expect(_.isEqual(_.keys(error.errors).sort(), ['patient_id', 'name'].sort())).to.be.true;
     });
 
 
     it('should succeed on creation of patient with only required fields', function() {
-        var Patient = require('./patient.js').Patient;
+        var Patient = require('./patient.js');
         var patient = new Patient({ patient_id: '0123456789', name: ['foofoofoo', 'barbarbar'] });
         expect(patient.validateSync()).to.be.undefined;
     });
 
     it('should have default basic properties for patient created with only required fields', function() {
-        var Patient = require('./patient.js').Patient;
+        var Patient = require('./patient.js');
         var patient = new Patient({ patient_id: '0123456789', name: ['foofoofoo', 'barbarbar'] });
         expect(patient.hidden).to.be.false;
         expect(patient.creation_date).to.exist;
     });
 
     it('should succeed on creation of patient with all fields except basic properties', function() {
-        var Patient = require('./patient.js').Patient;
+        var Patient = require('./patient.js');
         var patient = new Patient({
             patient_id: '1234',
             name: ['foofoofoo', 'barbarbar'],
