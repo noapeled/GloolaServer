@@ -45,14 +45,8 @@ describe('Patient', function() {
                 frequency: { day_of_week: '*', month_of_year: '*', day_of_month: '1,7,14,21', hour: '8', minute: '0' }
              }]
         });
-        console.log(patient.validateSync())
         expect(patient.validateSync()).to.be.undefined;
     });
-    //
-    // it('should refuse too low mg. per dosage', function() {
-    //     var Patient = require('./patient.js').Patient;
-    //     var error = new Patient({ patient_id: '1234', mg_per_dosage: 1E-6 }).validateSync();
-    //     expect(_.get(error, ['errors', 'mg_per_dosage', 'message'])).to.match(
-    //         /^Too low mg per dosage, minimum is \d+\.?\d*$/);
-    // });
+
+    // TODO: Check more validations
 });
