@@ -1,6 +1,9 @@
 /**
  * Created by noa on 15/04/17.
  */
+
+// TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
+
 require('./models/db');
 
 var _ = require('lodash');
