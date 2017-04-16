@@ -14,7 +14,9 @@ var PatientSchema = data_types.createSchema({
     patient_id: { type: String, required: true },
     name: {
         type: [String],
-        validate: { validator: function(v) { return v.length >= 2 }, message: 'name must consist of at least forname and surname' }
+        validate: {
+            validator: function(v) { return v.length >= 2 },
+            message: 'name must consist of at least forname and surname' }
     },
     birthdate: Date,
     hmo: { type: String, enum: ['clalit', 'maccabi', 'meuhedet', 'leumit', null], default: null },
