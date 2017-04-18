@@ -16,6 +16,15 @@ var mongoose    = require('mongoose');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+function getAllPatients(req, res) {
+    mongoose.models.Patient.find({ }, function(err, data) {
+        res.json({
+            error: err ? err : false,
+            "message" : err ? "Error fetching data" : data
+        });
+    });
+}
+
 function updateExistingMedicine(req, res) {
     var medicine_id = req.body.medicine_id;
     mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
@@ -114,6 +123,9 @@ router.route("/medicine")
     .get(getAllMedicine)
     .post(updateExistingMedicine)
     .put(createNewMedicine);
+
+router.route("/patient")
+    .get(getAllPatients)
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
