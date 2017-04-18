@@ -16,9 +16,37 @@ var mongoose    = require('mongoose');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
-//route() will allow you to use same path for different HTTP operation.
-//So if you have same URL but with different HTTP OP such as POST,GET etc
-//Then use route() to remove redundant code.
+function updateExistingMedicine(req, res) {
+    var medicine_id = req.body.medicine_id;
+    mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
+        if (data.length > 0) {
+            var existingMedicine = data[0];
+            _.forOwn(_.omit(req.body, 'medicine_id'), function(value, key) {
+                existingMedicine[key] = value;
+            });
+            existingMedicine.save(function(err) {
+                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                    "error" : err ? err : false,
+                    "message" : (err ? "Error updating medicine " : "Updated medicine ") + medicine_id
+                });
+            });
+        } else {
+            res.status(400).json({
+                "error" : true,
+                "message" : "Medicine with medicine_id " + medicine_id + " does not exist. Use PUT for creation."
+            });
+        }
+    });
+}
+
+function getAllMedicine(req, res) {
+    mongoose.models.Medicine.find({ }, function(err, data) {
+        res.json({
+            error: err ? err : false,
+            "message" : err ? "Error fetching data" : data
+        });
+    });
+}
 
 function createNewMedicine(req, res) {
     var medicine_id = req.body.medicine_id;
@@ -97,6 +125,8 @@ router.route("/user")
     .put(createNewUser);
 
 router.route("/medicine")
+    .get(getAllMedicine)
+    .post(updateExistingMedicine)
     .put(createNewMedicine);
 
 app.use(bodyParser.json());
