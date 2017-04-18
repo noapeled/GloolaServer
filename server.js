@@ -13,8 +13,22 @@ var bodyParser  =   require("body-parser");
 var router      =   express.Router();
 var mongoose    = require('mongoose');
 
+var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
+
+function createNewPatient(req, res) {
+    var patient_id = req.body.patient_id;
+    mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
+        var newPatient = new PatientModel(req.body);
+        newPatient.save(function(err) {
+            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                "error" : err ? err : false,
+                "message" : (err ? "Error creating patient " : "Created patient ") + patient_id
+            });
+        });
+    });
+}
 
 function getAllPatients(req, res) {
     mongoose.models.Patient.find({ }, function(err, data) {
@@ -126,6 +140,7 @@ router.route("/medicine")
 
 router.route("/patient")
     .get(getAllPatients)
+    .put(createNewPatient);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
