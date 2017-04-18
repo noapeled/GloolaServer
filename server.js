@@ -43,15 +43,17 @@ function createNewUser(req, res) {
     });
 }
 
-router.route("/user")
-    .get(function(req, res){
-        mongoose.models.User.find({ }, function(err, data) {
-            res.json({
-                error: err ? err : false,
-                "message" : err ? "Error fetching data" : data
-            });
+function getAllUsers(req, res) {
+    mongoose.models.User.find({ }, function(err, data) {
+        res.json({
+            error: err ? err : false,
+            "message" : err ? "Error fetching data" : data
         });
-    })
+    });
+}
+
+router.route("/user")
+    .get(getAllUsers)
     .post(function(req, res){
         // If user exists, update it. Otherwise create new user.
         mongoose.models.User.find({ username: req.body.username }, function(err, data) {
