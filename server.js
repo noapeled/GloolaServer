@@ -17,6 +17,11 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+function UNIQUE_KEY_ERROR_CODE {
+    var UNIQUE_KEY_ERROR_CODE = 11000;
+    return (_.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE) ? 400 : 500;
+}
+
 function updateExistingPatient(req, res) {
     var patient_id = req.body.patient_id;
     mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
@@ -25,7 +30,7 @@ function updateExistingPatient(req, res) {
             existingPatient[key] = value;
         });
         existingPatient.save(function (err) {
-            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+            res.status(statusCode(err)).json({
                 "error": err ? err : false,
                 "message": (err ? "Error updating patient " : "Updated patient ") + patient_id
             });
@@ -38,7 +43,7 @@ function createNewPatient(req, res) {
     mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
         var newPatient = new PatientModel(req.body);
         newPatient.save(function(err) {
-            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+            res.status(statusCode(err)).json({
                 "error" : err ? err : false,
                 "message" : (err ? "Error creating patient " : "Created patient ") + patient_id
             });
@@ -64,7 +69,7 @@ function updateExistingMedicine(req, res) {
                 existingMedicine[key] = value;
             });
             existingMedicine.save(function(err) {
-                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                res.status(statusCode(err)).json({
                     "error" : err ? err : false,
                     "message" : (err ? "Error updating medicine " : "Updated medicine ") + medicine_id
                 });
@@ -92,7 +97,7 @@ function createNewMedicine(req, res) {
     mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
         var newMedicine = new MedicineModel(req.body);
         newMedicine.save(function(err) {
-            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+            res.status(statusCode(err)).json({
                 "error" : err ? err : false,
                 "message" : (err ? "Error creating medicine " : "Created medicine ") + medicine_id
             });
@@ -108,7 +113,7 @@ function updateExistingUser(req, res) {
             existingUser.password = req.body.password ? req.body.password : existingUser.password; // TODO: hash the password
             existingUser.patients = req.body.patients ? req.body.patients : existingUser.patients;
             existingUser.save(function(err) {
-                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                res.status(statusCode(err)).json({
                     "error" : err ? err : false,
                     "message" : err ? "Error updating data" : "Updated user " + existingUser.username
                 });
@@ -127,7 +132,7 @@ function createNewUser(req, res) {
     mongoose.models.User.find({ username: username }, function(err, data) {
         var newUser = new UserModel(req.body);
         newUser.save(function(err) {
-            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+            res.status(statusCode(err)).json({
                 "error" : err ? err : false,
                 "message" : (err ? "Error creating user " : "Created user ") + username
             });
