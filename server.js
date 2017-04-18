@@ -154,6 +154,16 @@ router.route("/user")
     .post(updateExistingUser)
     .put(createNewUser);
 
+router.route('/user/:username')
+    .get(function (req, res) {
+        mongoose.models.User.find({ username: req.params.username }, function(err, data) {
+            res.json({
+                error: err ? err : false,
+                "message" : err ? "Error fetching data" : data
+            });
+        });
+    });
+
 router.route("/medicine")
     .get(getAllMedicine)
     .post(updateExistingMedicine)
