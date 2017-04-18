@@ -19,7 +19,31 @@ var UserModel = require('./models/user');
 //So if you have same URL but with different HTTP OP such as POST,GET etc
 //Then use route() to remove redundant code.
 
-router.route("/users")
+function createNewUser(req, res) {
+    // If user exists, update it. Otherwise create new user.
+    mongoose.models.User.find({ username: req.body.username }, function(err, data) {
+        if (data.length > 0) {
+            res.status(400).json({
+                "error" : true,
+                "message" : "User with username " + req.body.username + " already exists. Use POST for updates."
+            });
+        } else {
+            var newUser = new UserModel({ // TODO: deconstructing statement from req.body, ECMA6.
+                username: req.body.username,
+                password: req.body.password,
+                patients: req.body.patients
+            });
+            newUser.save(function(err) {
+                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                    "error" : err ? err : false,
+                    "message" : err ? "Error creating user" : "Created user " + newUser.username
+                });
+            });
+        }
+    });
+}
+
+router.route("/user")
     .get(function(req, res){
         mongoose.models.User.find({ }, function(err, data) {
             res.json({
@@ -50,29 +74,7 @@ router.route("/users")
             }
         });
     })
-    .put(function(req, res){
-        // If user exists, update it. Otherwise create new user.
-        mongoose.models.User.find({ username: req.body.username }, function(err, data) {
-            if (data.length > 0) {
-                res.status(400).json({
-                    "error" : true,
-                    "message" : "User with username " + req.body.username + " already exists. Use POST for updates."
-                });
-            } else {
-                var newUser = new UserModel({ // TODO: deconstructing statement from req.body, ECMA6.
-                    username: req.body.username,
-                    password: req.body.password,
-                    patients: req.body.patients
-                });
-                newUser.save(function(err) {
-                    res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
-                        "error" : err ? err : false,
-                        "message" : err ? "Error creating user" : "Created user " + newUser.username
-                    });
-                });
-            }
-        });
-    });
+    .put(createNewUser);
 
 
 app.use(bodyParser.json());
