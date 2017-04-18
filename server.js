@@ -17,9 +17,9 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
-function UNIQUE_KEY_ERROR_CODE {
+function statusCode(err) {
     var UNIQUE_KEY_ERROR_CODE = 11000;
-    return (_.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE) ? 400 : 500;
+    return _.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE ? 400 : 500;
 }
 
 function updateExistingPatient(req, res) {
