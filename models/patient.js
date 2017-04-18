@@ -11,7 +11,7 @@ require('mongoose-type-email');
 // }
 
 var PatientSchema = data_types.createSchema({
-    patient_id: { type: String, required: true },
+    patient_id: { type: String, required: true, unique: true },
     name: {
         type: [String],
         validate: {

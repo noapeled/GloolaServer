@@ -8,7 +8,7 @@ var mongoose = require('mongoose');
 var MIN_MG_PER_DOSAGE = 0.001;
 
 var MedicineSchema = data_types.createSchema({
-    medicine_id: { type: String, required: true, nullable: false },
+    medicine_id: { type: String, required: true, nullable: false, unique: true },
     medicine_names: [String],
     images: [],
     route_of_administration: {type: String, enum: ['oral', 'intravenous']},
