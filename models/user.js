@@ -7,9 +7,9 @@ var mongoose = require('mongoose');
 require('mongoose-type-email');
 
 var UserSchema = data_types.createSchema({
-    username: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    email: mongoose.SchemaTypes.Email,
+    email: { type: mongoose.SchemaTypes.Email, required: true, unique: true },
     patients: [String]
 });
 
