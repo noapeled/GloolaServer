@@ -13,14 +13,34 @@ var bodyParser  =   require("body-parser");
 var router      =   express.Router();
 var mongoose    = require('mongoose');
 
+var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
 //route() will allow you to use same path for different HTTP operation.
 //So if you have same URL but with different HTTP OP such as POST,GET etc
 //Then use route() to remove redundant code.
 
+function createNewMedicine(req, res) {
+    var medicine_id = req.body.medicine_id;
+    mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
+        if (data.length > 0) {
+            res.status(400).json({
+                "error" : true,
+                "message" : "Medicine with medicine_id " + req.body.medicine_id + " already exists. Use POST for updates."
+            });
+        } else {
+            var newMedicine = new MedicineModel(req.body);
+            newMedicine.save(function(err) {
+                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                    "error" : err ? err : false,
+                    "message" : (err ? "Error creating medicine " : "Created medicine ") + medicine_id
+                });
+            });
+        }
+    });
+}
+
 function updateExistingUser(req, res) {
-    // If user exists, update it. Otherwise create new user.
     mongoose.models.User.find({ username: req.body.username }, function(err, data) {
         if (data.length > 0) {
             var existingUser = data[0];
@@ -43,7 +63,6 @@ function updateExistingUser(req, res) {
 }
 
 function createNewUser(req, res) {
-    // If user exists, update it. Otherwise create new user.
     mongoose.models.User.find({ username: req.body.username }, function(err, data) {
         if (data.length > 0) {
             res.status(400).json({
@@ -80,6 +99,8 @@ router.route("/user")
     .post(updateExistingUser)
     .put(createNewUser);
 
+router.route("/medicine")
+    .put(createNewMedicine);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
