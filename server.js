@@ -154,16 +154,6 @@ router.route("/user")
     .post(updateExistingUser)
     .put(createNewUser);
 
-router.route('/user/:username')
-    .get(function (req, res) {
-        mongoose.models.User.find({ username: req.params.username }, function(err, data) {
-            res.json({
-                error: err ? err : false,
-                "message" : err ? "Error fetching data" : data[0]
-            });
-        });
-    });
-
 router.route("/medicine")
     .get(getAllMedicine)
     .post(updateExistingMedicine)
@@ -173,6 +163,23 @@ router.route("/patient")
     .get(getAllPatients)
     .post(updateExistingPatient)
     .put(createNewPatient);
+
+router.route('/:collection/:entity_id')
+    .get(function (req, res) {
+        var model = _.startCase(req.params.collection);
+        var identifier = model === 'User' ? 'username' : (model === 'Medicine' ? 'medicine_id' : 'patient_id');
+        var query = _.fromPairs([[identifier, req.params.entity_id]]);
+        mongoose.models[model].find(query, function(err, data) {
+            if (data && data.length <= 0) {
+                res.status(400).json({ error: true, message: "No " + model + " with " + identifier + " " + req.params.entity_id})
+            } else {
+                res.json({
+                    error: err ? err : false,
+                    "message": err ? "Error fetching data" : data[0]
+                });
+            }
+        });
+    });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
