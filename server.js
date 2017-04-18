@@ -171,7 +171,7 @@ router.route('/:collection/:entity_id')
         var query = _.fromPairs([[identifier, req.params.entity_id]]);
         mongoose.models[model].find(query, function(err, data) {
             if (data && data.length <= 0) {
-                res.status(400).json({ error: true, message: "No " + model + " with " + identifier + " " + req.params.entity_id})
+                res.status(400).json({ error: true, message: "No " + req.params.collection + " with " + identifier + " " + req.params.entity_id})
             } else {
                 res.json({
                     error: err ? err : false,
