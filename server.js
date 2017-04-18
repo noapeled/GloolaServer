@@ -19,6 +19,29 @@ var UserModel = require('./models/user');
 //So if you have same URL but with different HTTP OP such as POST,GET etc
 //Then use route() to remove redundant code.
 
+function updateExistingUser(req, res) {
+    // If user exists, update it. Otherwise create new user.
+    mongoose.models.User.find({ username: req.body.username }, function(err, data) {
+        if (data.length > 0) {
+            var existingUser = data[0];
+            existingUser.email = req.body.email ? req.body.email : existingUser.email;
+            existingUser.password = req.body.password ? req.body.password : existingUser.password; // TODO: hash the password
+            existingUser.patients = req.body.patients ? req.body.patients : existingUser.patients;
+            existingUser.save(function(err) {
+                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                    "error" : err ? err : false,
+                    "message" : err ? "Error updating data" : "Updated user " + existingUser.username
+                });
+            });
+        } else {
+            res.status(400).json({
+                "error" : true,
+                "message" : "User with username " + req.body.username + " does not exist. Use PUT for creation."
+            });
+        }
+    });
+}
+
 function createNewUser(req, res) {
     // If user exists, update it. Otherwise create new user.
     mongoose.models.User.find({ username: req.body.username }, function(err, data) {
@@ -54,28 +77,7 @@ function getAllUsers(req, res) {
 
 router.route("/user")
     .get(getAllUsers)
-    .post(function(req, res){
-        // If user exists, update it. Otherwise create new user.
-        mongoose.models.User.find({ username: req.body.username }, function(err, data) {
-            if (data.length > 0) {
-                var existingUser = data[0];
-                existingUser.email = req.body.email ? req.body.email : existingUser.email;
-                existingUser.password = req.body.password ? req.body.password : existingUser.password; // TODO: hash the password
-                existingUser.patients = req.body.patients ? req.body.patients : existingUser.patients;
-                existingUser.save(function(err) {
-                    res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
-                        "error" : err ? err : false,
-                        "message" : err ? "Error updating data" : "Updated user " + existingUser.username
-                    });
-                });
-            } else {
-                res.status(400).json({
-                    "error" : true,
-                    "message" : "User with username " + req.body.username + " does not exist. Use PUT for creation."
-                });
-            }
-        });
-    })
+    .post(updateExistingUser)
     .put(createNewUser);
 
 
