@@ -17,6 +17,22 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+function updateExistingPatient(req, res) {
+    var patient_id = req.body.patient_id;
+    mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
+        var existingPatient = data[0];
+        _.forOwn(_.omit(req.body, 'patient_id'), function (value, key) {
+            existingPatient[key] = value;
+        });
+        existingPatient.save(function (err) {
+            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                "error": err ? err : false,
+                "message": (err ? "Error updating patient " : "Updated patient ") + patient_id
+            });
+        });
+    })
+}
+
 function createNewPatient(req, res) {
     var patient_id = req.body.patient_id;
     mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
@@ -140,6 +156,7 @@ router.route("/medicine")
 
 router.route("/patient")
     .get(getAllPatients)
+    .post(updateExistingPatient)
     .put(createNewPatient);
 
 app.use(bodyParser.json());
