@@ -159,7 +159,7 @@ router.route('/user/:username')
         mongoose.models.User.find({ username: req.params.username }, function(err, data) {
             res.json({
                 error: err ? err : false,
-                "message" : err ? "Error fetching data" : data
+                "message" : err ? "Error fetching data" : data[0]
             });
         });
     });
