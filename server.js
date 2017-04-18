@@ -51,20 +51,13 @@ function getAllMedicine(req, res) {
 function createNewMedicine(req, res) {
     var medicine_id = req.body.medicine_id;
     mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
-        if (data.length > 0) {
-            res.status(400).json({
-                "error" : true,
-                "message" : "Medicine with medicine_id " + req.body.medicine_id + " already exists. Use POST for updates."
+        var newMedicine = new MedicineModel(req.body);
+        newMedicine.save(function(err) {
+            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                "error" : err ? err : false,
+                "message" : (err ? "Error creating medicine " : "Created medicine ") + medicine_id
             });
-        } else {
-            var newMedicine = new MedicineModel(req.body);
-            newMedicine.save(function(err) {
-                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
-                    "error" : err ? err : false,
-                    "message" : (err ? "Error creating medicine " : "Created medicine ") + medicine_id
-                });
-            });
-        }
+        });
     });
 }
 
