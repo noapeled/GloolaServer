@@ -43,6 +43,22 @@ router.route("/users")
                     });
                 });
             } else {
+                res.status(400).json({
+                    "error" : true,
+                    "message" : "User with username " + req.body.username + " does not exist. Use PUT for creation."
+                });
+            }
+        });
+    })
+    .put(function(req, res){
+        // If user exists, update it. Otherwise create new user.
+        mongoose.models.User.find({ username: req.body.username }, function(err, data) {
+            if (data.length > 0) {
+                res.status(400).json({
+                    "error" : true,
+                    "message" : "User with username " + req.body.username + " already exists. Use POST for updates."
+                });
+            } else {
                 var newUser = new UserModel({ // TODO: deconstructing statement from req.body, ECMA6.
                     username: req.body.username,
                     password: req.body.password,
@@ -57,6 +73,7 @@ router.route("/users")
             }
         });
     });
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
