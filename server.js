@@ -93,20 +93,13 @@ function updateExistingUser(req, res) {
 function createNewUser(req, res) {
     var username = req.body.username;
     mongoose.models.User.find({ username: username }, function(err, data) {
-        if (data.length > 0) {
-            res.status(400).json({
-                "error" : true,
-                "message" : "User with username " + req.body.username + " already exists. Use POST for updates."
+        var newUser = new UserModel(req.body);
+        newUser.save(function(err) {
+            res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
+                "error" : err ? err : false,
+                "message" : (err ? "Error creating user " : "Created user ") + username
             });
-        } else {
-            var newUser = new UserModel(req.body);
-            newUser.save(function(err) {
-                res.status(_.get(err, 'name') === 'ValidationError' ? 400 : 500).json({
-                    "error" : err ? err : false,
-                    "message" : (err ? "Error creating user " : "Created user ") + username
-                });
-            });
-        }
+        });
     });
 }
 
