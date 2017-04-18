@@ -1,15 +1,53 @@
 # GloolaServer
 
-## Add or update patient
-    POST
+The server uses RESTful API to administrate three collections of entities: user, medicine, and patient, as following.
+
+## Get all entities in a collection
+    GET /:collection
+
+### Examples:
+    GET /user
+    GET /medicine
+    GET /patient
+
+## Get any specific entity
+    GET /:collection/:entity_id
+
+### Examples:
+    GET /user/tuli
+    GET /medicine/x9999
+    GET /patient/77ty12
+
+## Create New User
+    PUT /user
     Content-Type:application/json
     
     {
-      patient_id: ascii128_encoded  # Better make this the Israeli ID.
+      username: <<<UNIQUE among users>>> better make this the Israeli ID number,
+      password: ascii128 encoded,
+      email: <<<UNIQUE among users>>>  RFC 822 address
+      patients: [patient_id]  # The patients whom this user is allowed to watch.
+    }
+
+## Update Existing User
+    POST /user
+    Content-Type:application/json
+    
+    {
+      username: ...,
+      ...
+    }
+
+## Create new patient
+    PUT /patient
+    Content-Type:application/json
+    
+    {
+      patient_id: ascii128_encoded  # <<<UNIQUE among patients>>> Better make this the Israeli ID. 
       name: [forname, middle_name1, ..., middle_nameN, surname],  # Middle names optional, forname and surname mandatory
       birthdate: ISO8601 UTC Date,
       hmo: OneOf('clalit', 'maccabi', 'meuhedet', 'leumit', null),
-      email: RFC 822 address,
+      email: <<<UNIQUE among patients>>> RFC 822 address,
       medication: [{
         medicine_id,
         dosage_size: positive number,
@@ -17,7 +55,7 @@
       }]
     }
 
-### Example patient
+### Example
 The following patient takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
 
     {
@@ -33,23 +71,38 @@ The following patient takes only one medicine: every day at 08:15pm, as well as 
       }]
     }
 
-
-## Add or update user
-    POST
+## Update Existing Patient
+    POST /patient
     Content-Type:application/json
-    
+
     {
-      username: <better make this the Israeli ID number>,
-      password: ascii128 encoded,
-      patients: [patient_id]  # The patients whom this user is allowed to watch.
+      patient_id: "0123456789"
+      ...
+    }
+    
+### Example
+In the following example, note that the medication is COMPLETELY OVERWRITTEN by the given array.
+So if you wish to preserve existing information, first GET the information, then re-POST it along with new information. 
+
+    POST /patient
+    Content-Type:application/json
+
+    {
+      patient_id: "0123456789"
+      birthdate: "1943-08-21",
+      medication: [{
+         medicine_id: "7777777",
+         dosage_size: 11,
+         frequency: [{"1,2", "*", "*", "22", "33"}]
+      }]
     }
 
-## Add or update medicine
-    POST
+## Add New Medicine
+    PUT /medicine
     Content-Type:application/json
     
     {
-      medicine_id: ascii128 encoded,
+      medicine_id: <<<UNIQUE among medicine>>> ascii128 encoded,
       medicine_names: [ascii128 encoded],
       images: [TBD, leave empty for now],
       route_of_administration: ascii128 encoded,
@@ -65,4 +118,13 @@ The following patient takes only one medicine: every day at 08:15pm, as well as 
       images: [],
       route_of_administration: "oral",
       dosage_form: "tablets"
+    }
+
+## Update Existing Medicine
+    POST /medicine
+    Content-Type:application/json
+    
+    {
+      medicine_id: ...,
+      ...
     }
