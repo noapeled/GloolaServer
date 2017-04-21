@@ -4,7 +4,6 @@
 
 var data_types = require('./data_types');
 var mongoose = require('mongoose');
-require('mongoose-type-email');
 
 // function regexpForCronStyleValue(numbersString) {
 //     return new RegExp('^([*])|((' + numbersString + ',)*' + numbersString + ')$');
@@ -20,7 +19,7 @@ var PatientSchema = data_types.createSchema({
     },
     birthdate: Date,
     hmo: { type: String, enum: ['clalit', 'maccabi', 'meuhedet', 'leumit', null], default: null },
-    email: mongoose.SchemaTypes.Email,
+    email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
     medication: [{
         medicine_id: { type: String, required: true },
         dosage_size: {
