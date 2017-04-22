@@ -108,7 +108,7 @@ So if you wish to preserve existing information, first GET the information, then
       route_of_administration: ascii128 encoded,
       dosage_form: ascii128 encoded,
       manufacturer: ascii128 encoded,
-      mg_per_dosage: non-negative number
+      basic_dose: ascii128 encoded
     }
 
 ### Example JSON Body
