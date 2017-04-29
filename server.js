@@ -27,7 +27,7 @@ function updateExistingImage(req, res) {
         existingImage.save(function (err) {
             res.status(statusCode(err)).json({
                 "error": err ? err : false,
-                "message": (err ? "Error updating image " : "Updated image ") + patient_id
+                "message": (err ? "Error updating image " : "Updated image ") + image_id
             });
         });
     })
