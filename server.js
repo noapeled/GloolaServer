@@ -18,6 +18,28 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+function getByEntityId(req, res) {
+    var modelNameToIdentifier = {
+        User: 'username',
+        Medicine: 'medicine_id',
+        Patient: 'patient_id',
+        Image: 'image_id'
+    }
+    var model = _.startCase(req.params.collection);
+    var identifier = modelNameToIdentifier[model];
+    var query = _.fromPairs([[identifier, req.params.entity_id]]);
+    mongoose.models[model].find(query, function(err, data) {
+        if (data && data.length <= 0) {
+            res.status(400).json({ error: true, message: "No " + req.params.collection + " with " + identifier + " " + req.params.entity_id})
+        } else {
+            res.json({
+                error: err ? err : false,
+                "message": err ? "Error fetching data" : data[0]
+            });
+        }
+    });
+}
+
 function updateExistingImage(req, res) {
     mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
         var existingImage = data[0];
@@ -197,27 +219,7 @@ router.route("/patient")
     .put(createNewPatient);
 
 router.route('/:collection/:entity_id')
-    .get(function (req, res) {
-        var modelNameToIdentifier = {
-            User: 'username',
-            Medicine: 'medicine_id',
-            Patient: 'patient_id',
-            Image: 'image_id'
-        }
-        var model = _.startCase(req.params.collection);
-        var identifier = modelNameToIdentifier[model];
-        var query = _.fromPairs([[identifier, req.params.entity_id]]);
-        mongoose.models[model].find(query, function(err, data) {
-            if (data && data.length <= 0) {
-                res.status(400).json({ error: true, message: "No " + req.params.collection + " with " + identifier + " " + req.params.entity_id})
-            } else {
-                res.json({
-                    error: err ? err : false,
-                    "message": err ? "Error fetching data" : data[0]
-                });
-            }
-        });
-    });
+    .get(getByEntityId);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
