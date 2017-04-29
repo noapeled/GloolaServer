@@ -18,6 +18,21 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+function updateExistingImage(req, res) {
+    mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
+        var existingImage = data[0];
+        _.forOwn(_.omit(req.body, 'image_id'), function (value, key) {
+            existingImage[key] = value;
+        });
+        existingImage.save(function (err) {
+            res.status(statusCode(err)).json({
+                "error": err ? err : false,
+                "message": (err ? "Error updating image " : "Updated image ") + patient_id
+            });
+        });
+    })
+}
+
 function createNewImage(req, res) {
     mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
         var newImage = new ImageModel(req.body);
@@ -161,6 +176,10 @@ function getAllUsers(req, res) {
         });
     });
 }
+
+router.route("/image")
+    .post(updateExistingImage)
+    .put(createNewImage);
 
 router.route("/user")
     .get(getAllUsers)
