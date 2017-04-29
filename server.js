@@ -198,8 +198,14 @@ router.route("/patient")
 
 router.route('/:collection/:entity_id')
     .get(function (req, res) {
+        var modelNameToIdentifier = {
+            User: 'username',
+            Medicine: 'medicine_id',
+            Patient: 'patient_id',
+            Image: 'image_id'
+        }
         var model = _.startCase(req.params.collection);
-        var identifier = model === 'User' ? 'username' : (model === 'Medicine' ? 'medicine_id' : 'patient_id');
+        var identifier = modelNameToIdentifier[model];
         var query = _.fromPairs([[identifier, req.params.entity_id]]);
         mongoose.models[model].find(query, function(err, data) {
             if (data && data.length <= 0) {
