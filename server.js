@@ -13,9 +13,22 @@ var bodyParser  =   require("body-parser");
 var router      =   express.Router();
 var mongoose    = require('mongoose');
 
+var ImageModel = require('./models/image');
 var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
+
+function createNewImage(req, res) {
+    mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
+        var newImage = new ImageModel(req.body);
+        newImage.save(function(err) {
+            res.status(statusCode(err)).json({
+                "error" : err ? err : false,
+                "message" : (err ? "Error creating image " : "Created image ") + req.body.image_id
+            });
+        });
+    });
+}
 
 function statusCode(err) {
     var UNIQUE_KEY_ERROR_CODE = 11000;
