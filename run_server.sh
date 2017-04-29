@@ -10,6 +10,7 @@ log() {
 # Run server if not already running.
 server_pid=`ps -ef | grep 'node server.js' | grep -v grep | awk '{print $2}'`
 if [ "$server_pid" = "" ] ; then
+	npm install
 	node server.js &
 	log 'No running server found, so started server'
 fi
@@ -24,6 +25,7 @@ while [ 1 ] ; do
 		log "Found new git log ($reslog), updating."
 		# Pull and restart server.
   		git merge origin/master # completing the pull
+		npm install
 		server_pid=`ps -ef | grep 'node server.js' | grep -v grep | awk '{print $2}'`
 		kill -9 "$server_pid"
 		node server.js &
