@@ -19,8 +19,13 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
-var serverSecret = 'This is a secret string for signing tokens';
-var tokenValidity = "1day";
+var config = {
+    port: 3000,
+    auth: {
+        serverSecret: 'This is a secret string for signing tokens',
+        tokenValidity: "1day"
+    }
+};
 
 function getByEntityId(req, res) {
     var modelNameToIdentifier = {
@@ -217,7 +222,8 @@ function authenticateUser(req, res) {
             res.json({
                 error: false,
                 message: 'Successfully authenticated.',
-                token: jwt.sign({ username: user.username }, serverSecret, { expiresIn: tokenValidity })
+                token: jwt.sign(
+                    { username: user.username }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
             });
         }
     });
@@ -251,5 +257,6 @@ router.route('/:collection/:entity_id')
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false}));
 app.use('/', router);
-app.listen(3000);
-console.log("Listening to PORT 3000");
+
+app.listen(config.port);
+console.log("Listening to PORT " + config.port);
