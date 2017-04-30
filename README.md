@@ -135,7 +135,7 @@ So if you wish to preserve existing information, first GET the information, then
     {
       medicine_id: <<<UNIQUE among medicine>>> ascii128 encoded,
       medicine_names: [ascii128 encoded],
-      images: [TBD, leave empty for now],
+      images: [image_id],
       route_of_administration: ascii128 encoded,
       dosage_form: ascii128 encoded,
       manufacturer: ascii128 encoded,
