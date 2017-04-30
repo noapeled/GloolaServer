@@ -1,9 +1,10 @@
 # GloolaServer
 
-The server uses RESTful API to administrate three collections of entities: user, medicine, and patient, as following.
+The server uses RESTful API to administrate several collections of entities, as following.
 
 ## Get all entities in a collection
-    GET /:collection
+    GET /:collection    
+*Note:* Currently disabled for /image, in order to avoid very large responses.
 
 ### Examples:
     GET /user
@@ -17,6 +18,36 @@ The server uses RESTful API to administrate three collections of entities: user,
     GET /user/tuli
     GET /medicine/x9999
     GET /patient/77ty12
+    GET /image/myimage.png
+
+## Create New Image
+    PUT /image
+    Content-Type:application/json
+    
+    {
+      "image_id": <<<UNIQUE among images>>> ascii128 String,
+      "format": ascii128 String, e.g. "png" or "jpg".
+      "contents": base64-encoded String
+    }
+    
+### Example
+    PUT /image
+    Content-Type:application/json
+    
+    {
+      "image_id": "bobsponge",
+      "format": "gif".
+      "contents": "aHi32...t="
+    }
+
+
+## Update Existing Image
+    POST /image
+    Content-Type:application/json
+    
+    {
+      "image_id": ...
+    }
 
 ## Create New User
     PUT /user
