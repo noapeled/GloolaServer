@@ -22,6 +22,7 @@ var UserModel = require('./models/user');
 var config = {
     port: 3000,
     auth: {
+        adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "1day"
     }
@@ -208,7 +209,20 @@ function getAllUsers(req, res) {
     });
 }
 
-function authenticateUser(req, res) {
+function authenticateAdmin(req, res) {
+    if (req.body.password !== config.auth.adminPassword) {
+        res.status(400).json({ error: true, message: 'Wrong password for admin' });
+    } else {
+        res.json({
+            error: false,
+            message: 'Successfully authenticated.',
+            token: jwt.sign(
+                { username: "admin" }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
+        });
+    }
+}
+
+function authenticateUserNotAdmin(req, res) {
     UserModel.findOne({ username: req.body.username }, function(err, user) {
         if (err) {
             res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.username});
@@ -229,8 +243,12 @@ function authenticateUser(req, res) {
     });
 }
 
+function authenticate(req, res) {
+    return req.body.username === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
+}
+
 router.route("/authenticate")
-    .post(authenticateUser);
+    .post(authenticate);
 
 router.route("/image")
     .post(updateExistingImage)
