@@ -19,8 +19,8 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
-var serverSecret = 'This is a secret string for encrypting tokens';
-var tokenValidityInMinutes = 7 * 24 * 60;  // Tokens are valid for one week.
+var serverSecret = 'This is a secret string for signing tokens';
+var tokenValidity = "1day";
 
 function getByEntityId(req, res) {
     var modelNameToIdentifier = {
@@ -217,7 +217,7 @@ function authenticateUser(req, res) {
             res.json({
                 error: false,
                 message: 'Successfully authenticated.',
-                token: jwt.sign(user, serverSecret, { expiresInMinutes: tokenValidityInMinutes })
+                token: jwt.sign({ username: user.username }, serverSecret, { expiresIn: tokenValidity })
             });
         }
     });
@@ -225,7 +225,6 @@ function authenticateUser(req, res) {
 
 router.route("/authenticate")
     .post(authenticateUser);
-
 
 router.route("/image")
     .post(updateExistingImage)
