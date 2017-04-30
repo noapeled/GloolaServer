@@ -6,6 +6,7 @@
 
 require('./models/db');
 
+var jwt = require('jsonwebtoken');
 var _ = require('lodash');
 var express     =   require("express");
 var app         =   express();
@@ -18,13 +19,16 @@ var PatientModel = require('./models/patient');
 var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
+var serverSecret = 'This is a secret string for encrypting tokens';
+var tokenValidityInMinutes = 7 * 24 * 60;  // Tokens are valid for one week.
+
 function getByEntityId(req, res) {
     var modelNameToIdentifier = {
         User: 'username',
         Medicine: 'medicine_id',
         Patient: 'patient_id',
         Image: 'image_id'
-    }
+    };
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
     var query = _.fromPairs([[identifier, req.params.entity_id]]);
@@ -193,11 +197,35 @@ function createNewUser(req, res) {
 function getAllUsers(req, res) {
     mongoose.models.User.find({ }, function(err, data) {
         res.json({
-            error: err ? err : false,
-            "message" : err ? "Error fetching data" : data
+            "message" : err ? "Error fetching data" : data,
+            error: err ? err : false
         });
     });
 }
+
+function authenticateUser(req, res) {
+    UserModel.findOne({ username: req.body.username }, function(err, user) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.username});
+        } else if (!user) {
+            res.status(400).json(
+                { error: true, message: 'User ' + req.body.username + ' not found.' });
+        } else if (user.password !== req.body.password) {
+            res.status(400).json(
+                { error: true, message: 'Wrong password for user ' + req.body.username });
+        } else {
+            res.json({
+                error: false,
+                message: 'Successfully authenticated.',
+                token: jwt.sign(user, serverSecret, { expiresInMinutes: tokenValidityInMinutes })
+            });
+        }
+    });
+}
+
+router.route("/authenticate")
+    .post(authenticateUser);
+
 
 router.route("/image")
     .post(updateExistingImage)
