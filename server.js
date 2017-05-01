@@ -15,8 +15,6 @@ var bodyParser  =   require("body-parser");
 var router      =   express.Router();
 var mongoose    = require('mongoose');
 
-var UserModel = require('./models/user');
-
 var config = {
     port: 3000,
     auth: {
@@ -119,7 +117,7 @@ function authenticateAdmin(req, res) {
 }
 
 function authenticateUserNotAdmin(req, res) {
-    UserModel.findOne({ username: req.body.username }, function(err, user) {
+    mongoose.models.User.findOne({ username: req.body.username }, function(err, user) {
         if (err) {
             res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.username});
         } else if (!user) {
@@ -182,7 +180,7 @@ function authorizeAccessToPatientEntity(req, res, next) {
     if (username === 'admin') {
         return next();
     } else {
-        UserModel.findOne({ username: username }, function(err, user) {
+        mongoose.models.User.findOne({ username: username }, function(err, user) {
             if (err) {
                 res.status(500).json({ error: err, mesage: "Error fetching user " + username});
             } else if (!user) {
