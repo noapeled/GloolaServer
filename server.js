@@ -3,6 +3,7 @@
  */
 
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
+// TODO: maybe hash user passwords?
 
 require('./models/db');
 
@@ -14,9 +15,6 @@ var bodyParser  =   require("body-parser");
 var router      =   express.Router();
 var mongoose    = require('mongoose');
 
-var ImageModel = require('./models/image');
-var PatientModel = require('./models/patient');
-var MedicineModel = require('./models/medicine');
 var UserModel = require('./models/user');
 
 var config = {
@@ -150,28 +148,6 @@ function getAllMedicine(req, res) {
     });
 }
 
-function updateExistingUser(req, res) {
-    mongoose.models.User.find({ username: req.body.username }, function(err, data) {
-        if (data.length > 0) {
-            var existingUser = data[0];
-            existingUser.email = req.body.email ? req.body.email : existingUser.email;
-            existingUser.password = req.body.password ? req.body.password : existingUser.password; // TODO: hash the password
-            existingUser.patients = req.body.patients ? req.body.patients : existingUser.patients;
-            existingUser.save(function(err) {
-                res.status(statusCode(err)).json({
-                    "error" : err ? err : false,
-                    "message" : err ? "Error updating data" : "Updated user " + existingUser.username
-                });
-            });
-        } else {
-            res.status(400).json({
-                "error" : true,
-                "message" : "User with username " + req.body.username + " does not exist. Use PUT for creation."
-            });
-        }
-    });
-}
-
 function getAllUsers(req, res) {
     mongoose.models.User.find({ }, function(err, data) {
         res.json({
@@ -298,8 +274,7 @@ function serverMain() {
     }
 
     router.route("/user")
-        .get(getAllUsers)
-        .post(updateExistingUser);
+        .get(getAllUsers);
 
     router.route("/medicine")
         .get(getAllMedicine)
