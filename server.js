@@ -35,13 +35,20 @@ var modelNameToIdentifier = {
 };
 
 function getAllEntitiesInCollection(req, res) {
-    var model = _.startCase(req.params.collection);
-    mongoose.models[model].find({ }, function(err, data) {
-        res.json({
-            "message" : err ? "Error fetching data" : data,
-            error: err ? err : false
+    if (req.params.collection === 'image') {
+        return res.status(400).json({
+            error: true,
+            message : "GET all images is disabled, payload may be very large"
         });
-    });
+    } else {
+        var model = _.startCase(req.params.collection);
+        mongoose.models[model].find({}, function (err, data) {
+            res.json({
+                "message": err ? "Error fetching data" : data,
+                error: err ? err : false
+            });
+        });
+    }
 }
 
 function updateExistingEntity(req, res) {
