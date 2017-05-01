@@ -266,12 +266,12 @@ function verifyToken(req, res, next) {
 
 function authorizeAccessToEntireCollection(req, res, next) {
     // TODO: allow GET for all medicine and image
-    return req.decodedToken.username !== 'admin' ?
+    return req.decodedToken.username === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
+        next() :
         res.status(403).json({
             err: true,
             message: 'User ' + req.decodedToken.username + ' is not authorized to access all ' + req.params.collection
-        }) :
-        next();
+        });
 }
 
 function authorizeAccessToUserEntity(req, res, next) {
