@@ -36,6 +36,29 @@ var modelNameToIdentifier = {
     Image: 'image_id'
 };
 
+function updateExistingEntity(req, res) {
+    var model = _.startCase(req.params.collection);
+    var identifier = modelNameToIdentifier[model];
+    var query = _.fromPairs([[identifier, req.params.entityId]]);
+    mongoose.models[model].findOne(query, function(err, entity) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + req.body[identifier]});
+        } else if (!entity) {
+            res.status(400).json({ error: true, message: identifier + " " + req.body[identifier] + " not found." });
+        } else {
+            _.forOwn(_.omit(req.body, identifier), function (value, key) {
+                entity[key] = value;
+            });
+            entity.save(function (err) {
+                res.status(statusCode(err)).json({
+                    "error": err ? err : false,
+                    "message": (err ? "Error updating " : "Updated ") + identifier + " " + req.body[identifier]
+                });
+            });
+        }
+    });
+}
+
 function createNewEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
