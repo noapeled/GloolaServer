@@ -38,16 +38,15 @@ function getByEntityId(req, res) {
     };
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var query = _.fromPairs([[identifier, req.params.entity_id]]);
+    var query = _.fromPairs([[identifier, req.params.entityId]]);
     mongoose.models[model].find(query, function(err, data) {
-        if (data && data.length <= 0) {
-            res.status(400).json({ error: true, message: "No " + req.params.collection + " with " + identifier + " " + req.params.entity_id})
-        } else {
+        return data && data.length <= 0 ?
+            res.status(400).json({
+                error: true,
+                message: "No " + req.params.collection + " with " + identifier + " " + req.params.entityId}) :
             res.json({
                 error: err ? err : false,
-                "message": err ? "Error fetching data" : data[0]
-            });
-        }
+                "message": err ? "Error fetching data" : data[0] });
     });
 }
 
@@ -274,13 +273,23 @@ function authorizeAccessToEntireCollection(req, res, next) {
         next();
 }
 
+function authorizeAccessToUserEntity(req, res, next) {
+    return _.includes(['admin', req.params.entityId], req.decodedToken.username) ?
+        next() :
+        res.status(403).json({
+            error: true,
+            message: 'User ' + req.decodedToken.username + ' is not authorized to access any other user' });
+}
+
 router.route("/authenticate")
     .post(authenticate);
 
 if (config.auth.tokenFeatureFlag) {
     router.use(verifyToken);
     router.route("/:collection")
-        .get(authorizeAccessToEntireCollection);
+        .all(authorizeAccessToEntireCollection);
+    router.route("/user/:entityId")
+        .all(authorizeAccessToUserEntity)
 }
 
 router.route("/image")
@@ -302,7 +311,7 @@ router.route("/patient")
     .post(updateExistingPatient)
     .put(createNewPatient);
 
-router.route('/:collection/:entity_id')
+router.route('/:collection/:entityId')
     .get(getByEntityId);
 
 app.use(bodyParser.json());
