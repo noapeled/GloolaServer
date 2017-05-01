@@ -258,11 +258,20 @@ function verifyToken(req, res, next) {
                 return res.status(403).json({ error: err, message: 'Token authentication failed' });
             } else {
                 // if everything is good, save to request for use in other routes
-                req.decoded = decoded;
+                req.decodedToken = decoded;
                 next();
             }
         });
     }
+}
+
+function authorizeAccessToEntireCollection(req, res, next) {
+    return req.decodedToken.username !== 'admin' ?
+        res.status(403).json({
+            err: true,
+            message: 'User ' + req.decodedToken.username + ' is not authorized to access all ' + req.params.collection
+        }) :
+        next();
 }
 
 router.route("/authenticate")
@@ -270,12 +279,9 @@ router.route("/authenticate")
 
 if (config.auth.tokenFeatureFlag) {
     router.use(verifyToken);
+    router.route("/:collection")
+        .get(authorizeAccessToEntireCollection);
 }
-
-// router.route("/:collection")
-//     .get(function (req, res) {
-//         if (req.body.)
-//     });
 
 router.route("/image")
     .post(updateExistingImage)
