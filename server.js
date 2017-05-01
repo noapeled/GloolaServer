@@ -22,6 +22,7 @@ var UserModel = require('./models/user');
 var config = {
     port: 3000,
     auth: {
+        tokenFeatureFlag: true,
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "1day"
@@ -247,8 +248,34 @@ function authenticate(req, res) {
     return req.body.username === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
 }
 
+function verifyToken(req, res, next) {
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (!token) {
+        return res.status(403).send({error: true, message: 'No token provided'});
+    } else {
+        jwt.verify(token, config.auth.serverSecret, function(err, decoded) {
+            if (err) {
+                return res.status(403).json({ error: err, message: 'Token authentication failed' });
+            } else {
+                // if everything is good, save to request for use in other routes
+                req.decoded = decoded;
+                next();
+            }
+        });
+    }
+}
+
 router.route("/authenticate")
     .post(authenticate);
+
+if (config.auth.tokenFeatureFlag) {
+    router.use(verifyToken);
+}
+
+// router.route("/:collection")
+//     .get(function (req, res) {
+//         if (req.body.)
+//     });
 
 router.route("/image")
     .post(updateExistingImage)
