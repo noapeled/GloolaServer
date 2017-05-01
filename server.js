@@ -155,19 +155,6 @@ function getAllMedicine(req, res) {
     });
 }
 
-function createNewMedicine(req, res) {
-    var medicine_id = req.body.medicine_id;
-    mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
-        var newMedicine = new MedicineModel(req.body);
-        newMedicine.save(function(err) {
-            res.status(statusCode(err)).json({
-                "error" : err ? err : false,
-                "message" : (err ? "Error creating medicine " : "Created medicine ") + medicine_id
-            });
-        });
-    });
-}
-
 function updateExistingUser(req, res) {
     mongoose.models.User.find({ username: req.body.username }, function(err, data) {
         if (data.length > 0) {
@@ -324,8 +311,7 @@ function serverMain() {
 
     router.route("/medicine")
         .get(getAllMedicine)
-        .post(updateExistingMedicine)
-        .put(createNewMedicine);
+        .post(updateExistingMedicine);
 
     router.route("/patient")
         .get(getAllPatients)
