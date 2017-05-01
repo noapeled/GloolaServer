@@ -277,8 +277,7 @@ function serverMain() {
         .get(getAllUsers);
 
     router.route("/medicine")
-        .get(getAllMedicine)
-        .post(updateExistingMedicine);
+        .get(getAllMedicine);
 
     router.route("/patient")
         .get(getAllPatients)
