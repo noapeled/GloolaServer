@@ -29,13 +29,28 @@ var config = {
     }
 };
 
+var modelNameToIdentifier = {
+    User: 'username',
+    Medicine: 'medicine_id',
+    Patient: 'patient_id',
+    Image: 'image_id'
+};
+
+function createNewEntity(req, res) {
+    var model = _.startCase(req.params.collection);
+    var identifier = modelNameToIdentifier[model];
+    var query = _.fromPairs([[identifier, req.params.entityId]]);
+    mongoose.models[model].find(query, function(err, data) {
+        new mongoose.models[model](req.body).save(function(err) {
+            res.status(statusCode(err)).json({
+                "error" : err ? err : false,
+                "message" : (err ? "Error creating " : "Created ") + identifier + " " + req.body[identifier]
+            });
+        });
+    });
+}
+
 function getByEntityId(req, res) {
-    var modelNameToIdentifier = {
-        User: 'username',
-        Medicine: 'medicine_id',
-        Patient: 'patient_id',
-        Image: 'image_id'
-    };
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
     var query = _.fromPairs([[identifier, req.params.entityId]]);
@@ -330,9 +345,9 @@ function serverMain() {
         .put(createNewImage);
 
     router.route("/user")
+        .put(createNewUser)
         .get(getAllUsers)
-        .post(updateExistingUser)
-        .put(createNewUser);
+        .post(updateExistingUser);
 
     router.route("/medicine")
         .get(getAllMedicine)
@@ -343,6 +358,9 @@ function serverMain() {
         .get(getAllPatients)
         .post(updateExistingPatient)
         .put(createNewPatient);
+
+    router.route('/:collection')
+        .put(createNewEntity);
 
     router.route('/:collection/:entityId')
         .get(getByEntityId);
