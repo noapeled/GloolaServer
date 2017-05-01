@@ -80,18 +80,6 @@ function updateExistingImage(req, res) {
     })
 }
 
-function createNewImage(req, res) {
-    mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
-        var newImage = new ImageModel(req.body);
-        newImage.save(function(err) {
-            res.status(statusCode(err)).json({
-                "error" : err ? err : false,
-                "message" : (err ? "Error creating image " : "Created image ") + req.body.image_id
-            });
-        });
-    });
-}
-
 function statusCode(err) {
     var UNIQUE_KEY_ERROR_CODE = 11000;
     return _.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE ? 400 : 500;
@@ -328,8 +316,7 @@ function serverMain() {
     }
 
     router.route("/image")
-        .post(updateExistingImage)
-        .put(createNewImage);
+        .post(updateExistingImage);
 
     router.route("/user")
         .get(getAllUsers)
