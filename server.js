@@ -39,7 +39,7 @@ var modelNameToIdentifier = {
 function updateExistingEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var query = _.fromPairs([[identifier, req.params.entityId]]);
+    var query = _.fromPairs([[identifier, req.body[identifier]]]);
     mongoose.models[model].findOne(query, function(err, entity) {
         if (err) {
             res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + req.body[identifier]});
@@ -86,21 +86,6 @@ function getByEntityId(req, res) {
                 error: err ? err : false,
                 "message": err ? "Error fetching data" : data[0] });
     });
-}
-
-function updateExistingImage(req, res) {
-    mongoose.models.Image.find({ image_id: req.body.image_id }, function(err, data) {
-        var existingImage = data[0];
-        _.forOwn(_.omit(req.body, 'image_id'), function (value, key) {
-            existingImage[key] = value;
-        });
-        existingImage.save(function (err) {
-            res.status(statusCode(err)).json({
-                "error": err ? err : false,
-                "message": (err ? "Error updating image " : "Updated image ") + req.body.image_id
-            });
-        });
-    })
 }
 
 function statusCode(err) {
@@ -312,9 +297,6 @@ function serverMain() {
             .all(authorizeAccessToPatientEntity);
     }
 
-    router.route("/image")
-        .post(updateExistingImage);
-
     router.route("/user")
         .get(getAllUsers)
         .post(updateExistingUser);
@@ -328,6 +310,7 @@ function serverMain() {
         .post(updateExistingPatient);
 
     router.route('/:collection')
+        .post(updateExistingEntity)
         .put(createNewEntity);
 
     router.route('/:collection/:entityId')
