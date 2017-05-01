@@ -161,7 +161,6 @@ function verifyToken(req, res, next) {
 }
 
 function authorizeAccessToEntireCollection(req, res, next) {
-    // TODO: allow GET for all medicine and image
     return req.decodedToken.username === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
         next() :
         res.status(403).json({
