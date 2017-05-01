@@ -265,6 +265,7 @@ function verifyToken(req, res, next) {
 }
 
 function authorizeAccessToEntireCollection(req, res, next) {
+    // TODO: allow GET for all medicine and image
     return req.decodedToken.username !== 'admin' ?
         res.status(403).json({
             err: true,
@@ -302,16 +303,25 @@ function authorizeAccessToPatientEntity(req, res, next) {
     }
 }
 
+function authorizeCreationOfEntity(req, res, next) {
+    return req.decodedToken.username === 'admin' ?
+        next() :
+        res.status(403).json({
+            error: true,
+            message: 'User ' + req.decodedToken.username + ' is not authorized to create new entities' });
+}
+
 if (config.auth.tokenFeatureFlag) {
     router.route("/authenticate")
         .post(authenticate);
     router.use(verifyToken);
     router.route("/:collection")
+        .put(authorizeCreationOfEntity)
         .all(authorizeAccessToEntireCollection);
     router.route("/user/:userId")
         .all(authorizeAccessToUserEntity);
     router.route("/patient/:patientId")
-        .all(authorizeAccessToPatientEntity)
+        .all(authorizeAccessToPatientEntity);
 }
 
 router.route("/image")
