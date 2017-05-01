@@ -77,13 +77,10 @@ function updateExistingEntity(req, res) {
 function createNewEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var query = _.fromPairs([[identifier, req.params.entityId]]);
-    mongoose.models[model].find(query, function(err, data) {
-        new mongoose.models[model](req.body).save(function(err) {
-            res.status(statusCode(err)).json({
-                "error" : err ? err : false,
-                "message" : (err ? "Error creating " : "Created ") + identifier + " " + req.body[identifier]
-            });
+    new mongoose.models[model](req.body).save(function(err) {
+        res.status(statusCode(err)).json({
+            "error" : err ? err : false,
+            "message" : (err ? "Error creating " : "Created ") + identifier + " " + req.body[identifier]
         });
     });
 }
