@@ -101,15 +101,6 @@ function statusCode(err) {
     return _.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE ? 400 : 500;
 }
 
-function getAllPatients(req, res) {
-    mongoose.models.Patient.find({ }, function(err, data) {
-        res.json({
-            error: err ? err : false,
-            "message" : err ? "Error fetching data" : data
-        });
-    });
-}
-
 function authenticateAdmin(req, res) {
     if (req.body.password !== config.auth.adminPassword) {
         res.status(400).json({ error: true, message: 'Wrong password for admin' });
@@ -225,9 +216,6 @@ function serverMain() {
         router.route("/patient/:patientId")
             .all(authorizeAccessToPatientEntity);
     }
-
-    router.route("/patient")
-        .get(getAllPatients);
 
     router.route('/:collection')
         .get(getAllEntitiesInCollection)
