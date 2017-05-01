@@ -110,15 +110,6 @@ function getAllPatients(req, res) {
     });
 }
 
-function getAllMedicine(req, res) {
-    mongoose.models.Medicine.find({ }, function(err, data) {
-        res.json({
-            error: err ? err : false,
-            "message" : err ? "Error fetching data" : data
-        });
-    });
-}
-
 function authenticateAdmin(req, res) {
     if (req.body.password !== config.auth.adminPassword) {
         res.status(400).json({ error: true, message: 'Wrong password for admin' });
@@ -234,9 +225,6 @@ function serverMain() {
         router.route("/patient/:patientId")
             .all(authorizeAccessToPatientEntity);
     }
-
-    router.route("/medicine")
-        .get(getAllMedicine);
 
     router.route("/patient")
         .get(getAllPatients);
