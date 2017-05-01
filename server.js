@@ -274,22 +274,44 @@ function authorizeAccessToEntireCollection(req, res, next) {
 }
 
 function authorizeAccessToUserEntity(req, res, next) {
-    return _.includes(['admin', req.params.entityId], req.decodedToken.username) ?
+    return _.includes(['admin', req.params.userId], req.decodedToken.username) ?
         next() :
         res.status(403).json({
             error: true,
             message: 'User ' + req.decodedToken.username + ' is not authorized to access any other user' });
 }
 
-router.route("/authenticate")
-    .post(authenticate);
+function authorizeAccessToPatientEntity(req, res, next) {
+    var username = req.decodedToken.username;
+    if (username === 'admin') {
+        return next();
+    } else {
+        UserModel.findOne({ username: username }, function(err, user) {
+            if (err) {
+                res.status(500).json({ error: err, mesage: "Error fetching user " + username});
+            } else if (!user) {
+                res.status(400).json({ error: true, message: 'User ' + username + ' not found.' });
+            } else if (!_.includes(user.patients, req.params.patientId)) {
+                res.status(403).json({
+                    error: true,
+                    message: 'User ' + username + ' is not authorized to access patient ' + req.params.patientId });
+            } else {
+                next();
+            }
+        });
+    }
+}
 
 if (config.auth.tokenFeatureFlag) {
+    router.route("/authenticate")
+        .post(authenticate);
     router.use(verifyToken);
     router.route("/:collection")
         .all(authorizeAccessToEntireCollection);
-    router.route("/user/:entityId")
-        .all(authorizeAccessToUserEntity)
+    router.route("/user/:userId")
+        .all(authorizeAccessToUserEntity);
+    router.route("/patient/:patientId")
+        .all(authorizeAccessToPatientEntity)
 }
 
 router.route("/image")
