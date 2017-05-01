@@ -101,19 +101,6 @@ function updateExistingPatient(req, res) {
     })
 }
 
-function createNewPatient(req, res) {
-    var patient_id = req.body.patient_id;
-    mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
-        var newPatient = new PatientModel(req.body);
-        newPatient.save(function(err) {
-            res.status(statusCode(err)).json({
-                "error" : err ? err : false,
-                "message" : (err ? "Error creating patient " : "Created patient ") + patient_id
-            });
-        });
-    });
-}
-
 function getAllPatients(req, res) {
     mongoose.models.Patient.find({ }, function(err, data) {
         res.json({
@@ -315,8 +302,7 @@ function serverMain() {
 
     router.route("/patient")
         .get(getAllPatients)
-        .post(updateExistingPatient)
-        .put(createNewPatient);
+        .post(updateExistingPatient);
 
     router.route('/:collection')
         .put(createNewEntity);
