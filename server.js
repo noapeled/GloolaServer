@@ -202,19 +202,6 @@ function updateExistingUser(req, res) {
     });
 }
 
-function createNewUser(req, res) {
-    var username = req.body.username;
-    mongoose.models.User.find({ username: username }, function(err, data) {
-        var newUser = new UserModel(req.body);
-        newUser.save(function(err) {
-            res.status(statusCode(err)).json({
-                "error" : err ? err : false,
-                "message" : (err ? "Error creating user " : "Created user ") + username
-            });
-        });
-    });
-}
-
 function getAllUsers(req, res) {
     mongoose.models.User.find({ }, function(err, data) {
         res.json({
@@ -345,7 +332,6 @@ function serverMain() {
         .put(createNewImage);
 
     router.route("/user")
-        .put(createNewUser)
         .get(getAllUsers)
         .post(updateExistingUser);
 
