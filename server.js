@@ -91,51 +91,12 @@ function statusCode(err) {
     return _.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE ? 400 : 500;
 }
 
-function updateExistingPatient(req, res) {
-    var patient_id = req.body.patient_id;
-    mongoose.models.Patient.find({ patient_id: patient_id }, function(err, data) {
-        var existingPatient = data[0];
-        _.forOwn(_.omit(req.body, 'patient_id'), function (value, key) {
-            existingPatient[key] = value;
-        });
-        existingPatient.save(function (err) {
-            res.status(statusCode(err)).json({
-                "error": err ? err : false,
-                "message": (err ? "Error updating patient " : "Updated patient ") + patient_id
-            });
-        });
-    })
-}
-
 function getAllPatients(req, res) {
     mongoose.models.Patient.find({ }, function(err, data) {
         res.json({
             error: err ? err : false,
             "message" : err ? "Error fetching data" : data
         });
-    });
-}
-
-function updateExistingMedicine(req, res) {
-    var medicine_id = req.body.medicine_id;
-    mongoose.models.Medicine.find({ medicine_id: medicine_id }, function(err, data) {
-        if (data.length > 0) {
-            var existingMedicine = data[0];
-            _.forOwn(_.omit(req.body, 'medicine_id'), function(value, key) {
-                existingMedicine[key] = value;
-            });
-            existingMedicine.save(function(err) {
-                res.status(statusCode(err)).json({
-                    "error" : err ? err : false,
-                    "message" : (err ? "Error updating medicine " : "Updated medicine ") + medicine_id
-                });
-            });
-        } else {
-            res.status(400).json({
-                "error" : true,
-                "message" : "Medicine with medicine_id " + medicine_id + " does not exist. Use PUT for creation."
-            });
-        }
     });
 }
 
@@ -280,8 +241,7 @@ function serverMain() {
         .get(getAllMedicine);
 
     router.route("/patient")
-        .get(getAllPatients)
-        .post(updateExistingPatient);
+        .get(getAllPatients);
 
     router.route('/:collection')
         .post(updateExistingEntity)
