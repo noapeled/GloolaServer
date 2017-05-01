@@ -34,6 +34,16 @@ var modelNameToIdentifier = {
     Image: 'image_id'
 };
 
+function getAllEntitiesInCollection(req, res) {
+    var model = _.startCase(req.params.collection);
+    mongoose.models[model].find({ }, function(err, data) {
+        res.json({
+            "message" : err ? "Error fetching data" : data,
+            error: err ? err : false
+        });
+    });
+}
+
 function updateExistingEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
@@ -244,6 +254,7 @@ function serverMain() {
         .get(getAllPatients);
 
     router.route('/:collection')
+        .get(getAllEntitiesInCollection)
         .post(updateExistingEntity)
         .put(createNewEntity);
 
