@@ -311,44 +311,48 @@ function authorizeCreationOfEntity(req, res, next) {
             message: 'User ' + req.decodedToken.username + ' is not authorized to create new entities' });
 }
 
-if (config.auth.tokenFeatureFlag) {
-    router.route("/authenticate")
-        .post(authenticate);
-    router.use(verifyToken);
-    router.route("/:collection")
-        .put(authorizeCreationOfEntity)
-        .all(authorizeAccessToEntireCollection);
-    router.route("/user/:userId")
-        .all(authorizeAccessToUserEntity);
-    router.route("/patient/:patientId")
-        .all(authorizeAccessToPatientEntity);
+function serverMain() {
+    if (config.auth.tokenFeatureFlag) {
+        router.route("/authenticate")
+            .post(authenticate);
+        router.use(verifyToken);
+        router.route("/:collection")
+            .put(authorizeCreationOfEntity)
+            .all(authorizeAccessToEntireCollection);
+        router.route("/user/:userId")
+            .all(authorizeAccessToUserEntity);
+        router.route("/patient/:patientId")
+            .all(authorizeAccessToPatientEntity);
+    }
+
+    router.route("/image")
+        .post(updateExistingImage)
+        .put(createNewImage);
+
+    router.route("/user")
+        .get(getAllUsers)
+        .post(updateExistingUser)
+        .put(createNewUser);
+
+    router.route("/medicine")
+        .get(getAllMedicine)
+        .post(updateExistingMedicine)
+        .put(createNewMedicine);
+
+    router.route("/patient")
+        .get(getAllPatients)
+        .post(updateExistingPatient)
+        .put(createNewPatient);
+
+    router.route('/:collection/:entityId')
+        .get(getByEntityId);
+
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({"extended": false}));
+    app.use('/', router);
+
+    app.listen(config.port);
+    console.log("Listening to PORT " + config.port);
 }
 
-router.route("/image")
-    .post(updateExistingImage)
-    .put(createNewImage);
-
-router.route("/user")
-    .get(getAllUsers)
-    .post(updateExistingUser)
-    .put(createNewUser);
-
-router.route("/medicine")
-    .get(getAllMedicine)
-    .post(updateExistingMedicine)
-    .put(createNewMedicine);
-
-router.route("/patient")
-    .get(getAllPatients)
-    .post(updateExistingPatient)
-    .put(createNewPatient);
-
-router.route('/:collection/:entityId')
-    .get(getByEntityId);
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({"extended" : false}));
-app.use('/', router);
-
-app.listen(config.port);
-console.log("Listening to PORT " + config.port);
+serverMain();
