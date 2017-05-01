@@ -22,7 +22,7 @@ var UserModel = require('./models/user');
 var config = {
     port: 3000,
     auth: {
-        tokenFeatureFlag: true,
+        tokenFeatureFlag: false,
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "1day"
