@@ -215,6 +215,7 @@ function getAllUsers(req, res) {
             "message" : err ? "Error fetching data" : data,
             error: err ? err : false
         });
+    });
 }
 
 function authenticateAdmin(req, res) {
