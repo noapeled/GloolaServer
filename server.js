@@ -204,6 +204,17 @@ function authorizeCreationOfEntity(req, res, next) {
             message: 'User ' + req.decodedToken.username + ' is not authorized to create new entities' });
 }
 
+function getCaretakers(req, res) {
+    var username = _.get(req, 'decodedToken', 'username') || req.body.username;
+    mongoose.models['User'].find({ patients: { $all: [username] } }, function (err, caretakers) {
+        res.json({
+            message: err ? "Error fetching caretakers of user " + username
+                : _.map(caretakers, function(caretaker) { return _.pick(caretaker, ['username', 'name', 'email']); }),
+            error: err ? err : false
+        })
+    });
+}
+
 function serverMain() {
     if (config.auth.tokenFeatureFlag) {
         router.route("/authenticate")
@@ -225,6 +236,9 @@ function serverMain() {
 
     router.route('/:collection/:entityId')
         .get(getByEntityId);
+
+    router.route('/caretakers')
+        .get(getCaretakers);
 
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({"extended": false}));
