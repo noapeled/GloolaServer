@@ -18,6 +18,17 @@ var tuliPassword = 'lll';
 var tweenyEmail = 'tweeny@t.com';
 var tuliEmail = 'tuli@t.com';
 
+var medicalData = {
+    medication: [{
+        medicine_id: "3334123",
+        dosage_size: 2,
+        frequency: [
+            { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "20", minute: "15" },
+            { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" }
+        ]
+    }]
+};
+
 adminToken = null;
 userIds = { };
 userTokens = { };
@@ -63,13 +74,31 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function checkTuliHasMedicine() {
+    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+        console.log(data);
+        expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
+        console.log(JSON.parse(data).message.medical_info.medication[0]);
+        // expect(_.isEqual(JSON.parse(data).message.medical_info.medication[0], medicalData)).to.be.true;
+        allTestsDone();
+    })
+}
+
+function testTweenyCanAddMedicineToTuli() {
+    putOrPostToServer(userTokens[tweenyEmail], 'POST', '/user/' + userIds['tuli'], { medical_info: medicalData}, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        checkTuliHasMedicine();
+    });
+}
+
 function testTuliHasCaretakerTweeny() {
-    getFromServer(userTokens['tweeny@t.com'], '/caretakers/' + userIds['tuli'], function (data) {
+    getFromServer(userTokens[tweenyEmail], '/caretakers/' + userIds['tuli'], function (data) {
        console.log(data);
        var caretakers = JSON.parse(data).message;
        expect(caretakers.length).to.equal(1);
        expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
-       allTestsDone();
+       testTweenyCanAddMedicineToTuli();
     });
 }
 
