@@ -5,7 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
-require('./models/db');
+require('./db');
 
 var jwt = require('jsonwebtoken');
 var _ = require('lodash');
@@ -226,7 +226,10 @@ function createNewUserWithAutomaticId(req, res) {
     });
 }
 
-function serverMain() {
+function serverMain(dbName) {
+    // Connect mongoose to database.
+    require('./db').connectToDatabase(dbName);
+
     // First, authentication and authorization.
     router.route("/authenticate")
         .post(authenticate);
@@ -265,4 +268,4 @@ function serverMain() {
     console.log("Listening to PORT " + config.port);
 }
 
-serverMain();
+exports.serverMain = serverMain;
