@@ -149,7 +149,7 @@ Note that when updating an entity, every specified field is COMPLETELY OVERWRITT
 So if you wish to preserve existing information, first GET the information, then RE-POST it along with new information. 
 This applies also for updating medication for a user.
 
-### Example
+### Example Users: Patient and Caretaker
 Yehoram is a patient who takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
 
     {
@@ -182,7 +182,7 @@ Zion is Yehoram's caretaker:
       "medical_info": {}
     }
 
-## Obtaining Caretakers for a patient
+## Get Caretakers of Patient
 
     GET /caretakers
     
@@ -202,5 +202,30 @@ The server will reply with the following JSON body:
  The server responds with JSON body:
  
     [
-       { "username": "zion_coolness", "name": ["Zion", "Coolness"], "email": "zion@coolness.co.il" }
+       { 
+        "username": "zion_coolness", 
+        "name": ["Zion", "Coolness"], 
+        "email": "zion@coolness.co.il" 
+       }
     ]
+
+## Patient Indicates Medicine Taken
+    POST /takenmedicine
+    
+    {
+        "when": ISO 8601 date-time,
+        "medicine_id": ...,
+        "dosage": ...
+    }
+
+### Example of taken medicine
+    POST /takenmedicine
+    
+    {
+        "when": "2017-05-14T09:30:00Z",
+        "medicine_id": 12345,
+        "dosage": 1
+    }
+
+## Push or Pull Notifications
+TBD.
