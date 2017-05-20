@@ -18,10 +18,9 @@ var mongoose    = require('mongoose');
 var config = {
     port: 3000,
     auth: {
-        tokenFeatureFlag: false,
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
-        tokenValidity: "1day"
+        tokenValidity: "1month"
     }
 };
 
@@ -168,27 +167,20 @@ function authorizeAccessToEntireCollection(req, res, next) {
 }
 
 function authorizeAccessToUserEntity(req, res, next) {
-    return _.includes(['admin', req.params.userId], req.decodedToken.username) ?
-        next() :
-        res.status(403).json({
-            error: true,
-            message: 'User ' + req.decodedToken.username + ' is not authorized to access any other user' });
-}
-
-function authorizeAccessToPatientEntity(req, res, next) {
-    var username = req.decodedToken.username;
-    if (username === 'admin') {
+    var senderUserId = _.get(req, 'decodedToken', 'userid');
+    var requestedUserId = _.get(req, 'params', 'userid');
+    if (senderUserId === 'admin' || senderUserId === requestedUserId) {
         return next();
     } else {
-        mongoose.models.User.findOne({ username: username }, function(err, user) {
+        mongoose.models.User.findOne({ userid: req.params.userid }, function(err, userEntity) {
             if (err) {
-                res.status(500).json({ error: err, mesage: "Error fetching user " + username});
-            } else if (!user) {
-                res.status(400).json({ error: true, message: 'User ' + username + ' not found.' });
-            } else if (!_.includes(user.patients, req.params.patientId)) {
+                res.status(500).json({ error: err, mesage: "Error fetching user " + requestedUserId});
+            } else if (!userEntity) {
+                res.status(400).json({ error: true, message: 'User ' + requestedUserId + ' not found.' });
+            } else if (!_.includes(userEntity.patients, requestedUserId)) {
                 res.status(403).json({
                     error: true,
-                    message: 'User ' + username + ' is not authorized to access patient ' + req.params.patientId });
+                    message: 'User ' + senderUserId + ' is not authorized to access user ' + requestedUserId });
             } else {
                 next();
             }
@@ -206,7 +198,7 @@ function authorizeCreationOfEntity(req, res, next) {
 
 function getCaretakers(req, res) {
     var username = _.get(req, 'decodedToken', 'username') || req.body.username;
-    mongoose.models['User'].find({ patients: { $all: [username] } }, function (err, caretakers) {
+    mongoose.models.User.find({ patients: { $all: [username] } }, function (err, caretakers) {
         res.json({
             message: err ? "Error fetching caretakers of user " + username
                 : _.map(caretakers, function(caretaker) { return _.pick(caretaker, ['username', 'name', 'email']); }),
@@ -215,19 +207,30 @@ function getCaretakers(req, res) {
     });
 }
 
+function createNewUserWithAutomaticId(req, res) {
+    var newUser = _.assign(req.body, {
+        userid: "user_" + Math.floor(Math.random() * 2000000000) + 1
+    });
+    new mongoose.models.User(newUser).save(function(err) {
+        res.status(statusCode(err)).json({
+            "error" : err ? err : false,
+            "message" : err ? "Error creating user" : "Created user " + newUser.userid
+        });
+    });
+}
+
 function serverMain() {
-    if (config.auth.tokenFeatureFlag) {
-        router.route("/authenticate")
-            .post(authenticate);
-        router.use(verifyToken);
-        router.route("/:collection")
-            .put(authorizeCreationOfEntity)
-            .all(authorizeAccessToEntireCollection);
-        router.route("/user/:userId")
-            .all(authorizeAccessToUserEntity);
-        router.route("/patient/:patientId")
-            .all(authorizeAccessToPatientEntity);
-    }
+    router.route("/authenticate")
+        .post(authenticate);
+    router.use(verifyToken);
+    router.route("/:collection")
+        .put(authorizeCreationOfEntity)
+        .all(authorizeAccessToEntireCollection);
+    router.route("/user/:userid")
+        .all(authorizeAccessToUserEntity);
+
+    router.route("/user")
+        .put(createNewUserWithAutomaticId);
 
     router.route('/:collection')
         .get(getAllEntitiesInCollection)

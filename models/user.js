@@ -10,7 +10,7 @@ var UserSchema = data_types.createSchema({
         validator: function(v) { return v.length >= 2 },
         message: 'name must consist of at least forname and surname' }
     },
-    username: { type: String, required: true, unique: true },
+    userid: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
     patients: [String],
