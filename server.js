@@ -20,7 +20,7 @@ var config = {
     auth: {
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
-        tokenValidity: "1month"
+        tokenValidity: "30days"
     }
 };
 
