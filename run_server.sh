@@ -7,11 +7,19 @@ log() {
 	echo '['`date`'] '"$message" | tee -a ./update_server.log
 }
 
+get_server_pid() {
+    server_pid=`ps -ef | grep 'serverMain' | grep -v grep | awk '{print $2}'`
+}
+
+run_node_server() {
+    npm install
+    node -e 'require("./server").serverMain()' &
+}
+
 # Run server if not already running.
-server_pid=`ps -ef | grep 'node server.js' | grep -v grep | awk '{print $2}'`
+get_server_pid
 if [ "$server_pid" = "" ] ; then
-	npm install
-	node server.js &
+	run_node_server
 	log 'No running server found, so started server'
 fi
 
@@ -25,14 +33,12 @@ while [ 1 ] ; do
 		log "Found new git log ($reslog), updating."
 		# Pull and restart server.
   		git merge origin/master # completing the pull
-		npm install
-		server_pid=`ps -ef | grep 'node server.js' | grep -v grep | awk '{print $2}'`
+		get_server_pid
 		kill -9 "$server_pid"
-		node server.js &
+		run_node_server
 		log 'Code changes pulled and server restarted'
 	else
 		log 'No code changes detected, server not restarted.'
 	fi
 	sleep "$CHECK_PERIOD_SECONDS"
 done
-
