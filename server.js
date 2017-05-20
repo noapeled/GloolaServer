@@ -183,11 +183,11 @@ function authorizeAccessToUserEntity(req, res, next) {
     if (senderUserId === 'admin' || senderUserId === requestedUserId) {
         return next();
     } else {
-        mongoose.models.User.findOne({ userid: req.params.userid }, function(err, userEntity) {
+        mongoose.models.User.findOne({ userid: senderUserId }, function(err, userEntity) {
             if (err) {
                 res.status(500).json({ error: err, mesage: "Error fetching user " + requestedUserId});
             } else if (!userEntity) {
-                res.status(400).json({ error: true, message: 'User ' + requestedUserId + ' not found.' });
+                res.status(400).json({ error: true, message: 'User ' + senderUserId + ' not found.' });
             } else if (!_.includes(userEntity.patients, requestedUserId)) {
                 res.status(403).json({
                     error: true,

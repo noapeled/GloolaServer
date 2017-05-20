@@ -54,16 +54,24 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
-function checkTweenyHasPatientTuli(data) {
-    console.log(data);
-    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tweeny'], function (data) {
+function testTweenyCanSeeDetailsOfTuli() {
+    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
-        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        expect(JSON.parse(data).error).to.be.false;
         allTestsDone();
     });
 }
 
-function setTweenyAsCaretakerOfTuli() {
+function testTweenyHasPatientTuli(data) {
+    console.log(data);
+    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tweeny'], function (data) {
+        console.log(data);
+        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        testTweenyCanSeeDetailsOfTuli();
+    });
+}
+
+function testSetTweenyAsCaretakerOfTuli() {
     console.log(userTokens);
     console.log(userIds);
     putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user/' + userIds['tweeny'], {
@@ -72,17 +80,17 @@ function setTweenyAsCaretakerOfTuli() {
         console.log(chunk);
         var jsonBody = JSON.parse(chunk);
         expect(jsonBody.error).to.be.false;
-        checkTweenyHasPatientTuli();
+        testTweenyHasPatientTuli();
     });
 }
 
-function loginAsTweeny() {
+function testLoginAsTweeny() {
     console.log(userIds);
-    getUserToken('tweeny@t.com', 'ttt', setTweenyAsCaretakerOfTuli);
+    testGetUserToken('tweeny@t.com', 'ttt', testSetTweenyAsCaretakerOfTuli);
 }
 
-function createUserTuli() {
-    createNewUserAsAdmin(['Tuli', 'Peled'], 'tuli@t.com', 'lll', loginAsTweeny);
+function testCreateUserTuli() {
+    createNewUserAsAdmin(['Tuli', 'Peled'], 'tuli@t.com', 'lll', testLoginAsTweeny);
 }
 
 function createNewUserAsAdmin(name, email, password, continueCallback) {
@@ -103,12 +111,12 @@ function createNewUserAsAdmin(name, email, password, continueCallback) {
     )
 }
 
-function getUserToken(email, password, continueCallback) {
+function testGetUserToken(email, password, continueCallback) {
     putOrPostToServer(
         '',
         'POST',
         '/authenticate',
-        {email: email, password: password},
+        { email: email, password: password },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
             console.log(jsonBody);
@@ -121,12 +129,12 @@ function getUserToken(email, password, continueCallback) {
     );
 }
 
-function getAdminToken() {
+function testGetAdminToken() {
     putOrPostToServer(
         '',
         'POST',
         '/authenticate',
-        {userid: 'admin', password: 'gloola123!'},
+        { userid: 'admin', password: 'gloola123!' },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
             // console.log(jsonBody);
@@ -139,13 +147,13 @@ function getAdminToken() {
     );
 }
 
-function createUserTweeny() {
-    createNewUserAsAdmin(['Tweeny', 'Peled'], 'tweeny@t.com', 'ttt', createUserTuli);
+function testCreateUserTweeny() {
+    createNewUserAsAdmin(['Tweeny', 'Peled'], 'tweeny@t.com', 'ttt', testCreateUserTuli);
 }
 
 function continueNowThatAdminTokenIsKnown() {
     require('mongoose').connection.dropDatabase(testDbName);
-    createUserTweeny();
+    testCreateUserTweeny();
 }
 
-getAdminToken();
+testGetAdminToken();
