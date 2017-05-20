@@ -106,6 +106,7 @@ Following are all the details you may update for a user, whether he/she is a pat
     Content-Type:application/json
     
     {
+        userid: <Identifies the user to be updated>,
         push_tokens: [ascii128 encoded],
         name: [forname, middlename0, middlename1, ..., surname],
         password: ascii128 encoded,

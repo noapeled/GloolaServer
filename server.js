@@ -50,12 +50,13 @@ function getAllEntitiesInCollection(req, res) {
 function updateExistingEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var query = _.fromPairs([[identifier, req.body[identifier]]]);
+    var idOfEntityToBeUpdated = req.params.entityId
+    var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
     mongoose.models[model].findOne(query, function(err, entity) {
         if (err) {
-            res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + req.body[identifier]});
+            res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + idOfEntityToBeUpdated});
         } else if (!entity) {
-            res.status(400).json({ error: true, message: identifier + " " + req.body[identifier] + " not found." });
+            res.status(400).json({ error: true, message: identifier + " " + idOfEntityToBeUpdated + " not found." });
         } else {
             _.forOwn(_.omit(req.body, identifier), function (value, key) {
                 entity[key] = value;
@@ -63,7 +64,7 @@ function updateExistingEntity(req, res) {
             entity.save(function (err) {
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,
-                    "message": (err ? "Error updating " : "Updated ") + identifier + " " + req.body[identifier]
+                    "message": (err ? "Error updating " : "Updated ") + identifier + " " + idOfEntityToBeUpdated
                 });
             });
         }
@@ -177,8 +178,8 @@ function authorizeAccessToEntireCollection(req, res, next) {
 }
 
 function authorizeAccessToUserEntity(req, res, next) {
-    var senderUserId = _.get(req, 'decodedToken', 'userid');
-    var requestedUserId = _.get(req, 'params', 'userid');
+    var senderUserId = _.get(req, ['decodedToken', 'userid']);
+    var requestedUserId = _.get(req, ['params', 'userid']);
     if (senderUserId === 'admin' || senderUserId === requestedUserId) {
         return next();
     } else {
@@ -251,7 +252,7 @@ function serverMain(dbName) {
     router.route("/takenmedicine")
         .put(createNewTakenMedicine);
 
-    router.route('/:collection')
+    router.route('/:collection/:entityId')
         .get(getAllEntitiesInCollection)
         .post(updateExistingEntity)
         .put(createNewEntity);

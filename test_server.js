@@ -35,8 +35,16 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
     postReq.end();
 }
 
+function allTestsDone(data) {
+    console.log(data);
+}
+
 function setTweenyAsCaretakerOfTuli() {
     console.log(userTokens);
+    console.log(userIds);
+    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user/' + userIds['tweeny'], {
+        patients: [userIds['tuli']]
+    }, allTestsDone)
 }
 
 function loginAsTweeny() {
