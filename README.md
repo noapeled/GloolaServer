@@ -128,7 +128,6 @@ Following are all the details you may update for a user, whether he/she is a pat
         name: [forname, middlename0, middlename1, ..., surname],
         patients: [username],
         medical_info: {
-              hmo: { one of: ['clalit', 'maccabi', 'meuhedet', 'leumit', null] },
               medication: [{
                   medicine_id: ascii128 string,
                   dosage_size: positive number,
@@ -160,7 +159,6 @@ Yehoram is a patient who takes only one medicine: every day at 08:15pm, as well 
       "birthdate": "1943-09-22",
       "patients": [],
       "medical_info": {
-          hmo: "maccabi",
           medication: [{
             medicine_id: "3334123",
             dosage_size: 2,
@@ -222,7 +220,7 @@ The server will reply with the following JSON body:
     
     {
         "when": "2017-05-14T09:30:00Z",
-        "medicine_id": 12345,
+        "medicine_id": "z12345",
         "dosage": 1
     }
 
