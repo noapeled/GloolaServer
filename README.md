@@ -164,9 +164,10 @@ Zion is Yehoram's caretaker:
 
 ## Get Caretakers of Patient
 
-    GET /caretakers
+    GET /caretakers/:userid
     
-The server will reply with the following JSON body:
+Where userid identifies the patient.
+The server will reply with all caretakers of the patient, in the following JSON body:
     
     [
         {"userid": ..., "name": ..., "email": ...},
