@@ -18,10 +18,7 @@ var UserSchema = data_types.createSchema({
         hmo: { type: String, enum: ['clalit', 'maccabi', 'meuhedet', 'leumit', null], default: null },
         medication: [{
             medicine_id: { type: String, required: true },
-            dosage_size: { type: Number, required: true, validate: {
-                validator: function(v) { return v > 0 },
-                message: 'dosage_size must be positive' }
-            },
+            dosage_size: data_types.dosage_size_type,
             frequency: [{ // TODO: validate precise cron-style patterns
                 day_of_week: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
                 month_of_year: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },

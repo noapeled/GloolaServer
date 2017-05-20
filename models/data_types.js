@@ -12,3 +12,8 @@ exports.createSchema = function(schemaProperties) {
     }));
 };
 
+exports.dosage_size_type = {
+    type: Number,
+    required: true,
+    validate: { validator: function(v) { return v > 0 }, message: 'dosage_size must be positive' }
+};
