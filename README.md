@@ -189,7 +189,7 @@ The server will reply with the following JSON body:
        }
     ]
 
-## Patient Indicates Medicine Taken
+## Indication of Medicine Taken
     POST /takenmedicine
     
     {
@@ -206,6 +206,12 @@ The server will reply with the following JSON body:
         "medicine_id": "z12345",
         "dosage": 1
     }
+
+## Query taken medicine
+    GET /takenmedicine/:userid?latest=<number>
+    
+The server will respond with the latest <number> records of medicine taken by userid.
+If parameter latest is omitted, defaults to all records.
 
 ## Push or Pull Notifications
 TBD. Note that push_tokens is already available for each user.

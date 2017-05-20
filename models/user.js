@@ -6,25 +6,21 @@ var data_types = require('./data_types');
 var mongoose = require('mongoose');
 
 var UserSchema = data_types.createSchema({
+    name: { required: true, type: [String], validate: {
+        validator: function(v) { return v.length >= 2 },
+        message: 'name must consist of at least forname and surname' }
+    },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
-    birthdate: Date,
-    name: {
-        type: [String],
-        validate: {
-            validator: function(v) { return v.length >= 2 },
-            message: 'name must consist of at least forname and surname' }
-    },
     patients: [String],
     medical_info: {
         hmo: { type: String, enum: ['clalit', 'maccabi', 'meuhedet', 'leumit', null], default: null },
         medication: [{
             medicine_id: { type: String, required: true },
-            dosage_size: {
-                type: Number,
-                required: true,
-                validate: { validator: function(v) { return v > 0 }, message: 'dosage_size must be positive' }
+            dosage_size: { type: Number, required: true, validate: {
+                validator: function(v) { return v > 0 },
+                message: 'dosage_size must be positive' }
             },
             frequency: [{ // TODO: validate precise cron-style patterns
                 day_of_week: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
@@ -34,7 +30,8 @@ var UserSchema = data_types.createSchema({
                 minute: { type: String, match: /^((\*)|((\d+,)*\d+))$/ }
             }]
         }]
-    }
+    },
+    push_tokens: [String]
 });
 
 module.exports = mongoose.model('User', UserSchema, 'User');
