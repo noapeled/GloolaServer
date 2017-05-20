@@ -208,9 +208,7 @@ function getCaretakers(req, res) {
 }
 
 function createNewUserWithAutomaticId(req, res) {
-    var newUser = _.assign(req.body, {
-        userid: "user_" + Math.floor(Math.random() * 2000000000) + 1
-    });
+    var newUser = _.assign(req.body, { userid: "user" + Math.floor(Math.random() * 2000000000) + 1 });
     new mongoose.models.User(newUser).save(function(err) {
         res.status(statusCode(err)).json({
             "error" : err ? err : false,
@@ -220,6 +218,7 @@ function createNewUserWithAutomaticId(req, res) {
 }
 
 function serverMain() {
+    // First, authentication and authorization.
     router.route("/authenticate")
         .post(authenticate);
     router.use(verifyToken);
@@ -231,6 +230,7 @@ function serverMain() {
     router.route("/caretakers/:userid")
         .all(authorizeAccessToUserEntity);
 
+    // Next, access to collections.
     router.route("/user")
         .put(createNewUserWithAutomaticId);
 
