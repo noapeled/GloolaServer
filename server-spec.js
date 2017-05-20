@@ -9,7 +9,7 @@ require('./server');
 var http = require('http');
 var expect = require('chai').expect;
 
-function postToServer(path, jsonBody, callbackOnResponseData) {
+function postToServer(path, postBody, callbackOnResponseData) {
     var postOptions = {
         path: path,
         host: 'localhost',
@@ -24,7 +24,7 @@ function postToServer(path, jsonBody, callbackOnResponseData) {
     });
 
     // post the data
-    postReq.write(JSON.stringify(jsonBody));
+    postReq.write(JSON.stringify(postBody));
     postReq.end();
 }
 
@@ -33,6 +33,7 @@ postToServer(
     { userid: 'admin', password: 'gloola123!'},
     function (chunk) {
         var jsonBody = JSON.parse(chunk);
+        console.log(jsonBody);
         expect(jsonBody.error).to.be.false;
         expect(jsonBody.message).to.be.defined;
         expect(jsonBody.token).to.be.defined;
