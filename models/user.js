@@ -15,7 +15,6 @@ var UserSchema = data_types.createSchema({
     email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
     patients: [String],
     medical_info: {
-        hmo: { type: String, enum: ['clalit', 'maccabi', 'meuhedet', 'leumit', null], default: null },
         medication: [{
             medicine_id: { type: String, required: true },
             dosage_size: data_types.dosage_size_type,
