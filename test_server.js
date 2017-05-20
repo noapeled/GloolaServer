@@ -2,12 +2,21 @@
  * Created by inon on 5/20/17.
  */
 
+var _ = require('lodash');
+
 var testDbName = 'temporaryTestDb';
 
 require('./server').serverMain(testDbName);
 
 var http = require('http');
 var expect = require('chai').expect;
+
+var tweenyName = ['Tweeny', 'Peled'];
+var tuliName = ['Tuli', 'Peled'];
+var tweenyPassword = 'ttt';
+var tuliPassword = 'lll';
+var tweenyEmail = 'tweeny@t.com';
+var tuliEmail = 'tuli@t.com';
 
 adminToken = null;
 userIds = { };
@@ -54,17 +63,27 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function testTuliHasCaretakerTweeny() {
+    getFromServer(userTokens['tweeny@t.com'], '/caretakers/' + userIds['tuli'], function (data) {
+       console.log(data);
+       var caretakers = JSON.parse(data).message;
+       expect(caretakers.length).to.equal(1);
+       expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
+       allTestsDone();
+    });
+}
+
 function testTweenyCanSeeDetailsOfTuli() {
-    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tuli'], function (data) {
+    getFromServer(userTokens[tweenyEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
-        allTestsDone();
+        testTuliHasCaretakerTweeny();
     });
 }
 
 function testTweenyHasPatientTuli(data) {
     console.log(data);
-    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tweeny'], function (data) {
+    getFromServer(userTokens[tweenyEmail], '/user/' + userIds['tweeny'], function (data) {
         console.log(data);
         expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
         testTweenyCanSeeDetailsOfTuli();
@@ -74,7 +93,7 @@ function testTweenyHasPatientTuli(data) {
 function testSetTweenyAsCaretakerOfTuli() {
     console.log(userTokens);
     console.log(userIds);
-    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user/' + userIds['tweeny'], {
+    putOrPostToServer(userTokens[tweenyEmail], 'POST', '/user/' + userIds['tweeny'], {
         patients: [userIds['tuli']]
     }, function (chunk) {
         console.log(chunk);
@@ -86,11 +105,11 @@ function testSetTweenyAsCaretakerOfTuli() {
 
 function testLoginAsTweeny() {
     console.log(userIds);
-    testGetUserToken('tweeny@t.com', 'ttt', testSetTweenyAsCaretakerOfTuli);
+    testGetUserToken(tweenyEmail, tweenyPassword, testSetTweenyAsCaretakerOfTuli);
 }
 
 function testCreateUserTuli() {
-    createNewUserAsAdmin(['Tuli', 'Peled'], 'tuli@t.com', 'lll', testLoginAsTweeny);
+    createNewUserAsAdmin(tuliName, tuliEmail, tuliPassword, testLoginAsTweeny);
 }
 
 function createNewUserAsAdmin(name, email, password, continueCallback) {
@@ -148,7 +167,7 @@ function testGetAdminToken() {
 }
 
 function testCreateUserTweeny() {
-    createNewUserAsAdmin(['Tweeny', 'Peled'], 'tweeny@t.com', 'ttt', testCreateUserTuli);
+    createNewUserAsAdmin(tweenyName, tweenyEmail, tweenyPassword, testCreateUserTuli);
 }
 
 function continueNowThatAdminTokenIsKnown() {

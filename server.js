@@ -257,12 +257,12 @@ function serverMain(dbName) {
         .get(getAllEntitiesInCollection)
         .put(createNewEntity);
 
+    router.route('/caretakers/:userid')
+        .get(getCaretakers);
+
     router.route('/:collection/:entityId')
         .post(updateExistingEntity)
         .get(getByEntityId);
-
-    router.route('/caretakers/:userid')
-        .get(getCaretakers);
 
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({"extended": false}));
