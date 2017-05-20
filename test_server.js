@@ -43,7 +43,8 @@ function allTestsDone(data) {
 function setTweenyAsCaretakerOfTuli() {
     console.log(userTokens);
     console.log(userIds);
-    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user/' + userIds['tweeny'], {
+    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user', {
+        userid: userIds['tweeny'],
         patients: [userIds['tuli']]
     }, allTestsDone)
 }

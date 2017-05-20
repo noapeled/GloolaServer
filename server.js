@@ -50,7 +50,7 @@ function getAllEntitiesInCollection(req, res) {
 function updateExistingEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var idOfEntityToBeUpdated = req.params.entityId;
+    var idOfEntityToBeUpdated = req.body[identifier];
     var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
     mongoose.models[model].findOne(query, function(err, entity) {
         if (err) {
@@ -179,7 +179,7 @@ function authorizeAccessToEntireCollection(req, res, next) {
 
 function authorizeAccessToUserEntity(req, res, next) {
     var senderUserId = _.get(req, ['decodedToken', 'userid']);
-    var requestedUserId = _.get(req, ['params', 'userid']);
+    var requestedUserId = _.get(req, ['body', 'userid']);
     if (senderUserId === 'admin' || senderUserId === requestedUserId) {
         return next();
     } else {
@@ -240,8 +240,9 @@ function serverMain(dbName) {
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
         .all(authorizeAccessToEntireCollection);
-    router.route("/user/:userid")
-        .all(authorizeAccessToUserEntity);
+    router.route("/user")
+        .get(authorizeAccessToUserEntity)
+        .post(authorizeAccessToUserEntity);
     router.route("/caretakers/:userid")
         .all(authorizeAccessToUserEntity);
 
@@ -253,12 +254,12 @@ function serverMain(dbName) {
         .put(createNewTakenMedicine);
 
     router.route('/:collection')
+        .post(updateExistingEntity)
         .get(getAllEntitiesInCollection)
         .put(createNewEntity);
 
     router.route('/:collection/:entityId')
-        .get(getByEntityId)
-        .post(updateExistingEntity);
+        .get(getByEntityId);
 
     router.route('/caretakers/:userid')
         .get(getCaretakers);
