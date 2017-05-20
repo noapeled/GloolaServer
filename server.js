@@ -125,7 +125,8 @@ function authenticateAdmin(req, res) {
 }
 
 function authenticateUserNotAdmin(req, res) {
-    mongoose.models.User.findOne({ userid: req.body.userid }, function(err, user) {
+    query = req.body.userid ? { userid: req.body.userid } : { email: req.body.email };
+    mongoose.models.User.findOne(query, function(err, user) {
         if (err) {
             res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.userid});
         } else if (!user) {
@@ -137,7 +138,7 @@ function authenticateUserNotAdmin(req, res) {
         } else {
             res.json({
                 error: false,
-                message: 'Successfully authenticated.',
+                message: 'Successfully authenticated ' + (req.body.userid || req.body.email),
                 token: jwt.sign(
                     { userid: user.userid }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
             });
@@ -220,8 +221,9 @@ function createNewUserWithAutomaticId(req, res) {
     var newUser = _.assign(req.body, { userid: "user" + Math.floor(Math.random() * 2000000000) + 1 });
     new mongoose.models.User(newUser).save(function(err) {
         res.status(statusCode(err)).json({
-            "error" : err ? err : false,
-            "message" : err ? "Error creating user" : "Created user " + newUser.userid
+            error : err ? err : false,
+            message : err ? "Error creating user" : "Created user " + newUser.userid,
+            userid: newUser.userid
         });
     });
 }

@@ -9,7 +9,9 @@ require('./server').serverMain(testDbName);
 var http = require('http');
 var expect = require('chai').expect;
 
-adminToken = '';
+adminToken = null;
+userIds = { };
+userTokens = { };
 
 function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseData) {
     var postOptions = {
@@ -33,7 +35,20 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
     postReq.end();
 }
 
-function createNewUserAsAdmin(name, email, password) {
+function setTweenyAsCaretakerOfTuli() {
+    console.log(userTokens);
+}
+
+function loginAsTweeny() {
+    console.log(userIds);
+    getUserToken('tweeny@t.com', 'ttt', setTweenyAsCaretakerOfTuli);
+}
+
+function createUserTuli() {
+    createNewUserAsAdmin(['Tuli', 'Peled'], 'tuli@t.com', 'lll', loginAsTweeny);
+}
+
+function createNewUserAsAdmin(name, email, password, continueCallback) {
     // console.log('createNewUserAsAdmin started with admin token ' + adminToken);
     putOrPostToServer(
         adminToken,
@@ -44,10 +59,30 @@ function createNewUserAsAdmin(name, email, password) {
             var jsonBody = JSON.parse(chunk);
             console.log(jsonBody);
             expect(jsonBody.error).to.be.false;
+            expect(jsonBody.userid).to.be.defined;
+            userIds[name[0].toLowerCase()] = jsonBody.userid;
+            continueCallback();
         }
     )
 }
 
+function getUserToken(email, password, continueCallback) {
+    putOrPostToServer(
+        '',
+        'POST',
+        '/authenticate',
+        {email: email, password: password},
+        function (chunk) {
+            var jsonBody = JSON.parse(chunk);
+            console.log(jsonBody);
+            expect(jsonBody.error).to.be.false;
+            expect(jsonBody.message).to.be.defined;
+            expect(jsonBody.token).to.be.defined;
+            userTokens[email] = jsonBody.token;
+            continueCallback();
+        }
+    );
+}
 
 function getAdminToken() {
     putOrPostToServer(
@@ -67,9 +102,13 @@ function getAdminToken() {
     );
 }
 
+function createUserTweeny() {
+    createNewUserAsAdmin(['Tweeny', 'Peled'], 'tweeny@t.com', 'ttt', createUserTuli);
+}
+
 function continueNowThatAdminTokenIsKnown() {
     require('mongoose').connection.dropDatabase(testDbName);
-    createNewUserAsAdmin(['Tweeny', 'Peled'], 'tweeny@t.com', 'ttt');
+    createUserTweeny();
 }
 
 getAdminToken();
