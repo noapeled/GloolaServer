@@ -70,6 +70,16 @@ function updateExistingEntity(req, res) {
     });
 }
 
+function createNewTakenMedicine(req, res) {
+    new mongoose.models.TakenMedicine(req.body).save(function(err, data) {
+        res.status(statusCode(err)).json({
+            "error" : err ? err : false,
+            "message" : err ? "Error creating takenmedicine" : "Created takenmedicine",
+            "takenmedicine": data
+        });
+    });
+}
+
 function createNewEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
@@ -232,6 +242,9 @@ function serverMain() {
     // Next, access to collections.
     router.route("/user")
         .put(createNewUserWithAutomaticId);
+
+    router.route("/takenmedicine")
+        .put(createNewTakenMedicine);
 
     router.route('/:collection')
         .get(getAllEntitiesInCollection)

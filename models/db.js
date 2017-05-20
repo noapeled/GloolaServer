@@ -36,6 +36,7 @@ process.on('SIGINT', function() {
 
 
 // BRING IN YOUR SCHEMAS & MODELS
+require('./takenmedicine');
 require('./image');
 require('./medicine');
 require('./user');
