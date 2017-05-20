@@ -3,6 +3,7 @@
  */
 
 var _ = require('lodash');
+var omitDeep = require('omit-deep-lodash');
 
 var testDbName = 'temporaryTestDb';
 
@@ -78,8 +79,8 @@ function checkTuliHasMedicine() {
     getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
-        console.log(JSON.parse(data).message.medical_info.medication[0]);
-        // expect(_.isEqual(JSON.parse(data).message.medical_info.medication[0], medicalData)).to.be.true;
+        // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
+        expect(_.isEqual(JSON.parse(data).message.medical_info, '_id'), medicalData);
         allTestsDone();
     })
 }
