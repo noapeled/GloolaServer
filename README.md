@@ -64,14 +64,6 @@ Userid "admin" is always available and has unlimited access permissions, see pas
     }
 
 
-## Update Existing Image
-    POST /image
-    Content-Type:application/json
-    
-    {
-      "image_id": ...
-    }
-
 ## Add New Medicine
     PUT /medicine
     Content-Type:application/json
@@ -93,15 +85,6 @@ Userid "admin" is always available and has unlimited access permissions, see pas
       images: [],
       route_of_administration: "oral",
       dosage_form: "tablets"
-    }
-
-## Update Existing Medicine
-    POST /medicine
-    Content-Type:application/json
-    
-    {
-      medicine_id: ...,
-      ...
     }
 
 ## Create New User
