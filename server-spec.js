@@ -9,33 +9,32 @@ require('./server');
 var http = require('http');
 var expect = require('chai').expect;
 
-// An object of options to indicate where to post to
-var post_options = {
-    path: '/authenticate',
-    host: 'localhost',
-    port: '3000',
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    }
-};
+function postToServer(path, jsonBody, callbackOnResponseData) {
+    var postOptions = {
+        path: path,
+        host: 'localhost',
+        port: '3000',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    };
 
-var post_req = http.request(post_options, function(res) {
-    res.setEncoding('utf8');
-    res.on('data', function (chunk) {
-        expect(JSON.parse(chunk).error).to.be.false;
+    var postReq = http.request(postOptions, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', callbackOnResponseData);
     });
-});
 
-// Build the post string from an object
-// var post_data = querystring.stringify({
-//     'compilation_level' : 'ADVANCED_OPTIMIZATIONS',
-//     'output_format': 'json',
-//     'output_info': 'compiled_code',
-//     'warning_level' : 'QUIET',
-//     'js_code' : codestring
-// });
+    // post the data
+    postReq.write(JSON.stringify(jsonBody));
+    postReq.end();
+}
 
-// post the data
-post_req.write(JSON.stringify({ userid: 'admin', password: 'gloola123!'}));
-post_req.end();
+postToServer(
+    '/authenticate',
+    { userid: 'admin', password: 'gloola123!'},
+    function (chunk) {
+        var jsonBody = JSON.parse(chunk);
+        expect(jsonBody.error).to.be.false;
+        expect(jsonBody.message).to.be.defined;
+        expect(jsonBody.token).to.be.defined;
+    }
+);
