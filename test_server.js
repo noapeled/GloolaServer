@@ -80,7 +80,7 @@ function checkTuliHasMedicine() {
         console.log(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
-        expect(_.isEqual(JSON.parse(data).message.medical_info, '_id'), medicalData);
+        expect(_.isEqual(omitDeep(JSON.parse(data).message.medical_info, '_id'), medicalData)).to.be.true;
         allTestsDone();
     })
 }
