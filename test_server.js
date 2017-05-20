@@ -103,9 +103,19 @@ function testSetTweenyAsCaretakerOfTuli() {
     });
 }
 
+function testTuliCanSeeItsOwnDetails() {
+    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+        expect(JSON.parse(data).error).to.be.false;
+        testSetTweenyAsCaretakerOfTuli();
+    })
+}
+
+function testLoginAsTuli() {
+    testGetUserToken(tuliEmail, tuliPassword, testTuliCanSeeItsOwnDetails);
+}
+
 function testLoginAsTweeny() {
-    console.log(userIds);
-    testGetUserToken(tweenyEmail, tweenyPassword, testSetTweenyAsCaretakerOfTuli);
+    testGetUserToken(tweenyEmail, tweenyPassword, testLoginAsTuli);
 }
 
 function testCreateUserTuli() {
