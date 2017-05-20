@@ -178,8 +178,7 @@ Zion is Yehoram's caretaker:
       "password": ...,
       "email": "zion@coolness.co.il",
       "name": ["Zion", "Coolness"],
-      "patients": ["yehoram_gaon"],
-      "medical_info": {}
+      "patients": ["yehoram_gaon"]
     }
 
 ## Get Caretakers of Patient
