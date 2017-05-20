@@ -25,9 +25,8 @@ var config = {
 };
 
 var modelNameToIdentifier = {
-    User: 'username',
+    User: 'userid',
     Medicine: 'medicine_id',
-    Patient: 'patient_id',
     Image: 'image_id'
 };
 
@@ -110,34 +109,34 @@ function authenticateAdmin(req, res) {
             error: false,
             message: 'Successfully authenticated.',
             token: jwt.sign(
-                { username: "admin" }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
+                { userid: "admin" }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
         });
     }
 }
 
 function authenticateUserNotAdmin(req, res) {
-    mongoose.models.User.findOne({ username: req.body.username }, function(err, user) {
+    mongoose.models.User.findOne({ userid: req.body.userid }, function(err, user) {
         if (err) {
-            res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.username});
+            res.status(500).json({ error: err, mesage: "Error fetching user " + req.body.userid});
         } else if (!user) {
             res.status(400).json(
-                { error: true, message: 'User ' + req.body.username + ' not found.' });
+                { error: true, message: 'User ' + req.body.userid + ' not found.' });
         } else if (user.password !== req.body.password) {
             res.status(400).json(
-                { error: true, message: 'Wrong password for user ' + req.body.username });
+                { error: true, message: 'Wrong password for user ' + req.body.userid });
         } else {
             res.json({
                 error: false,
                 message: 'Successfully authenticated.',
                 token: jwt.sign(
-                    { username: user.username }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
+                    { userid: user.userid }, config.auth.serverSecret, { expiresIn: config.auth.tokenValidity })
             });
         }
     });
 }
 
 function authenticate(req, res) {
-    return req.body.username === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
+    return req.body.userid === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
 }
 
 function verifyToken(req, res, next) {
@@ -158,11 +157,11 @@ function verifyToken(req, res, next) {
 }
 
 function authorizeAccessToEntireCollection(req, res, next) {
-    return req.decodedToken.username === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
+    return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
         next() :
         res.status(403).json({
             err: true,
-            message: 'User ' + req.decodedToken.username + ' is not authorized to access all ' + req.params.collection
+            message: 'User ' + req.decodedToken.userid + ' is not authorized to access all ' + req.params.collection
         });
 }
 
@@ -189,11 +188,11 @@ function authorizeAccessToUserEntity(req, res, next) {
 }
 
 function authorizeCreationOfEntity(req, res, next) {
-    return req.decodedToken.username === 'admin' ?
+    return req.decodedToken.userid === 'admin' ?
         next() :
         res.status(403).json({
             error: true,
-            message: 'User ' + req.decodedToken.username + ' is not authorized to create new entities' });
+            message: 'User ' + req.decodedToken.userid + ' is not authorized to create new entities' });
 }
 
 function getCaretakers(req, res) {
