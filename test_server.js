@@ -37,6 +37,7 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
 
 function allTestsDone(data) {
     console.log(data);
+    console.log("All tests done.");
 }
 
 function setTweenyAsCaretakerOfTuli() {

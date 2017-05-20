@@ -43,6 +43,14 @@ Userid "admin" is always available and has unlimited access permissions, see pas
     GET /medicine/x9999
     GET /image/myimage.png
 
+## Update Existing Entity
+    POST /:collection/:entityID
+    
+    Content-Type:application/json
+    
+In the JSON body, include the properties that you wish to OVERWRITE. 
+See next descriptions of available collections and entity details.
+
 ## Create New Image
     PUT /image
     Content-Type:application/json
@@ -102,11 +110,10 @@ The server assigns to each new user a unique, automatically generated userid.
 ## Update Existing User
 Following are all the details you may update for a user, whether he/she is a patient or a caretaker.
 
-    POST /user
+    POST /user/<userid>
     Content-Type:application/json
     
     {
-        userid: <Identifies the user to be updated>,
         push_tokens: [ascii128 encoded],
         name: [forname, middlename0, middlename1, ..., surname],
         password: ascii128 encoded,

@@ -50,7 +50,7 @@ function getAllEntitiesInCollection(req, res) {
 function updateExistingEntity(req, res) {
     var model = _.startCase(req.params.collection);
     var identifier = modelNameToIdentifier[model];
-    var idOfEntityToBeUpdated = req.params.entityId
+    var idOfEntityToBeUpdated = req.params.entityId;
     var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
     mongoose.models[model].findOne(query, function(err, entity) {
         if (err) {
@@ -252,13 +252,13 @@ function serverMain(dbName) {
     router.route("/takenmedicine")
         .put(createNewTakenMedicine);
 
-    router.route('/:collection/:entityId')
+    router.route('/:collection')
         .get(getAllEntitiesInCollection)
-        .post(updateExistingEntity)
         .put(createNewEntity);
 
     router.route('/:collection/:entityId')
-        .get(getByEntityId);
+        .get(getByEntityId)
+        .post(updateExistingEntity);
 
     router.route('/caretakers/:userid')
         .get(getCaretakers);
