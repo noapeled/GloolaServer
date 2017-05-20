@@ -13,6 +13,21 @@ adminToken = null;
 userIds = { };
 userTokens = { };
 
+function getFromServer(jwtToken, path, callbackOnResponseData) {
+    var getOptions = {
+        path: path,
+        host: 'localhost',
+        port: '3000',
+        headers: {
+            'X-ACCESS-TOKEN': jwtToken
+        }
+    };
+    http.get(getOptions, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', callbackOnResponseData);
+    });
+}
+
 function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseData) {
     var postOptions = {
         path: path,
@@ -35,18 +50,30 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
     postReq.end();
 }
 
-function allTestsDone(data) {
-    console.log(data);
+function allTestsDone() {
     console.log("All tests done.");
+}
+
+function checkTweenyHasPatientTuli(data) {
+    console.log(data);
+    getFromServer(userTokens['tweeny@t.com'], '/user/' + userIds['tweeny'], function (data) {
+        console.log(data);
+        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        allTestsDone();
+    });
 }
 
 function setTweenyAsCaretakerOfTuli() {
     console.log(userTokens);
     console.log(userIds);
-    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user', {
-        userid: userIds['tweeny'],
+    putOrPostToServer(userTokens['tweeny@t.com'], 'POST', '/user/' + userIds['tweeny'], {
         patients: [userIds['tuli']]
-    }, allTestsDone)
+    }, function (chunk) {
+        console.log(chunk);
+        var jsonBody = JSON.parse(chunk);
+        expect(jsonBody.error).to.be.false;
+        checkTweenyHasPatientTuli();
+    });
 }
 
 function loginAsTweeny() {
