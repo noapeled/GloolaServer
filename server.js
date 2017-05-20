@@ -197,11 +197,11 @@ function authorizeCreationOfEntity(req, res, next) {
 }
 
 function getCaretakers(req, res) {
-    var username = _.get(req, 'decodedToken', 'username') || req.body.username;
-    mongoose.models.User.find({ patients: { $all: [username] } }, function (err, caretakers) {
+    var requestedUserId = req.params.userid;
+    mongoose.models.User.find({ patients: { $all: [requestedUserId] } }, function (err, caretakers) {
         res.json({
-            message: err ? "Error fetching caretakers of user " + username
-                : _.map(caretakers, function(caretaker) { return _.pick(caretaker, ['username', 'name', 'email']); }),
+            message: err ? "Error fetching caretakers of user " + requestedUserId
+                : _.map(caretakers, function(caretaker) { return _.pick(caretaker, ['userid', 'name', 'email']); }),
             error: err ? err : false
         })
     });
@@ -228,6 +228,8 @@ function serverMain() {
         .all(authorizeAccessToEntireCollection);
     router.route("/user/:userid")
         .all(authorizeAccessToUserEntity);
+    router.route("/caretakers/:userid")
+        .all(authorizeAccessToUserEntity);
 
     router.route("/user")
         .put(createNewUserWithAutomaticId);
@@ -240,7 +242,7 @@ function serverMain() {
     router.route('/:collection/:entityId')
         .get(getByEntityId);
 
-    router.route('/caretakers')
+    router.route('/caretakers/:userid')
         .get(getCaretakers);
 
     app.use(bodyParser.json());
