@@ -111,7 +111,13 @@ function getByEntityId(req, res) {
 
 function statusCode(err) {
     var UNIQUE_KEY_ERROR_CODE = 11000;
-    return _.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE ? 400 : 500;
+    if (_.isNull(err)) {
+        return 200;
+    } else if (_.get(err, 'name') === 'ValidationError' || _.get(err, 'code') === UNIQUE_KEY_ERROR_CODE) {
+        return 400;
+    } else {
+        return 500;
+    }
 }
 
 function authenticateAdmin(req, res) {

@@ -45,6 +45,7 @@ function getFromServer(jwtToken, path, callbackOnResponseData) {
         }
     };
     http.get(getOptions, function(res) {
+        expect(res.statusCode).to.be.lessThan(500);
         res.setEncoding('utf8');
         res.on('data', callbackOnResponseData);
     });
@@ -63,6 +64,7 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
     };
 
     var postReq = http.request(postOptions, function(res) {
+        expect(res.statusCode).to.be.lessThan(500);
         res.setEncoding('utf8');
         res.on('data', callbackOnResponseData);
     });
