@@ -75,13 +75,32 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
-function checkTuliHasMedicine() {
+function testLatestTakenMedicine() {
+    getFromServer(userTokens[tuliEmail], '/takenmedicine/latest=10', function (data) {
+        console.log(data);
+        expect(JSON.parse(data).message.length).to.equal(1);
+        expect(new Date(JSON.parse(data).message[0].when)).to.equal(new Date('2017-05-19T23:33:45Z'));
+        allTestsDone();
+    })
+}
+
+function testTuliReportsTakenMedicine() {
+    putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
+        when: '2017-05-19T23:33:45Z', medicine_id: 'x123', dosage: 1.2
+    }, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        testLatestTakenMedicine();
+    });
+}
+
+function testTuliHasMedicine() {
     getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(omitDeep(JSON.parse(data).message.medical_info, '_id'), medicalData)).to.be.true;
-        allTestsDone();
+        testTuliReportsTakenMedicine();
     })
 }
 
@@ -89,7 +108,7 @@ function testTweenyCanAddMedicineToTuli() {
     putOrPostToServer(userTokens[tweenyEmail], 'POST', '/user/' + userIds['tuli'], { medical_info: medicalData}, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
-        checkTuliHasMedicine();
+        testTuliHasMedicine();
     });
 }
 

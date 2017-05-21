@@ -199,7 +199,7 @@ The server will reply with all caretakers of the patient, in the following JSON 
     ]
 
 ## Indication of Medicine Taken
-    POST /takenmedicine
+    PUT /takenmedicine
     
     {
         "when": ISO 8601 date-time,
@@ -208,7 +208,7 @@ The server will reply with all caretakers of the patient, in the following JSON 
     }
 
 ### Example of taken medicine
-    POST /takenmedicine
+    PUT /takenmedicine
     
     {
         "when": "2017-05-14T09:30:00Z",

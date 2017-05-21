@@ -72,11 +72,11 @@ function updateExistingEntity(req, res) {
 }
 
 function createNewTakenMedicine(req, res) {
-    new mongoose.models.TakenMedicine(req.body).save(function(err, data) {
+    new mongoose.models.TakenMedicine(_.assign(req.body, { userid: req.decodedToken.userid }))
+        .save(function(err, data) {
         res.status(statusCode(err)).json({
             "error" : err ? err : false,
-            "message" : err ? "Error creating takenmedicine" : "Created takenmedicine",
-            "takenmedicine": data
+            "message" : err ? "Error creating takenmedicine" : "Created takenmedicine"
         });
     });
 }
@@ -200,7 +200,7 @@ function authorizeAccessToUserEntity(req, res, next) {
 }
 
 function authorizeCreationOfEntity(req, res, next) {
-    return req.decodedToken.userid === 'admin' ?
+    return req.decodedToken.userid === 'admin' || req.params.collection === 'takenmedicine' ?
         next() :
         res.status(403).json({
             error: true,
@@ -229,6 +229,17 @@ function createNewUserWithAutomaticId(req, res) {
     });
 }
 
+function getLatestTakenMedicine(req, res) {
+    mongoose.models.TakenMedicine.find({ userid: req.decodedToken.userid }, function (err, data) {
+        res.json({
+            "message": err ? "Error fetching data" : data,
+            error: err ? err : false
+        });
+    })
+        .sort({ when: -1 })
+        .limit(_.get(req, ['query', 'latest']) || 2000000000);
+}
+
 function serverMain(dbName) {
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
@@ -239,7 +250,8 @@ function serverMain(dbName) {
     router.use(verifyToken);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
-        .all(authorizeAccessToEntireCollection);
+        .get(authorizeAccessToEntireCollection)
+        .post(authorizeAccessToEntireCollection);
     router.route("/user/:userid")
         .get(authorizeAccessToUserEntity)
         .post(authorizeAccessToUserEntity);
@@ -252,6 +264,9 @@ function serverMain(dbName) {
 
     router.route("/takenmedicine")
         .put(createNewTakenMedicine);
+
+    router.route("/takenmedicine/:userid")
+        .get(getLatestTakenMedicine);
 
     router.route('/:collection')
         .get(getAllEntitiesInCollection)
