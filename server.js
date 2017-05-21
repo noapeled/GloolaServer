@@ -172,7 +172,7 @@ function authorizeAccessToEntireCollection(req, res, next) {
     return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
         next() :
         res.status(403).json({
-            err: true,
+            error: true,
             message: 'User ' + req.decodedToken.userid + ' is not authorized to access all ' + req.params.collection
         });
 }

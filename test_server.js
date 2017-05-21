@@ -75,12 +75,20 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function testUserCannotAccessAllUsers() {
+    getFromServer(userTokens[tweenyEmail], '/user', function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.true;
+        allTestsDone();
+    })
+}
+
 function testLastSingleTakenMedicine() {
     getFromServer(userTokens[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
         console.log(data);
         expect(JSON.parse(data).message.length).to.equal(1);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
-        allTestsDone();
+        testUserCannotAccessAllUsers();
     })
 }
 
