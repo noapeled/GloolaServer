@@ -7,6 +7,8 @@
 
 require('./db');
 
+var fs = require('fs');
+var morgan = require('morgan');
 var jwt = require('jsonwebtoken');
 var _ = require('lodash');
 var express     =   require("express");
@@ -240,7 +242,21 @@ function getLatestTakenMedicine(req, res) {
         .limit(parseInt(_.get(req, ['query', 'latest']) || "2000000000"));
 }
 
-function serverMain(dbName) {
+function setupLogging(logFilePath) {
+    // create a write stream (in append mode)
+    var accessLogStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+    // setup the logger
+    morgan.token('reqheaders', function (req, res) { return JSON.stringify(req.headers); });
+    morgan.token('reqbody', function (req, res) { return JSON.stringify(req.body); });
+    app.use(morgan(
+        '[METHOD :method] [URL :url] [REQHEADERS :reqheaders] [REQBODY :reqbody] [RESSTATUS :status] [RESCONTENTLEN :res[content-length]] [RESTIMEMS :response-time]',
+        { stream: accessLogStream })
+    );
+}
+
+function serverMain(dbName, logFilePath) {
+    setupLogging(logFilePath);
+
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 

@@ -13,7 +13,7 @@ get_server_pid() {
 
 run_node_server() {
     npm install
-    node -e 'require("./server").serverMain()' &
+    node -e 'require("./server").serverMain("demoDb", "./access.log")' &
 }
 
 # Run server if not already running.

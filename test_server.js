@@ -6,8 +6,9 @@ var _ = require('lodash');
 var omitDeep = require('omit-deep-lodash');
 
 var testDbName = 'temporaryTestDb';
+var testAccessLog = './test_access.log';
 
-require('./server').serverMain(testDbName);
+require('./server').serverMain(testDbName, testAccessLog);
 
 var http = require('http');
 var expect = require('chai').expect;
