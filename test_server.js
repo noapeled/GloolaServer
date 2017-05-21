@@ -75,11 +75,20 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function testUserCanAccessAllMedicine() {
+    getFromServer(userTokens[tweenyEmail], '/medicine', function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        expect(JSON.parse(data).message[0].medicine_id).to.equal('x123');
+        allTestsDone();
+    })
+}
+
 function testUserCannotAccessAllUsers() {
     getFromServer(userTokens[tweenyEmail], '/user', function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.true;
-        allTestsDone();
+        testUserCanAccessAllMedicine();
     })
 }
 
