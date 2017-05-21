@@ -72,7 +72,7 @@ See next descriptions of available collections and entity details.
     }
 
 
-## Add New Medicine
+## Create New Medicine
     PUT /medicine
     Content-Type:application/json
     
