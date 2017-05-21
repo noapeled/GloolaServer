@@ -75,6 +75,18 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function testAdminCanCreateNewMedicine() {
+    putOrPostToServer(adminToken, 'PUT', '/medicine', {
+        medicine_id: "x123",
+        route_of_administration: "oral",
+        dosage_form: "tablets"
+    }, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        allTestsDone();
+    });
+}
+
 function testAdminCanGetAllUsers() {
     getFromServer(adminToken, '/user', function (data) {
         console.log(data);
@@ -83,7 +95,7 @@ function testAdminCanGetAllUsers() {
             _.map(JSON.parse(data).message, 'email').sort()
             )
         ).to.be.true;
-        allTestsDone();
+        testAdminCanCreateNewMedicine();
     })
 }
 
