@@ -154,9 +154,9 @@ Yehoram is a patient who takes only one medicine: every day at 08:15pm, as well 
             medicine_id: "3334123",
             dosage_size: 2,
             frequency: [
-                {"*", "*", "*", "20", "15"}, 
-                {"3,7", "*", "*", "09", "00"}]
-          }]
+               { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "20", minute: "15" },
+               { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" }
+           ]
       }
     }
     
