@@ -237,7 +237,7 @@ function getLatestTakenMedicine(req, res) {
         });
     })
         .sort({ when: -1 })
-        .limit(_.get(req, ['query', 'latest']) || 2000000000);
+        .limit(parseInt(_.get(req, ['query', 'latest']) || "2000000000"));
 }
 
 function serverMain(dbName) {

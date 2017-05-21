@@ -75,22 +75,41 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
-function testLatestTakenMedicine() {
-    getFromServer(userTokens[tuliEmail], '/takenmedicine/latest=10', function (data) {
+function testLastSingleTakenMedicine() {
+    getFromServer(userTokens[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
         console.log(data);
         expect(JSON.parse(data).message.length).to.equal(1);
-        expect(new Date(JSON.parse(data).message[0].when)).to.equal(new Date('2017-05-19T23:33:45Z'));
+        expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
         allTestsDone();
     })
 }
 
-function testTuliReportsTakenMedicine() {
+function testAllLatestTakenMedicine() {
+    getFromServer(userTokens[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=40', function (data) {
+        console.log(data);
+        expect(JSON.parse(data).message.length).to.equal(2);
+        expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
+        testLastSingleTakenMedicine();
+    })
+}
+
+function testTuliReportsTakenMedicine2() {
+    putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
+        when: '2016-01-01T12:00:00Z', medicine_id: 'x777', dosage: 3
+    }, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        testAllLatestTakenMedicine();
+    });
+}
+
+function testTuliReportsTakenMedicine1() {
     putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2017-05-19T23:33:45Z', medicine_id: 'x123', dosage: 1.2
     }, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
-        testLatestTakenMedicine();
+        testTuliReportsTakenMedicine2();
     });
 }
 
@@ -100,7 +119,7 @@ function testTuliHasMedicine() {
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(omitDeep(JSON.parse(data).message.medical_info, '_id'), medicalData)).to.be.true;
-        testTuliReportsTakenMedicine();
+        testTuliReportsTakenMedicine1();
     })
 }
 
