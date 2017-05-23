@@ -162,6 +162,7 @@ function testAdminCanAddImageToMedicine() {
 }
 
 function testAdminCanCreateNewImage() {
+    console.log('------In testAdminCanCreateNewImage-----------');
     putOrPostToServer(adminToken, 'PUT', '/image', {
         image_id: 'image555',
         format: 'png',
