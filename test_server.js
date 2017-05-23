@@ -162,7 +162,6 @@ function testAdminCanAddImageToMedicine() {
 }
 
 function testAdminCanCreateNewImage() {
-    console.log('------In testAdminCanCreateNewImage-----------');
     putOrPostToServer(adminToken, 'PUT', '/image', {
         image_id: 'image555',
         format: 'png',
@@ -175,6 +174,7 @@ function testAdminCanCreateNewImage() {
 }
 
 function testAdminCanCreateNewMedicine() {
+    console.log('------In testAdminCanCreateNewMedicine-----------');
     putOrPostToServer(adminToken, 'PUT', '/medicine', {
         medicine_id: "x123",
         route_of_administration: "oral",
