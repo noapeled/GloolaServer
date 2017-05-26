@@ -21,14 +21,23 @@ var tweenyEmail = 'tweeny@t.com';
 var tuliEmail = 'tuli@t.com';
 
 var medicalData = {
-    medication: [{
-        medicine_id: "x123",
-        dosage_size: 2,
-        frequency: [
-            { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "20", minute: "15" },
-            { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" }
-        ]
-    }]
+    medication: [
+        {
+            medicine_id: "x777",
+            dosage_size: 1.11,
+            frequency: [
+                { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "13", minute: "30" }
+            ]
+        },
+        {
+            medicine_id: "x123",
+            dosage_size: 2,
+            frequency: [
+                { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "20", minute: "15" },
+                { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" }
+            ]
+        }
+    ]
 };
 
 adminToken = null;
@@ -147,7 +156,7 @@ function testTuliReportsTakenMedicine1() {
 function testTuliHasMedicine() {
     getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
-        expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
+        expect(JSON.parse(data).message.medical_info.medication.length).to.equal(2);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(
             omitDeep(JSON.parse(data).message.medical_info, '_id'),
