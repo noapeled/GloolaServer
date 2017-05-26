@@ -124,10 +124,11 @@ function testAllLatestTakenMedicine() {
 
 function testLastTaken() {
     getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
-        expect(_.isEqual(JSON.parse(data).message.medical_info.medication[0].last_taken), {
-            when: "2017-05-19T23:33:45.000Z",
-            dosage: 1.2
-        });
+        var sortedMedication = _.sortBy(JSON.parse(data).message.medical_info.medication, ['medicine_id']);
+        expect(sortedMedication[0].last_taken.when).to.equal("2017-05-19T23:33:45.000Z");
+        expect(sortedMedication[0].last_taken.dosage).to.equal(1.2);
+        expect(sortedMedication[1].last_taken.when).to.equal("2016-01-01T12:00:00.000Z");
+        expect(sortedMedication[1].last_taken.dosage).to.equal(3);
         testAllLatestTakenMedicine();
     })
 
