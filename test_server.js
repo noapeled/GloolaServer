@@ -22,7 +22,7 @@ var tuliEmail = 'tuli@t.com';
 
 var medicalData = {
     medication: [{
-        medicine_id: "3334123",
+        medicine_id: "x123",
         dosage_size: 2,
         frequency: [
             { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "20", minute: "15" },
