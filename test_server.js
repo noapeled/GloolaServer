@@ -113,13 +113,21 @@ function testAllLatestTakenMedicine() {
     })
 }
 
+function testLastTaken() {
+    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+        console.log('----------------------------------------', data);
+        testAllLatestTakenMedicine();
+    })
+
+}
+
 function testTuliReportsTakenMedicine2() {
     putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2016-01-01T12:00:00Z', medicine_id: 'x777', dosage: 3
     }, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
-        testAllLatestTakenMedicine();
+        testLastTaken();
     });
 }
 
@@ -141,7 +149,7 @@ function testTuliHasMedicine() {
         expect(_.isEqual(
             omitDeep(JSON.parse(data).message.medical_info, '_id'),
             _.merge(medicalData, { medication: _.forEach(medicalData.medication, function (med) {
-                return _.merge(med, { last_taken: null });
+                return _.merge(med, { last_taken: { } });
             }) })
         )).to.be.true;
         testTuliReportsTakenMedicine1();

@@ -265,10 +265,10 @@ function addLastTaken(userEntity, takenMedicineEntities) {
         medical_info: {
             medication: _.forEach(userEntity.toObject().medical_info.medication, function (med) {
                 return _.merge(med, {
-                    last_taken: _(takenMedicineEntities)
+                    last_taken: _.pick(_(takenMedicineEntities)
                         .filter({medicine_id: med.medicine_id})
                         .sortBy(['when'])
-                        .last() || null
+                        .last(), ['when', 'dosage'])
                 });
             })
         }
