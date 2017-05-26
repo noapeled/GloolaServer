@@ -115,7 +115,10 @@ function testAllLatestTakenMedicine() {
 
 function testLastTaken() {
     getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
-        console.log('----------------------------------------', data);
+        expect(_.isEqual(JSON.parse(data).message.medical_info.medication[0].last_taken), {
+            when: "2017-05-19T23:33:45.000Z",
+            dosage: 1.2
+        });
         testAllLatestTakenMedicine();
     })
 
