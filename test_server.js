@@ -22,6 +22,7 @@ var tuliEmail = 'tuli@t.com';
 
 var medicalData = {
     medication: [{
+        meow: 7,
         medicine_id: "x123",
         dosage_size: 2,
         frequency: [
@@ -138,7 +139,10 @@ function testTuliHasMedicine() {
         console.log(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(1);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
-        expect(_.isEqual(omitDeep(JSON.parse(data).message.medical_info, '_id'), medicalData)).to.be.true;
+        expect(_.isEqual(
+            omitDeep(JSON.parse(data).message.medical_info, '_id'),
+            _.assign(medicalData, { last_taken: null })
+        )).to.be.true;
         testTuliReportsTakenMedicine1();
     })
 }
