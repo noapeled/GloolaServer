@@ -22,7 +22,6 @@ var tuliEmail = 'tuli@t.com';
 
 var medicalData = {
     medication: [{
-        meow: 7,
         medicine_id: "x123",
         dosage_size: 2,
         frequency: [
@@ -141,7 +140,9 @@ function testTuliHasMedicine() {
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(
             omitDeep(JSON.parse(data).message.medical_info, '_id'),
-            _.assign(medicalData, { last_taken: null })
+            _.merge(medicalData, { medication: _.forEach(medicalData.medication, function (med) {
+                return _.merge(med, { last_taken: null });
+            }) })
         )).to.be.true;
         testTuliReportsTakenMedicine1();
     })
