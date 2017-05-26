@@ -260,6 +260,43 @@ function setupLogging(logFilePath) {
     );
 }
 
+function addLastTaken(userEntity, takenMedicineEntities) {
+    return _.merge(userEntity.toObject(), {
+        medical_info: {
+            medication: _.forEach(userEntity.toObject().medical_info.medication, function (med) {
+                return _.merge(med, {
+                    last_taken: _(takenMedicineEntities)
+                        .filter({medicine_id: med.medicine_id})
+                        .sortBy(['when'])
+                        .last() || null
+                });
+            })
+        }
+    });
+}
+
+function getUserWithLastTakenMedicine(req, res) {
+    mongoose.models.User.findOne({ userid: req.params.userid }, function(err, userEntity) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching user " + userid});
+        } else if (!userEntity) {
+            res.status(400).json({ error: true, message: "No user " + userid });
+        } else {
+            // TODO: inefficient, try to formulate a query which takes the latest of each medicine of the user.
+            mongoose.models.TakenMedicine.find({ userid: userEntity.userid }, function(err, takenMedicineEntities) {
+                if (err) {
+                    res.status(500).json({ error: err, mesage: "Error fetching taken medicine for user " + userid});
+                } else {
+                    res.json({
+                        error: false,
+                        message: addLastTaken(userEntity, takenMedicineEntities)
+                    })
+                }
+            })
+        }
+    });
+}
+
 function serverMain(dbName, logFilePath) {
     setupLogging(logFilePath);
 
@@ -283,6 +320,9 @@ function serverMain(dbName, logFilePath) {
     // Next, access to collections.
     router.route("/user")
         .put(createNewUserWithAutomaticId);
+
+    router.route("/user/:userid")
+        .get(getUserWithLastTakenMedicine);
 
     router.route("/takenmedicine")
         .put(createNewTakenMedicine);
