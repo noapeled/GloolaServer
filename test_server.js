@@ -44,7 +44,7 @@ var medicalData = {
 adminToken = null;
 userIds = { };
 jwtTokensForNonAdminUsers = { };
-googleTokensForNonAdminUsers = _.fromPairs([[tweenyEmail, 'google ' + tweenyGoogleToken]])
+googleTokensForNonAdminUsers = _.fromPairs([[tweenyEmail, 'google ' + tweenyGoogleToken]]);
 
 
 function getFromServer(token, path, callbackOnResponseData) {
@@ -90,12 +90,50 @@ function allTestsDone() {
     console.log("All tests done.");
 }
 
+function testGetMedicineNamesBySubstring() {
+    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine/names/LL', function (data) {
+        console.log(data);
+        var sortedByMedicineId = _.sortBy(JSON.parse(data).message, ['medicine_id']);
+        expect( _(sortedByMedicineId).differenceWith([
+            { medicine_names: [ 'hello' ], medicine_id: 'x123' },
+            { medicine_names: [ 'yellow' ], medicine_id: 'x7777' } ], _.isEqual).isEmpty()).to.be.true;
+        allTestsDone();
+    })
+}
+
+function testCreateAnotherMedicine2() {
+    putOrPostToServer(adminToken, 'PUT', '/medicine', {
+        medicine_id: "y9990",
+        medicine_names: ['this', 'medicine', 'has', 'a', 'few', 'names'],
+        route_of_administration: "oral",
+        dosage_form: "tablets"
+    }, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        testGetMedicineNamesBySubstring();
+    })
+}
+
+
+function testCreateAnotherMedicine1() {
+    putOrPostToServer(adminToken, 'PUT', '/medicine', {
+        medicine_id: "x7777",
+        medicine_names: ['brick', 'yellow', 'road'],
+        route_of_administration: "oral",
+        dosage_form: "tablets"
+    }, function (data) {
+        console.log(data);
+        expect(JSON.parse(data).error).to.be.false;
+        testCreateAnotherMedicine2();
+    })
+}
+
 function testUserCanAccessAllMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine', function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
         expect(JSON.parse(data).message[0].medicine_id).to.equal('x123');
-        allTestsDone();
+        testCreateAnotherMedicine1();
     })
 }
 
@@ -206,6 +244,7 @@ function testAdminCanCreateNewMedicine() {
     console.log('------In testAdminCanCreateNewMedicine-----------');
     putOrPostToServer(adminToken, 'PUT', '/medicine', {
         medicine_id: "x123",
+        medicine_names: ['hello', 'world'],
         route_of_administration: "oral",
         dosage_form: "tablets"
     }, function (data) {
