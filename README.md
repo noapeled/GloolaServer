@@ -266,5 +266,21 @@ The server will reply with all caretakers of the patient, in the following JSON 
 The server will respond with the latest <number> records of medicine taken by userid.
 If parameter latest is omitted, defaults to all records.
 
+## Get Medicine Names by Substring
+
+    GET /medicine/names/:substring
+    
+The server will respond with all matching medicine names and corresponding medicine_id's.
+The matching is done in a case-insensitive manner, e.g.
+    
+    GET /medicine/names/LL
+
+may be responded with the following message
+
+    [
+        { medicine_names: ["hello"], medicine_id: "x111" },
+        { medicine_names: ["yellow", "JeLLo"], medicine_id: "x111" }
+    ]
+    
 ## Push or Pull Notifications
 TBD. Note that push_tokens is already available for each user.
