@@ -5,15 +5,16 @@
 var _ = require('lodash');
 var cron = require('node-cron');
 
-var alertOffsetMinutes = 60;
-var factorFromMinutesToMilliseconds = 60 * 1000;
+exports.hackishIsDebug = false;
+exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
+
 var tasks = { };
 var timeouts = { };
 
 function __timeoutFactory(mongoose, userid, medicine_id) {
     var checkTimeframeStart = new Date();
     var checkTimeframeEnd = new Date(checkTimeframeStart);
-    checkTimeframeEnd.setMinutes(checkTimeframeStart.getHours() + alertOffsetMinutes);
+    checkTimeframeEnd.setMinutes(checkTimeframeStart.getHours() + exports.alertOffsetMilliseconds);
 
     function checkIfNeedToAlertCaretaker() {
         mongoose.models.TakenMedicine.find({
@@ -30,7 +31,7 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
 
     function createTimeout() {
         timeouts[userid].push(setTimeout(
-            checkIfNeedToAlertCaretaker, alertOffsetMinutes * factorFromMinutesToMilliseconds));
+            checkIfNeedToAlertCaretaker, exports.alertOffsetMilliseconds));
     }
     return createTimeout;
 }
@@ -46,13 +47,14 @@ function updateTasksForUser(mongoose, userEntity) {
     timeouts[userid] = [];
     tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
         var frequency = med.frequency.toObject()[0];
-        return cron.schedule([
+        var second = exports.hackishIsDebug ? '* ' : '';
+        return cron.schedule(second + [
             frequency.minute,
             frequency.hour,
             frequency.day_of_month,
             frequency.month_of_year,
             frequency.day_of_week].join(' '),
-            __timeoutFactory(userid, med.medicine_id),
+            __timeoutFactory(mongoose, userid, med.medicine_id),
             true)
     });
 }

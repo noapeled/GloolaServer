@@ -1,11 +1,15 @@
 /**
- * Created by inon on 5/20/17.
+ * Created by noa on 5/20/17.
  */
 
 var _ = require('lodash');
 var omitDeep = require('omit-deep-lodash');
-
 var testDbName = 'temporaryTestDb';
+
+var scheduler = require('./scheduler');
+scheduler.hackishIsDebug = true;
+scheduler.alertOffsetMilliseconds = 1000;
+
 var testAccessLog = './test_access.log';
 
 require('./server').serverMain(testDbName, testAccessLog);
@@ -27,7 +31,7 @@ var medicalData = {
             medicine_id: "x777",
             dosage_size: 1.11,
             frequency: [
-                { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "13", minute: "30" }
+                { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" }
             ]
         },
         {
