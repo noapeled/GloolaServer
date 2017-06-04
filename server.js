@@ -180,11 +180,11 @@ function verifyGoogleToken(token, req, res, next) {
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {
             if (err) {
-                return res.status(403).send({ error: true, message: err });
+                return res.status(403).json({ error: true, message: err.message });
             }
             var payload = loginData.getPayload();
             if (!payload.email_verified) {
-                return res.status(403).send({
+                return res.status(403).json({
                     error: true,
                     message: 'Google token does not indicate that email is verified'
                 });
@@ -206,14 +206,14 @@ function verifyGoogleToken(token, req, res, next) {
 function verifyToken(req, res, next) {
     var tokenHeaderValue = req.body.token || req.query.token || req.headers['x-access-token'];
     if (!tokenHeaderValue) {
-        return res.status(403).send({ error: true, message: 'No token provided' });
+        return res.status(403).json({ error: true, message: 'No token provided' });
     }
     if (tokenHeaderValue.toLowerCase().startsWith('jwt ')) {
         verifyJwtToken(tokenHeaderValue.substring('jwt '.length), req, res, next);
     } else if (tokenHeaderValue.toLowerCase().startsWith('google ')) {
         verifyGoogleToken(tokenHeaderValue.substring('google '.length), req, res, next);
     } else {
-        return res.status(403).send({
+        return res.status(403).json({
             error: true,
             message: 'Token must start with "JWT " or "Google " (case-insensitive)'
         });
@@ -341,6 +341,13 @@ function getUserWithLastTakenMedicine(req, res) {
     });
 }
 
+function whoAmI(req, res) {
+    res.json({
+        error: false,
+        message: { userid: req.decodedToken.userid }
+    });
+}
+
 function serverMain(dbName, logFilePath) {
     setupLogging(logFilePath);
 
@@ -353,6 +360,9 @@ function serverMain(dbName, logFilePath) {
 
     // All requests must first have their token verified, no matter the origin of the token.
     router.use(verifyToken);
+    // Find out the userid of the user making the request.
+    router.route("/whoami")
+        .get(whoAmI);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
         .get(authorizeAccessToEntireCollection)
@@ -360,6 +370,7 @@ function serverMain(dbName, logFilePath) {
     router.route("/user/:userid")
         .get(authorizeAccessToUserEntity)
         .post(authorizeAccessToUserEntity);
+
     router.route("/caretakers/:userid")
         .all(authorizeAccessToUserEntity);
 
