@@ -6,6 +6,7 @@
 // TODO: maybe hash user passwords?
 
 require('./db');
+var scheduler = require('./scheduler');
 
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
@@ -19,7 +20,6 @@ var router      =   express.Router();
 var mongoose    = require('mongoose');
 
 var config = {
-    schedulerFeatureFlag: false,
     port: 3000,
     auth: {
         gloolaServerGoogleApiClientId: '798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com',
@@ -29,10 +29,7 @@ var config = {
     }
 };
 
-var scheduler = config.schedulerFeatureFlag ? require('scheduler') : {
-    updateTasksForUser: function () {},
-    createInitialTasks: function () {}
-};
+exports.schedulerFeatureFlag = false;
 
 var modelNameToIdentifier = {
     User: 'userid',
@@ -285,7 +282,9 @@ function createNewUserWithAutomaticId(req, res) {
                 message: "Error creating user"
             })
         } else {
-            scheduler.updateTasksForUser(mongoose, userEntity);
+            if (exports.schedulerFeatureFlag) {
+                scheduler.updateTasksForUser(mongoose, userEntity);
+            }
             res.json({
                 error: false,
                 message: "Created user " + userEntity.userid,
@@ -401,7 +400,9 @@ function updateUser(req, res) {
                         message: "Failed to update user " + userid
                     });
                 } else {
-                    scheduler.updateTasksForUser(mongoose, userEntity);
+                    if (exports.schedulerFeatureFlag) {
+                        scheduler.updateTasksForUser(mongoose, userEntity);
+                    }
                     res.json({
                         error: false,
                         message: "Updated user " + userid
@@ -418,7 +419,9 @@ function serverMain(dbName, logFilePath) {
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 
-    scheduler.createInitialTasks(mongoose);
+    if (exports.schedulerFeatureFlag) {
+        scheduler.createInitialTasks(mongoose);
+    }
 
     // For obtaining a token from the server, rather than from Google.
     router.route("/authenticate")

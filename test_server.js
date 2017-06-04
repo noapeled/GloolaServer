@@ -12,7 +12,9 @@ scheduler.alertOffsetMilliseconds = 1000;
 
 var testAccessLog = './test_access.log';
 
-require('./server').serverMain(testDbName, testAccessLog);
+var server = require('./server');
+server.schedulerFeatureFlag = true;
+server.serverMain(testDbName, testAccessLog);
 
 var http = require('http');
 var expect = require('chai').expect;
