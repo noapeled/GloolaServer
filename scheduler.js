@@ -2,32 +2,18 @@
  * Created by noa on 5/23/17.
  */
 
-require('./db');
-
-var mongoose = require('mongoose');
 var cron = require('node-cron');
 
 var alertOffsetMinutes = 60;
 var factorFromMinutesToMilliseconds = 60 * 1000;
 var tasks = { };
+var timeouts = { };
 
-
-function createInitialTasks() {
-    mongoose.models.User.find({ }, 'userid', function(err, docs) { console.log(docs); });
-}
-
-function addTaskForUser() {
-
-}
-
-function removeTaskForUser() {
-
-}
-
-function timeoutFactory(userid, medicine_id) {
+function __timeoutFactory(mongoose, userid, medicine_id) {
     var checkTimeframeStart = new Date();
     var checkTimeframeEnd = new Date(checkTimeframeStart);
     checkTimeframeEnd.setMinutes(checkTimeframeStart.getHours() + alertOffsetMinutes);
+
     function checkIfNeedToAlertCaretaker() {
         mongoose.models.TakenMedicine.find({
                 userid: userid,
@@ -40,32 +26,44 @@ function timeoutFactory(userid, medicine_id) {
                 }
             });
     }
+
     function createTimeout() {
-        // TODO: keep this object somewhere so that the timeout can be cancelled if the medicine is removed from the user's medical_info.
-        var timeout = setTimeout(checkIfNeedToAlertCaretaker,
-            alertOffsetMinutes * factorFromMinutesToMilliseconds);
+        timeouts[userid].push(setTimeout(
+            checkIfNeedToAlertCaretaker, alertOffsetMinutes * factorFromMinutesToMilliseconds));
     }
     return createTimeout;
 }
 
-function updateTasksForUser(userId) {
-    _.map(tasks[userId], function (task) {
+function updateTasksForUser(mongoose, userEntity) {
+    var userid = userEntity.userid;
+    _.map(tasks[userid], function (task) {
         task.destroy();
     });
-    mongoose.models.User.findOne({ userId: userId }, function(err, user) {
+    _.map(timeouts[userid], function (timeoutObject) {
+        clearTimeout(timeoutObject);
+    });
+    timeouts[userid] = [];
+    tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
+        return cron.schedule([
+            med.frequency.minute,
+            med.frequency.hour,
+            med.frequency.day_of_month,
+            med.frequency.month_of_year,
+            med.frequency.day_of_week].join(' '),
+            __timeoutFactory(userid, med.medicine_id),
+            true)
+    });
+}
+
+function createInitialTasks(mongoose) {
+    mongoose.models.User.find({ }, function(err, userEntities) {
         if (err) {
-            // TODO: retry?
+            throw 'ERROR: failed to obtain users for scheduling alerts';
         } else {
-            tasks[userId] = _.map(user.medical_info.medication, function (med) {
-                cron.schedule([
-                    med.frequency.minute,
-                    med.frequency.hour,
-                    med.frequency.day_of_month,
-                    med.frequency.month_of_year,
-                    med.frequency.day_of_week].join(' '), timeoutFactory(userId, med.medicine_id), true)
-            });
+            _.map(userEntities, _.partial(updateTasksForUser, mongoose));
         }
     });
 }
 
-createInitialTasks();
+exports.updateTaskForUser = updateTasksForUser;
+exports.createInitialTasks = createInitialTasks;
