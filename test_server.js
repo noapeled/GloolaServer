@@ -50,7 +50,7 @@ function getFromServer(jwtToken, path, callbackOnResponseData) {
         host: 'localhost',
         port: '3000',
         headers: {
-            'X-ACCESS-TOKEN': jwtToken
+            'X-ACCESS-TOKEN': 'JWT ' + jwtToken
         }
     };
     http.get(getOptions, function(res) {
@@ -68,7 +68,7 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            'X-ACCESS-TOKEN': jwtToken
+            'X-ACCESS-TOKEN': 'JWT ' + jwtToken
         }
     };
 
