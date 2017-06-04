@@ -27,8 +27,12 @@ client.verifyIdToken(
             console.log(e);
         } else {
             var payload = login.getPayload();
+            if (!payload.email_verified) {
+                // Error
+            }
             console.log(payload);
-            var userid = payload['sub'];
+            var email = payload['email'];
+            console.log(email);
         }
         // If request specified a G Suite domain:
         //var domain = payload['hd'];

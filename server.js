@@ -7,6 +7,7 @@
 
 require('./db');
 
+var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
 var morgan = require('morgan');
 var jwt = require('jsonwebtoken');
@@ -20,6 +21,7 @@ var mongoose    = require('mongoose');
 var config = {
     port: 3000,
     auth: {
+        gloolaServerGoogleApiClientId: '798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com',
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "30days"
@@ -159,19 +161,59 @@ function authenticate(req, res) {
     return req.body.userid === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
 }
 
-function verifyToken(req, res, next) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    if (!token) {
-        return res.status(403).send({error: true, message: 'No token provided'});
-    } else {
-        jwt.verify(token, config.auth.serverSecret, function(err, decoded) {
+function verifyJwtToken(token, req, res, next) {
+    jwt.verify(token, config.auth.serverSecret, function(err, decoded) {
+        if (err) {
+            return res.status(403).json({ error: err, message: 'JWT token authentication failed.' });
+        } else {
+            req.decodedToken = decoded;
+            next();
+        }
+    });
+}
+
+function verifyGoogleToken(token, req, res, next) {
+    (new GoogleAuth).OAuth2(config.auth.gloolaServerGoogleApiClientId, '', '').verifyIdToken(
+        token,
+        config.auth.gloolaServerGoogleApiClientId,
+        function(err, loginData) {
             if (err) {
-                return res.status(403).json({ error: err, message: 'Token authentication failed' });
-            } else {
-                // if everything is good, save to request for use in other routes
-                req.decodedToken = decoded;
-                next();
+                return res.status(403).send({ error: true, message: err });
             }
+            var payload = loginData.getPayload();
+            if (!payload.email_verified) {
+                return res.status(403).send({
+                    error: true,
+                    message: 'Google token does not indicate that email is verified'
+                });
+            }
+            var email = payload['email'];
+            mongoose.models.User.findOne({ email: email }, function(err, userEntity) {
+                if (err) {
+                    res.status(500).json({ error: err, mesage: "Error fetching user for email " + email });
+                } else if (!userEntity) {
+                    res.status(400).json({ error: true, message: 'No user found with email ' + email });
+                } else {
+                    req.decodedToken = _.assign(payload, { userid: userEntity.userid });
+                    next();
+                }
+            })
+        });
+}
+
+function verifyToken(req, res, next) {
+    var tokenHeaderValue = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (!tokenHeaderValue) {
+        return res.status(403).send({ error: true, message: 'No token provided' });
+    }
+    if (tokenHeaderValue.toLowerCase().startsWith('jwt ')) {
+        verifyJwtToken(tokenHeaderValue.substring('jwt '.length), req, res, next);
+    } else if (tokenHeaderValue.toLowerCase().startsWith('google ')) {
+        verifyGoogleToken(tokenHeaderValue.substring('google '.length), req, res, next);
+    } else {
+        return res.status(403).send({
+            error: true,
+            message: 'Token must start with "JWT " or "Google " (case-insensitive)'
         });
     }
 }
@@ -303,9 +345,11 @@ function serverMain(dbName, logFilePath) {
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 
-    // First, authentication and authorization.
+    // For obtaining a token from the server, rather than from Google.
     router.route("/authenticate")
         .post(authenticate);
+
+    // All requests must first have their token verified, no matter the origin of the token.
     router.use(verifyToken);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
