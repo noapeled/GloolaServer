@@ -270,7 +270,7 @@ If parameter latest is omitted, defaults to all records.
 
     GET /medicine/names/:substring
     
-The server will respond with all matching medicine names and corresponding medicine_id's.
+The server will respond with all medicine names which match :substring, along with corresponding medicine_id's.
 The matching is done in a case-insensitive manner, e.g.
     
     GET /medicine/names/LL
@@ -279,7 +279,7 @@ may be responded with the following message
 
     [
         { medicine_names: ["hello"], medicine_id: "x111" },
-        { medicine_names: ["yellow", "JeLLo"], medicine_id: "x111" }
+        { medicine_names: ["yellow", "JeLLo"], medicine_id: "z66t42" }
     ]
     
 ## Push or Pull Notifications
