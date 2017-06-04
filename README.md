@@ -13,18 +13,21 @@ Before a user makes requests to the server, the user must log in and obtain a to
 This can be done either indirectly through Google login, or directly through the server.
 
 ### Logging in through Google
-After the client application logs in through Google, all subsequent requests to the Gloola server
-must carry the Google token. The Google token value must be preceded by the string "Google ",
-and can appear in the request body, as
+A client application logging in through Google must log in against the CLIENT_ID of Gloola Project, which is:
+
+    798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com
+
+After logging in, all subsequent requests to the Gloola server must carry the Google token, 
+preceded by the string "Google ", either in the request body as
 
     {
         ...
-        token: Google <the_token_obtained_from_google_login>
+        token: Google <the_token_id_obtained_through_google_login>
     }
     
 or in HTTP header
 
-    X-ACCESS-TOKEN: Google <the_token_obtained_from_google_login>
+    X-ACCESS-TOKEN: Google <the_token_id_obtained_through_google_login>
 
 The server then extracts the Gmail address from the Google token, and uses it to identify the user
 who issues the request.
