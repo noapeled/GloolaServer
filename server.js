@@ -173,7 +173,9 @@ function verifyJwtToken(token, req, res, next) {
 }
 
 function verifyGoogleToken(token, req, res, next) {
-    (new GoogleAuth).OAuth2(config.auth.gloolaServerGoogleApiClientId, '', '').verifyIdToken(
+    var gauth = new GoogleAuth;
+    var gauthClient = new gauth.OAuth2(config.auth.gloolaServerGoogleApiClientId, '', '');
+    gauthClient.verifyIdToken(
         token,
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {

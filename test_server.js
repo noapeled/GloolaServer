@@ -13,11 +13,12 @@ require('./server').serverMain(testDbName, testAccessLog);
 var http = require('http');
 var expect = require('chai').expect;
 
+var tweenyGoogleToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ3MWJjZmJmMDY2ZmFlNWNkNTVkNmYyZmVjZWEyMDlhZjQ3YTQ0MDcifQ.eyJhenAiOiI3OTgzNTg0ODQ2OTItZ3I4NTk1amx2cXRzbHF0ZTFnamczYmY4ZmIxY2xnZzMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3OTgzNTg0ODQ2OTItZ3I4NTk1amx2cXRzbHF0ZTFnamczYmY4ZmIxY2xnZzMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDcxNDc3Njk3MDYzODk1ODA4NjEiLCJlbWFpbCI6InR3ZWVueWhhc2xlZnR0aGVidWlsZGluZ0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IkVUVlFTUlJNeGFhdzF5NWFxYkljX0EiLCJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiaWF0IjoxNDk2NTcwMjIyLCJleHAiOjE0OTY1NzM4MjIsIm5hbWUiOiJUd2VlbnkgUGVsZWQiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDYuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1QOXloYXFFeVJlUS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFBQS9BQXlZQkY3bVZ1YThNNEJ4WklNTU9WR1IxQlVkYTFJQWZ3L3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJUd2VlbnkiLCJmYW1pbHlfbmFtZSI6IlBlbGVkIiwibG9jYWxlIjoiZW4ifQ.APBgGjfBYjPjR9x6jfWRHmM-v5mD5V4YZvExDfTcD_O0uz4TTz0B8kfT4g8ACpcRUusHubclFXNQ4KG-D-UQhvwtoX1yS8LESe2v6ZSmfn_h9xVaqJ9ZhZ9gHiR5bESM7edXmL5BgztvVevIgw0BlFxeuZ5LnkrO-8gEpolBbdrJ9M-AhJMOJoL1gCTGI1lR4CLFp5U8fRSWMfzEpF9tgrFYE3VlQauCJRo7F60yjUwJdWQCsOI8j2bCJMDK5UztnTsjRShyq-RlEgyZzW8E8PaZ8pZZ_Z0pYC1jakHhdxxAZbi9decyryCg9dtEG9rFhbz9yeE4OjbMTFd-LMWZyg';
 var tweenyName = ['Tweeny', 'Peled'];
 var tuliName = ['Tuli', 'Peled'];
 var tweenyPassword = 'ttt';
 var tuliPassword = 'lll';
-var tweenyEmail = 'tweeny@t.com';
+var tweenyEmail = 'tweenyhasleftthebuilding@gmail.com';
 var tuliEmail = 'tuli@t.com';
 
 var medicalData = {
@@ -42,15 +43,17 @@ var medicalData = {
 
 adminToken = null;
 userIds = { };
-userTokens = { };
+jwtTokensForNonAdminUsers = { };
+googleTokensForNonAdminUsers = _.fromPairs([[tweenyEmail, 'google ' + tweenyGoogleToken]])
 
-function getFromServer(jwtToken, path, callbackOnResponseData) {
+
+function getFromServer(token, path, callbackOnResponseData) {
     var getOptions = {
         path: path,
         host: 'localhost',
         port: '3000',
         headers: {
-            'X-ACCESS-TOKEN': 'JWT ' + jwtToken
+            'X-ACCESS-TOKEN': token
         }
     };
     http.get(getOptions, function(res) {
@@ -60,7 +63,7 @@ function getFromServer(jwtToken, path, callbackOnResponseData) {
     });
 }
 
-function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseData) {
+function putOrPostToServer(token, method, path, postBody, callbackOnResponseData) {
     var postOptions = {
         path: path,
         host: 'localhost',
@@ -68,7 +71,7 @@ function putOrPostToServer(jwtToken, method, path, postBody, callbackOnResponseD
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            'X-ACCESS-TOKEN': 'JWT ' + jwtToken
+            'X-ACCESS-TOKEN': token
         }
     };
 
@@ -88,7 +91,7 @@ function allTestsDone() {
 }
 
 function testUserCanAccessAllMedicine() {
-    getFromServer(userTokens[tweenyEmail], '/medicine', function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine', function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
         expect(JSON.parse(data).message[0].medicine_id).to.equal('x123');
@@ -97,7 +100,7 @@ function testUserCanAccessAllMedicine() {
 }
 
 function testUserCannotAccessAllUsers() {
-    getFromServer(userTokens[tweenyEmail], '/user', function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user', function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.true;
         testUserCanAccessAllMedicine();
@@ -105,7 +108,7 @@ function testUserCannotAccessAllUsers() {
 }
 
 function testLastSingleTakenMedicine() {
-    getFromServer(userTokens[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
         console.log(data);
         expect(JSON.parse(data).message.length).to.equal(1);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
@@ -114,7 +117,7 @@ function testLastSingleTakenMedicine() {
 }
 
 function testAllLatestTakenMedicine() {
-    getFromServer(userTokens[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=40', function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=40', function (data) {
         console.log(data);
         expect(JSON.parse(data).message.length).to.equal(2);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
@@ -123,7 +126,7 @@ function testAllLatestTakenMedicine() {
 }
 
 function testLastTaken() {
-    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         var sortedMedication = _.sortBy(JSON.parse(data).message.medical_info.medication, ['medicine_id']);
         expect(sortedMedication[0].last_taken.when).to.equal("2017-05-19T23:33:45.000Z");
         expect(sortedMedication[0].last_taken.dosage).to.equal(1.2);
@@ -135,7 +138,7 @@ function testLastTaken() {
 }
 
 function testTuliReportsTakenMedicine2() {
-    putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2016-01-01T12:00:00Z', medicine_id: 'x777', dosage: 3
     }, function (data) {
         console.log(data);
@@ -145,7 +148,7 @@ function testTuliReportsTakenMedicine2() {
 }
 
 function testTuliReportsTakenMedicine1() {
-    putOrPostToServer(userTokens[tuliEmail], 'PUT', '/takenmedicine', {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2017-05-19T23:33:45Z', medicine_id: 'x123', dosage: 1.2
     }, function (data) {
         console.log(data);
@@ -155,7 +158,7 @@ function testTuliReportsTakenMedicine1() {
 }
 
 function testTuliHasMedicine() {
-    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(2);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
@@ -170,7 +173,7 @@ function testTuliHasMedicine() {
 }
 
 function testTweenyCanAddMedicineToTuli() {
-    putOrPostToServer(userTokens[tweenyEmail], 'POST', '/user/' + userIds['tuli'], { medical_info: medicalData}, function (data) {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tweenyEmail], 'POST', '/user/' + userIds['tuli'], { medical_info: medicalData}, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
         testTuliHasMedicine();
@@ -225,7 +228,7 @@ function testAdminCanGetAllUsers() {
 }
 
 function testTuliHasCaretakerTweeny() {
-    getFromServer(userTokens[tweenyEmail], '/caretakers/' + userIds['tuli'], function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/caretakers/' + userIds['tuli'], function (data) {
        console.log(data);
        var caretakers = JSON.parse(data).message;
        expect(caretakers.length).to.equal(1);
@@ -235,16 +238,15 @@ function testTuliHasCaretakerTweeny() {
 }
 
 function testTweenyCanSeeDetailsOfTuli() {
-    getFromServer(userTokens[tweenyEmail], '/user/' + userIds['tuli'], function (data) {
+    getFromServer(googleTokensForNonAdminUsers[tweenyEmail], '/user/' + userIds['tuli'], function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
         testTuliHasCaretakerTweeny();
     });
 }
 
-function testTweenyHasPatientTuli(data) {
-    console.log(data);
-    getFromServer(userTokens[tweenyEmail], '/user/' + userIds['tweeny'], function (data) {
+function testTweenyHasPatientTuli() {
+    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user/' + userIds['tweeny'], function (data) {
         console.log(data);
         expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
         testTweenyCanSeeDetailsOfTuli();
@@ -252,9 +254,9 @@ function testTweenyHasPatientTuli(data) {
 }
 
 function testSetTweenyAsCaretakerOfTuli() {
-    console.log(userTokens);
+    console.log(jwtTokensForNonAdminUsers);
     console.log(userIds);
-    putOrPostToServer(userTokens[tweenyEmail], 'POST', '/user/' + userIds['tweeny'], {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tweenyEmail], 'POST', '/user/' + userIds['tweeny'], {
         patients: [userIds['tuli']]
     }, function (chunk) {
         console.log(chunk);
@@ -265,7 +267,7 @@ function testSetTweenyAsCaretakerOfTuli() {
 }
 
 function testTuliCanSeeItsOwnDetails() {
-    getFromServer(userTokens[tuliEmail], '/user/' + userIds['tuli'], function (data) {
+    getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/user/' + userIds['tuli'], function (data) {
         expect(JSON.parse(data).error).to.be.false;
         testSetTweenyAsCaretakerOfTuli();
     })
@@ -313,13 +315,13 @@ function testGetUserToken(email, password, continueCallback) {
             expect(jsonBody.error).to.be.false;
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;
-            userTokens[email] = jsonBody.token;
+            jwtTokensForNonAdminUsers[email] = 'JWT ' + jsonBody.token;
             continueCallback();
         }
     );
 }
 
-function testGetAdminToken() {
+function testGetAdminJwtToken() {
     putOrPostToServer(
         '',
         'POST',
@@ -331,7 +333,7 @@ function testGetAdminToken() {
             expect(jsonBody.error).to.be.false;
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;
-            adminToken = jsonBody.token;
+            adminToken = 'JWT ' + jsonBody.token;
             continueNowThatAdminTokenIsKnown();
         }
     );
@@ -346,4 +348,4 @@ function continueNowThatAdminTokenIsKnown() {
     testCreateUserTweeny();
 }
 
-testGetAdminToken();
+testGetAdminJwtToken();
