@@ -2,8 +2,29 @@
 
 The server uses RESTful API to administrate several collections of entities, as following.
 
-## Authentication with JWT
-At the beginning of a session, the client must first obtain a JWT token:
+## Login
+Before a user makes requests to the server, the user must log in and obtain an identifying token.
+This can be done either indirectly through Google login, or directly through the server.
+
+### Logging in through Google
+After the client application logs in through Google, all subsequent requests to the Gloola server
+must carry the Google token. The Google token value must be preceded by the string "Google ",
+and can appear in the request body, as
+
+    {
+        ...
+        token: Google <the_token_obtained_from_google_login>
+    }
+    
+or in HTTP header
+
+    X-ACCESS-TOKEN: Google <the_token_obtained_from_google_login>
+
+The server then extracts the Gmail address from the Google token, and uses it to identify the user
+who issues the request.
+
+### Logging in directly through the Gloola Server
+At the beginning of a session, the client first obtains a JWT token:
 
     POST /authenticate
     
@@ -12,19 +33,19 @@ At the beginning of a session, the client must first obtain a JWT token:
         "password": ...
     }
 
-If login details are correct, then the server will reply with a JWT token. The client then must incldue the token
-in all subsequent API requests, either in the request body as
+If login details are correct, then the server will reply with a JWT token. The client then includes the token
+in all subsequent API requests, preceded by the string "JWT ". The token can appear in the request body as
 
     {
         ...
-        token: ...
+        token: JWT <the_jwt_token_from_the_authentication>
     }
 
 or in HTTP header
 
-    X-ACCESS-TOKEN: ...
+    X-ACCESS-TOKEN: JWT <the_jwt_token_from_the_authentication>
 
-Tokens are valid for 1 month.
+JWT tokens issued by Gloola server are valid for 1 month.
 Userid "admin" is always available and has unlimited access permissions, see password in separate mail.
 
 ## Get all entities in a collection
