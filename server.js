@@ -7,7 +7,6 @@
 
 require('./db');
 
-var scheduler = require('./scheduler');
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
 var morgan = require('morgan');
@@ -20,6 +19,7 @@ var router      =   express.Router();
 var mongoose    = require('mongoose');
 
 var config = {
+    schedulerFeatureFlag: false,
     port: 3000,
     auth: {
         gloolaServerGoogleApiClientId: '798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com',
@@ -27,6 +27,11 @@ var config = {
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "30days"
     }
+};
+
+var scheduler = config.schedulerFeatureFlag ? require('scheduler') : {
+    updateTasksForUser: function () {},
+    createInitialTasks: function () {}
 };
 
 var modelNameToIdentifier = {
