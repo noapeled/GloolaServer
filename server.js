@@ -7,6 +7,7 @@
 
 require('./db');
 
+var scheduler = require('./scheduler');
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
 var morgan = require('morgan');
@@ -272,12 +273,20 @@ function getCaretakers(req, res) {
 
 function createNewUserWithAutomaticId(req, res) {
     var newUser = _.assign(req.body, { userid: "user" + Math.floor(Math.random() * 2000000000) + 1 });
-    new mongoose.models.User(newUser).save(function(err) {
-        res.status(statusCode(err)).json({
-            error : err ? err : false,
-            message : err ? "Error creating user" : "Created user " + newUser.userid,
-            userid: newUser.userid
-        });
+    new mongoose.models.User(newUser).save(function (err, userEntity) {
+        if (err) {
+            res.status(statusCode(err)).json({
+                error: err,
+                message: "Error creating user"
+            })
+        } else {
+            scheduler.updateTasksForUser(mongoose, userEntity);
+            res.json({
+                error: false,
+                message: "Created user " + userEntity.userid,
+                userid: userEntity.userid
+            });
+        }
     });
 }
 
@@ -369,11 +378,42 @@ function getMedicineNamesByRegex(req, res) {
     });
 }
 
+function updateUser(req, res) {
+    var userid = req.params.userid;
+    mongoose.models.User.findOne({ userid: userid }, function(err, entity) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching userid " + userid });
+        } else if (!entity) {
+            res.status(400).json({ error: true, message: "No user with userid " + userid });
+        } else {
+            _.forOwn(_.omit(req.body, 'userid'), function (value, key) {
+                entity[key] = value;
+            });
+            entity.save(function (err, userEntity) {
+                if (err) {
+                    res.status(statusCode(err)).json({
+                        error: err,
+                        message: "Failed to update user " + userid
+                    });
+                } else {
+                    scheduler.updateTasksForUser(mongoose, userEntity);
+                    res.json({
+                        error: false,
+                        message: "Updated user " + userid
+                    });
+                }
+            });
+        }
+    });
+}
+
 function serverMain(dbName, logFilePath) {
     setupLogging(logFilePath);
 
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
+
+    scheduler.createInitialTasks(mongoose);
 
     // For obtaining a token from the server, rather than from Google.
     router.route("/authenticate")
@@ -403,6 +443,7 @@ function serverMain(dbName, logFilePath) {
         .put(createNewUserWithAutomaticId);
 
     router.route("/user/:userid")
+        .post(updateUser)
         .get(getUserWithLastTakenMedicine);
 
     router.route("/takenmedicine")

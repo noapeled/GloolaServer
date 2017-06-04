@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+var _ = require('lodash');
 var cron = require('node-cron');
 
 var alertOffsetMinutes = 60;
@@ -44,12 +45,13 @@ function updateTasksForUser(mongoose, userEntity) {
     });
     timeouts[userid] = [];
     tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
+        var frequency = med.frequency.toObject()[0];
         return cron.schedule([
-            med.frequency.minute,
-            med.frequency.hour,
-            med.frequency.day_of_month,
-            med.frequency.month_of_year,
-            med.frequency.day_of_week].join(' '),
+            frequency.minute,
+            frequency.hour,
+            frequency.day_of_month,
+            frequency.month_of_year,
+            frequency.day_of_week].join(' '),
             __timeoutFactory(userid, med.medicine_id),
             true)
     });
@@ -65,5 +67,5 @@ function createInitialTasks(mongoose) {
     });
 }
 
-exports.updateTaskForUser = updateTasksForUser;
+exports.updateTasksForUser = updateTasksForUser;
 exports.createInitialTasks = createInitialTasks;
