@@ -1,9 +1,15 @@
 # GloolaServer
 
-The server uses RESTful API to administrate several collections of entities, as following.
+The server uses RESTful API to administrate several collections of entities.
+All responses from the server are of the following format.
+
+    {
+        error: <false if response is successful, otherwise true or some Error object>
+        message: <a JSON object with the requested contents.>
+    }
 
 ## Login
-Before a user makes requests to the server, the user must log in and obtain an identifying token.
+Before a user makes requests to the server, the user must log in and obtain a token, which identifies the user in all subsequent requests.
 This can be done either indirectly through Google login, or directly through the server.
 
 ### Logging in through Google
@@ -22,6 +28,9 @@ or in HTTP header
 
 The server then extracts the Gmail address from the Google token, and uses it to identify the user
 who issues the request.
+
+Google tokens expire after a time set by Google, which can be much shorter than the expiry time for tokens 
+issued directly by the Gloola server.
 
 ### Logging in directly through the Gloola Server
 At the beginning of a session, the client first obtains a JWT token:
@@ -47,6 +56,17 @@ or in HTTP header
 
 JWT tokens issued by Gloola server are valid for 1 month.
 Userid "admin" is always available and has unlimited access permissions, see password in separate mail.
+
+### Getting userid for an authenticated user
+
+    GET /whoami
+    X-ACCESS-TOKEN: <JWT ...> or <Google ...> token
+    
+The server responds with message:
+
+    {
+        userid: <the_userid_of_the_user_whom_the_token_authenticates>
+    }
 
 ## Get all entities in a collection
     GET /:collection    
