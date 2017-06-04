@@ -348,6 +348,24 @@ function whoAmI(req, res) {
     });
 }
 
+function getMedicineNamesByRegex(req, res) {
+    var regex = new RegExp(req.params.substringToMatch);
+    mongoose.models.Medicine.find({ names: { $elemMatch: [ regex ]} }, function (err, medicineEntities ) {
+       if (err) {
+           res.status(400).json({ error: true, message: err } );
+       } else {
+           res.json(_.map(medicineEntities, function (med) {
+               return {
+                   names: _.filter(med.names, function (name) {
+                       return regex.test(name);
+                   }),
+                   medicine_id: med.medicine_id
+               };
+           }));
+       }
+    });
+}
+
 function serverMain(dbName, logFilePath) {
     setupLogging(logFilePath);
 
@@ -370,6 +388,9 @@ function serverMain(dbName, logFilePath) {
     router.route("/user/:userid")
         .get(authorizeAccessToUserEntity)
         .post(authorizeAccessToUserEntity);
+
+    router.route("/medicine/names/:substringToMatch")
+        .get(getMedicineNamesByRegex);
 
     router.route("/caretakers/:userid")
         .all(authorizeAccessToUserEntity);
