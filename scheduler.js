@@ -24,7 +24,7 @@ function firebaseNotify(pushTokens, payload) {
         };
         fcm.send(message, function (err, response) {
             if (err) {
-                throw 'ERROR: failed to send notification: ' + JSON.stringify(message);
+                throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is '  + JSON.stringify(err);
             } else {
                 console.log("Successfully sent notification", message, "got response", response);
             }
@@ -123,3 +123,8 @@ function createInitialTasks(mongoose) {
 
 exports.updateTasksForUser = updateTasksForUser;
 exports.createInitialTasks = createInitialTasks;
+
+// firebaseNotify(
+//     ['fIKWkUBNKM0:APA91bFmK8wrswXHUSX7OW5p9nxUc8MuJFhYPxxhrvspaqLJSIZCpEBrxLR-SokGxzOUag6puenfShLVnYQrOrUx2LhVQ-_kHJl8JhO0UEgJep82krLvUwpu1b04vzPLlPHxF82eFtJ6'],
+//     { demo: "payload" }
+// );
