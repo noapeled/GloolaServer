@@ -2,6 +2,8 @@
  * Created by noa on 5/23/17.
  */
 
+// TODO: test nagging patient and alerting caretakers
+
 var FCM = require('fcm-node');
 var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
 var fcm = new FCM(SERVER_KEY);
@@ -43,7 +45,6 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
         }, function (err, takenMedicineEntities) {
             if (_.isEmpty(takenMedicineEntities)) {
                 // TODO: check if alert already issued.
-                console.log('DEBUG EEEEEEEEEEK!', userid, medicine_id);
                 callbackInCaseMedicineNotTaken();
             }
         });
@@ -71,18 +72,32 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
         });
     }
 
-
     function alertCaretakersIfNeeded() {
         checkIfMedicineTakenSinceTimeframeStart(function () {
-            // TODO: notify caretakers.
+            mongoose.models.User.find({ patients: { $all: [userid] } }, function (err, caretakers) {
+                if (err) {
+                    throw 'ERROR: failed to retrieve caretakers of patient ' + userid +
+                        ' for alerting about medicine ' + medicine_id + 'not taken!';
+                } else {
+                    var caretakersPushTokens = _(caretakers).flatMap('push_tokens').uniq().value();
+                    __firebaseNotify(caretakersPushTokens, {
+                        type: 'medicine_not_taken',
+                        severity: 'alert',
+                        userid: userid,
+                        medicine_id: medicine_id,
+                        timeframe: {
+                            start: checkTimeframeStart,
+                            elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                        }
+                    });
+                }
+            });
         })
     }
 
     function createTimeouts() {
-        timeouts[userid].push(setTimeout(
-            nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
-        timeouts[userid].push(setTimeout(
-            alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
+        timeouts[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
+        timeouts[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
     }
     return createTimeouts;
 }
