@@ -22,7 +22,7 @@ var mongoose    = require('mongoose');
 var config = {
     port: 3000,
     auth: {
-        gloolaServerGoogleApiClientId: '798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com',
+        gloolaServerGoogleApiClientId: '546989006297-aecc06fnfkmgvf8v22jm2gshbt909md0.apps.googleusercontent.com',
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "30days"
@@ -183,7 +183,7 @@ function verifyGoogleToken(token, req, res, next) {
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {
             if (err) {
-                console.log('Failed to authenticate Google token, error is:', JSON.stringify(err));
+                console.log('Failed to authenticate Google token, error is:', JSON.stringify(err.message));
                 return res.status(403).json({ error: true, message: err.message });
             }
             var payload = loginData.getPayload();
