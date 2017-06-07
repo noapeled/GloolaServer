@@ -2,6 +2,10 @@
  * Created by noa on 5/23/17.
  */
 
+var FCM = require('fcm-node');
+var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
+var fcm = new FCM(SERVER_KEY);
+
 var _ = require('lodash');
 var cron = require('node-cron');
 
@@ -11,29 +15,77 @@ exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 var tasks = { };
 var timeouts = { };
 
+function firebaseNotify(pushTokens, payload) {
+    _.forEach(pushTokens, function (pushToken) {
+        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+            to: pushToken,
+            collapse_key: 'do_not_collapse',
+            data: payload
+        };
+        fcm.send(message, function (err, response) {
+            if (err) {
+                throw 'ERROR: failed to send notification: ' + JSON.stringify(message);
+            } else {
+                console.log("Successfully sent notification", message, "got response", response);
+            }
+        });
+
+    })
+}
+
 function __timeoutFactory(mongoose, userid, medicine_id) {
     var checkTimeframeStart = new Date();
-    var checkTimeframeEnd = new Date(checkTimeframeStart);
-    checkTimeframeEnd.setMinutes(checkTimeframeStart.getHours() + exports.alertOffsetMilliseconds);
 
-    function checkIfNeedToAlertCaretaker() {
+    function checkIfMedicineTakenSinceTimeframeStart(callbackInCaseMedicineNotTaken) {
         mongoose.models.TakenMedicine.find({
-                userid: userid,
-                medicine_id: medicine_id,
-                when: {$gte: checkTimeframeStart, $lte: checkTimeframeEnd}
-            }, function (err, takenMedicineEntities) {
-                if (_.isEmpty(takenMedicineEntities)) {
-                    // TODO: check if alert already issued.
-                    console.log('DEBUG EEEEEEEEEEK!', userid, medicine_id);
+            userid: userid,
+            medicine_id: medicine_id,
+            when: { $gte: checkTimeframeStart }
+        }, function (err, takenMedicineEntities) {
+            if (_.isEmpty(takenMedicineEntities)) {
+                // TODO: check if alert already issued.
+                console.log('DEBUG EEEEEEEEEEK!', userid, medicine_id);
+                callbackInCaseMedicineNotTaken();
+            }
+        });
+    }
+
+    function nagPatientIfNeeded() {
+        checkIfMedicineTakenSinceTimeframeStart(function () {
+            mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
+                if (err) {
+                    throw 'ERROR: failed to retrieve patient ' + userid +
+                        ' for nagging about medicine ' + medicine_id + 'not taken!';
+                } else {
+                    firebaseNotify(userEntity.push_tokens, {
+                        type: 'medicine_not_taken',
+                        severity: 'nag',
+                        userid: userid,
+                        medicine_id: medicine_id,
+                        timeframe: {
+                            start: checkTimeframeStart,
+                            elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                        }
+                    });
                 }
             });
+        });
     }
 
-    function createTimeout() {
-        timeouts[userid].push(setTimeout(
-            checkIfNeedToAlertCaretaker, exports.alertOffsetMilliseconds));
+
+    function alertCaretakersIfNeeded() {
+        checkIfMedicineTakenSinceTimeframeStart(function () {
+            // TODO: notify caretakers.
+        })
     }
-    return createTimeout;
+
+    function createTimeouts() {
+        timeouts[userid].push(setTimeout(
+            nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
+        timeouts[userid].push(setTimeout(
+            alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
+    }
+    return createTimeouts;
 }
 
 function updateTasksForUser(mongoose, userEntity) {
