@@ -15,7 +15,7 @@ exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 var tasks = { };
 var timeouts = { };
 
-function firebaseNotify(pushTokens, payload) {
+function __firebaseNotify(pushTokens, payload) {
     _.forEach(pushTokens, function (pushToken) {
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
             to: pushToken,
@@ -29,7 +29,6 @@ function firebaseNotify(pushTokens, payload) {
                 console.log("Successfully sent notification", message, "got response", response);
             }
         });
-
     })
 }
 
@@ -57,7 +56,7 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
                     throw 'ERROR: failed to retrieve patient ' + userid +
                         ' for nagging about medicine ' + medicine_id + 'not taken!';
                 } else {
-                    firebaseNotify(userEntity.push_tokens, {
+                    __firebaseNotify(userEntity.push_tokens, {
                         type: 'medicine_not_taken',
                         severity: 'nag',
                         userid: userid,
