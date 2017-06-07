@@ -183,6 +183,7 @@ function verifyGoogleToken(token, req, res, next) {
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {
             if (err) {
+                console.log('Failed to authenticate Google token, error is:', JSON.stringify(err));
                 return res.status(403).json({ error: true, message: err.message });
             }
             var payload = loginData.getPayload();
