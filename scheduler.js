@@ -29,7 +29,7 @@ function __firebaseNotify(pushTokens, payload) {
                 console.log("Successfully sent notification", message, "got response", response);
             }
         });
-    })
+    });
 }
 
 function __timeoutFactory(mongoose, userid, medicine_id) {
