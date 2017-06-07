@@ -22,7 +22,7 @@ var mongoose    = require('mongoose');
 var config = {
     port: 3000,
     auth: {
-        gloolaServerGoogleApiClientId: '546989006297-qpb8qlgffsjovojo3f3fvdbt6qoooe38.apps.googleusercontent.com',
+        gloolaServerGoogleApiClientId: '798358484692-gr8595jlvqtslqte1gjg3bf8fb1clgg3.apps.googleusercontent.com',
         adminPassword: 'gloola123!',
         serverSecret: 'This is a secret string for signing tokens',
         tokenValidity: "30days"
