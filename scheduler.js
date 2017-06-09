@@ -34,8 +34,24 @@ function __firebaseNotify(pushTokens, payload) {
     });
 }
 
-function __timeoutFactory(mongoose, userid, medicine_id) {
+function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id) {
     var checkTimeframeStart = new Date();
+
+    mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
+        if (err) {
+            throw 'ERROR: failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id;
+        } else {
+            __firebaseNotify(userEntity.push_tokens, {
+                type: 'reminder_take_medicine',
+                userid: userid,
+                medicine_id: medicine_id,
+                timeframe: {
+                    start: checkTimeframeStart,
+                    elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                }
+            });
+        }
+    });
 
     function checkIfMedicineTakenSinceTimeframeStart(callbackInCaseMedicineNotTaken) {
         mongoose.models.TakenMedicine.find({
@@ -58,8 +74,7 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
                         ' for nagging about medicine ' + medicine_id + 'not taken!';
                 } else {
                     __firebaseNotify(userEntity.push_tokens, {
-                        type: 'medicine_not_taken',
-                        severity: 'nag',
+                        type: 'nag_medicine_not_taken',
                         userid: userid,
                         medicine_id: medicine_id,
                         timeframe: {
@@ -81,8 +96,7 @@ function __timeoutFactory(mongoose, userid, medicine_id) {
                 } else {
                     var caretakersPushTokens = _(caretakers).flatMap('push_tokens').uniq().value();
                     __firebaseNotify(caretakersPushTokens, {
-                        type: 'medicine_not_taken',
-                        severity: 'alert',
+                        type: 'alert_medicine_not_taken',
                         userid: userid,
                         medicine_id: medicine_id,
                         timeframe: {
@@ -120,7 +134,7 @@ function updateTasksForUser(mongoose, userEntity) {
             frequency.day_of_month,
             frequency.month_of_year,
             frequency.day_of_week].join(' '),
-            __timeoutFactory(mongoose, userid, med.medicine_id),
+            __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, med.medicine_id),
             true)
     });
 }

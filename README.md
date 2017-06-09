@@ -283,21 +283,21 @@ may be responded with the following message
     ]
     
 ## Push Notifications
-For every medication _m_ of patient _p_, the server checks twice whether _p_ has taken _m_:
-first at _T_+30min and then at _T_+60min, where _T_ is a moment when _p_ is scheduled to take _m_.
+Suppose that at moment _T_, patient _p_ is scheduled to take medicine _m_.
+Then at time _T_, the server sends to _p_ a reminder to take medicine _m_.
+Afterwards, the server checks twice whether _p_ has taken _m_: at _T_+30min and at _T_+60min.
 * If _p_ hasn't taken _m_ by the time of the first check, then the server sends a nag to _p_.
 * If _p_ hasn't taken _m_ by the time of the second check, then the server sends alerts to all caretakers of _p_.
 
-The server sends nags and alerts as Firebase push messages.
-Nags are sent to all push_tokens of _p_, whereas alerts are sent to all push_tokens of all caretakers of _p_.
-In both cases, the messages have the following format.
+The server sends all the above messages as Firebase push messages.
+Nags and reminders are sent to all push_tokens of _p_, whereas alerts are sent to all push_tokens of all caretakers of _p_.
+In all cases, the messages have the following format.
 
     {
         to: pushToken,
         collapse_key: 'do_not_collapse',
         data: {
-            type: 'medicine_not_taken',
-            severity: <'nag' if nag, otherwise 'alert'>,
+            type: <One of: 'reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'>,
             userid: userid,
             medicine_id: medicine_id,
             timeframe: {
