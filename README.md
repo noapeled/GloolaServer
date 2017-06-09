@@ -284,7 +284,7 @@ may be responded with the following message
     
 ## Push Notifications
 For every medication _m_ of patient _p_, the server checks twice whether _p_ has taken _m_:
-first at _T_+30min and then at _T_+60min, where _T_ is the time when _p_ should take _m_.
+first at _T_+30min and then at _T_+60min, where _T_ is the time when _p_ is scheduled to take _m_.
 * If _p_ hasn't taken _m_ by the time of the first check, then the server sends a nag to _p_.
 * If _p_ hasn't taken _m_ by the time of the second check, then the server sends alerts to all caretakers of _p_.
 
