@@ -5,7 +5,8 @@
 var mongoose = require( 'mongoose' );
 
 // BRING IN YOUR SCHEMAS & MODELS
-require('./models/takenmedicine');
+require('./models/scheduled_medicine');
+require('./models/taken_medicine');
 require('./models/image');
 require('./models/medicine');
 require('./models/user');
