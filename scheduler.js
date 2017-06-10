@@ -18,7 +18,7 @@ var timeouts = { };
 function __firebaseNotify(pushTokens, payload) {
     if (exports.hackishIsDebug) {
         _.forEach(pushTokens, function (pushToken) {
-            console.log('Push token ' + pushToken + ' with payload ' + JSON.stringify(payload));
+            console.log('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
         });
     } else {
         _.forEach(pushTokens, function (pushToken) {
