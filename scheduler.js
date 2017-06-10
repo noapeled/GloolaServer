@@ -2,8 +2,6 @@
  * Created by noa on 5/23/17.
  */
 
-// TODO: test nagging patient and alerting caretakers
-
 var FCM = require('fcm-node');
 var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
 var fcm = new FCM(SERVER_KEY);
@@ -18,20 +16,26 @@ var tasks = { };
 var timeouts = { };
 
 function __firebaseNotify(pushTokens, payload) {
-    _.forEach(pushTokens, function (pushToken) {
-        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-            to: pushToken,
-            collapse_key: 'do_not_collapse',
-            data: payload
-        };
-        fcm.send(message, function (err, response) {
-            if (err) {
-                throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is '  + JSON.stringify(err);
-            } else {
-                console.log("Successfully sent notification", message, "got response", response);
-            }
+    if (exports.hackishIsDebug) {
+        _.forEach(pushTokens, function (pushToken) {
+            console.log('Push token ' + pushToken + ' with payload ' + JSON.stringify(payload));
         });
-    });
+    } else {
+        _.forEach(pushTokens, function (pushToken) {
+            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+                to: pushToken,
+                collapse_key: 'do_not_collapse',
+                data: payload
+            };
+            fcm.send(message, function (err, response) {
+                if (err) {
+                    throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
+                } else {
+                    console.log("Successfully sent notification", message, "got response", response);
+                }
+            });
+        });
+    }
 }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id) {
@@ -109,11 +113,8 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
         })
     }
 
-    function createTimeouts() {
-        timeouts[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
-        timeouts[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
-    }
-    return createTimeouts;
+    timeouts[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
+    timeouts[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
 }
 
 function updateTasksForUser(mongoose, userEntity) {
@@ -127,14 +128,14 @@ function updateTasksForUser(mongoose, userEntity) {
     timeouts[userid] = [];
     tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
         var frequency = med.frequency.toObject()[0];
-        var second = exports.hackishIsDebug ? '* ' : '';
+        var second = exports.hackishIsDebug ? '*/5 ' : '';
         return cron.schedule(second + [
             frequency.minute,
             frequency.hour,
             frequency.day_of_month,
             frequency.month_of_year,
             frequency.day_of_week].join(' '),
-            __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, med.medicine_id),
+            _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, userid, med.medicine_id),
             true)
     });
 }

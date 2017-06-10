@@ -8,13 +8,12 @@ var testDbName = 'temporaryTestDb';
 
 var scheduler = require('./scheduler');
 scheduler.hackishIsDebug = true;
-scheduler.alertOffsetMilliseconds = 1000;
+scheduler.alertOffsetMilliseconds = 2000;
 
 var testAccessLog = './test_access.log';
 
 var server = require('./server');
 server.schedulerFeatureFlag = true;
-server.serverMain(testDbName, testAccessLog);
 
 var http = require('http');
 var expect = require('chai').expect;
@@ -93,7 +92,7 @@ function putOrPostToServer(token, method, path, postBody, callbackOnResponseData
 }
 
 function allTestsDone() {
-    console.log("All tests done.");
+    console.log("All tests done. You should see repeated push notifications now!");
 }
 
 function testGetMedicineNamesBySubstring() {
@@ -347,7 +346,7 @@ function createNewUserAsAdmin(name, email, password, continueCallback) {
         adminToken,
         'PUT',
         '/user',
-        { name: name, email: email, password: password },
+        { name: name, email: email, password: password, push_tokens: ['mockPushTokenFor' + name[0]] },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
             console.log(jsonBody);
@@ -377,6 +376,10 @@ function testGetUserToken(email, password, continueCallback) {
     );
 }
 
+function testCreateUserTweeny() {
+    createNewUserAsAdmin(tweenyName, tweenyEmail, tweenyPassword, testCreateUserTuli);
+}
+
 function testGetAdminJwtToken() {
     putOrPostToServer(
         '',
@@ -390,18 +393,22 @@ function testGetAdminJwtToken() {
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;
             adminToken = 'JWT ' + jsonBody.token;
-            continueNowThatAdminTokenIsKnown();
+            testCreateUserTweeny();
         }
     );
 }
 
-function testCreateUserTweeny() {
-    createNewUserAsAdmin(tweenyName, tweenyEmail, tweenyPassword, testCreateUserTuli);
+function runServer() {
+    server.serverMain(testDbName, testAccessLog);
+    testGetAdminJwtToken();
 }
 
-function continueNowThatAdminTokenIsKnown() {
-    require('mongoose').connection.dropDatabase(testDbName);
-    testCreateUserTweeny();
+function startTests() {
+    var connection = require('mongoose').createConnection('mongodb://localhost:27017/' + testDbName, function(err){
+        connection.db.dropDatabase(function(err){
+            runServer();
+        })
+    });
 }
 
-testGetAdminJwtToken();
+startTests();

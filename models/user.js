@@ -19,11 +19,11 @@ var UserSchema = data_types.createSchema({
             medicine_id: { type: String, required: true },
             dosage_size: data_types.dosage_size_type,
             frequency: [{ // TODO: validate precise cron-style patterns
-                day_of_week: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
-                month_of_year: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
-                day_of_month: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
-                hour: { type: String, match: /^((\*)|((\d+,)*\d+))$/ },
-                minute: { type: String, match: /^((\*)|((\d+,)*\d+))$/ }
+                day_of_week: String,
+                month_of_year: String,
+                day_of_month: String,
+                hour: String,
+                minute: String
             }]
         }]
     },
