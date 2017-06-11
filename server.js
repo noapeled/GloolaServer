@@ -45,6 +45,14 @@ var modelNameToIdentifier = {
     Image: 'image_id'
 };
 
+function addToFeed(feedEventBody) {
+    (new mongoose.models.FeedEvent(feedEventBody)).save(function(err) {
+        if (err) {
+            console.log('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
+        }
+    })
+}
+
 function getAllEntitiesInCollection(req, res) {
     if (req.params.collection === 'image') {
         return res.status(400).json({
@@ -63,29 +71,34 @@ function getAllEntitiesInCollection(req, res) {
 }
 
 function updateExistingScheduledMedicine(req, res) {
-    var model = modelNames['scheduledmedicine'];
-    var identifier = modelNameToIdentifier[model];
-    var idOfEntityToBeUpdated = req.params.entityId;
-    var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
-    mongoose.models[model].findOne(query, function(err, entity) {
+    var scheduledMedicineId = req.params.entityId;
+    mongoose.models.ScheduledMedicine.findOne({ scheduled_medicine_id: scheduledMedicineId }, function(err, scheduledMedicineEntity) {
         if (err) {
-            res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + idOfEntityToBeUpdated});
-        } else if (!entity) {
-            res.status(400).json({ error: true, message: identifier + " " + idOfEntityToBeUpdated + " not found." });
+            res.status(500).json({ error: err, mesage: "Error fetching " + scheduledMedicineId });
+        } else if (!scheduledMedicineEntity) {
+            res.status(400).json({ error: true, message: scheduledMedicineId + " not found." });
         } else {
             // TODO: designate selected fields as non-updatable in schemas.
-            var detailsToUpdate = _.omit(req.body, identifier);
+            var detailsToUpdate = _.omit(req.body, ['scheduled_medicine_id', 'userid', 'medicine_id']);
             _.forOwn(detailsToUpdate, function (value, key) {
-                entity[key] = value;
+                scheduledMedicineEntity[key] = value;
             });
-            entity.update_history.push(detailsToUpdate);
-            entity.save(function (err) {
-                if (_.isNull(err) && exports.schedulerFeatureFlag) {
-                    scheduler.updateTimersForScheduledMedicine(mongoose, entity);
+            scheduledMedicineEntity.update_history.push(detailsToUpdate);
+            scheduledMedicineEntity.save(function (err) {
+                if (_.isNull(err)) {
+                    addToFeed({
+                        userid: scheduledMedicineEntity.userid,
+                        scheduled_medicine_id: scheduledMedicineId,
+                        when: (new Date()).toISOString(),
+                        event: { type: 'update', 'contents': detailsToUpdate }
+                    });
+                    if (exports.schedulerFeatureFlag) {
+                        scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
+                    }
                 }
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,
-                    "message": (err ? "Error updating " : "Updated ") + identifier + " " + idOfEntityToBeUpdated
+                    "message": (err ? "Error updating " : "Updated ") + scheduledMedicineId
                 });
             });
         }
@@ -472,6 +485,12 @@ function createNewScheduledMedicine(req, res) {
                 message: "Error creating scheduledMedicine"
             })
         } else {
+            addToFeed({
+                userid: userid,
+                when: scheduledMedicineEntity.creation_date,
+                scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
+                event: { type: 'created', contents: scheduledMedicineEntity.toObject() }
+            });
             if (exports.schedulerFeatureFlag) {
                 scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
             }
