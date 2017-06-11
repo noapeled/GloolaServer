@@ -221,11 +221,13 @@ function testAllLatestTakenMedicine() {
 
 function testLastTaken() {
     getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/user/' + userIds['tuli'], function (data) {
-        var sortedMedication = _.sortBy(JSON.parse(data).message.medical_info.medication, ['medicine_id']);
-        expect(sortedMedication[0].last_taken.when).to.equal("2017-05-19T23:33:45.000Z");
-        expect(sortedMedication[0].last_taken.dosage).to.equal(1.2);
-        expect(sortedMedication[1].last_taken.when).to.equal("2016-01-01T12:00:00.000Z");
-        expect(sortedMedication[1].last_taken.dosage).to.equal(3);
+        var medication = JSON.parse(data).message.medical_info.medication;
+        var indexOfX777 = medication[0].scheduled_medicine_id === scheduledMedicineIdForX777 ? 0 : 1;
+        var indexOfX123 = 1 - indexOfX777;
+        expect(medication[indexOfX777].last_taken.when).to.equal("2017-05-19T23:33:45.000Z");
+        expect(medication[indexOfX777].last_taken.dosage).to.equal(1.2);
+        expect(medication[indexOfX123].last_taken.when).to.equal("2016-01-01T12:00:00.000Z");
+        expect(medication[indexOfX123].last_taken.dosage).to.equal(3);
         testAllLatestTakenMedicine();
     })
 
@@ -233,7 +235,7 @@ function testLastTaken() {
 
 function testTuliReportsTakenMedicine2() {
     putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
-        when: '2016-01-01T12:00:00Z', medicine_id: 'x777', dosage: 3
+        when: '2016-01-01T12:00:00Z', scheduled_medicine_id: scheduledMedicineIdForX123, dosage: 3
     }, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
@@ -243,7 +245,7 @@ function testTuliReportsTakenMedicine2() {
 
 function testTuliReportsTakenMedicine1() {
     putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
-        when: '2017-05-19T23:33:45Z', medicine_id: 'x123', dosage: 1.2
+        when: '2017-05-19T23:33:45Z', scheduled_medicine_id: scheduledMedicineIdForX777, dosage: 1.2
     }, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;

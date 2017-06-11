@@ -362,7 +362,7 @@ function addLastTaken(userEntity, takenMedicineEntities) {
             medication: _.forEach(userEntity.toObject().medical_info.medication, function (med) {
                 return _.merge(med, {
                     last_taken: _.pick(_(takenMedicineEntities)
-                        .filter({medicine_id: med.medicine_id})
+                        .filter({scheduled_medicine_id: med.scheduled_medicine_id})
                         .sortBy(['when'])
                         .last(), ['when', 'dosage'])
                 });
@@ -484,10 +484,23 @@ function createNewScheduledMedicine(req, res) {
     });
 }
 
+function getFeed(req, res) {
+    var userid = req.params.userid;
+    mongoose.models.FeedEvent.find({ userid: userid }, function(err, feedEventEntities) {
+        res.status(statusCode(err)).json({
+            error: err ? err : false,
+            message: err ? 'Failed to retrieve feed events for ' + userid : feedEventEntities
+        });
+    });
+}
+
 function initializeRoutes() {
     // Find out the userid of the user making the request.
     router.route("/whoami")
         .get(whoAmI);
+
+    router.route("/feed/:userid")
+        .get(getFeed);
 
     router.route("/scheduledmedicine/:entityId")
         .post(updateExistingScheduledMedicine);
