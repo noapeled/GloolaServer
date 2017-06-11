@@ -330,24 +330,37 @@ function addLastTaken(userEntity, takenMedicineEntities) {
     });
 }
 
-function getUserWithLastTakenMedicine(req, res) {
-    mongoose.models.User.findOne({ userid: req.params.userid }, function(err, userEntity) {
+function getUserWithAdditionalDetails(req, res) {
+    var userid = req.params.userid;
+    mongoose.models.User.findOne({ userid: userid }, function(err, userEntity) {
         if (err) {
             res.status(500).json({ error: err, mesage: "Error fetching user " + userid});
         } else if (!userEntity) {
             res.status(400).json({ error: true, message: "No user " + userid });
         } else {
-            // TODO: inefficient, try to formulate a query which takes the latest of each medicine of the user.
-            mongoose.models.TakenMedicine.find({ userid: userEntity.userid }, function(err, takenMedicineEntities) {
+            mongoose.models.ScheduledMedicine.find({ userid: userid, hidden: false }, function(err, scheduledMedicineEntities) {
                 if (err) {
-                    res.status(500).json({ error: err, mesage: "Error fetching taken medicine for user " + userid});
+                    res.status(statusCode(err)).json(
+                        {error: err, message: 'Failed to retrieve scheduled medicine for user ' + userid});
                 } else {
-                    res.json({
-                        error: false,
-                        message: addLastTaken(userEntity, takenMedicineEntities)
-                    })
+                    // TODO: inefficient, try to formulate a query with aggregate, which takes the latest of each medicine of the user.
+                    mongoose.models.TakenMedicine.find({userid: userEntity.userid}, function (err, takenMedicineEntities) {
+                        if (err) {
+                            res.status(500).json({
+                                error: err,
+                                mesage: "Failed to retrieve taken medicine for user " + userid
+                            });
+                        } else {
+                            res.json({
+                                error: false,
+                                message: addLastTaken(
+                                    _.merge(userEntity, { medical_info: { medication: scheduledMedicineEntities } }),
+                                    takenMedicineEntities)
+                            })
+                        }
+                    });
                 }
-            })
+            });
         }
     });
 }
@@ -494,7 +507,7 @@ function initializeRoutes() {
 
     router.route("/user/:userid")
         .post(updateUser)
-        .get(getUserWithLastTakenMedicine);
+        .get(getUserWithAdditionalDetails);
 
     router.route("/takenmedicine")
         .put(createNewTakenMedicine);

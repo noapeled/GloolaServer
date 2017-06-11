@@ -3,7 +3,6 @@
  */
 
 var _ = require('lodash');
-var omitDeep = require('omit-deep-lodash');
 var testDbName = 'temporaryTestDb';
 
 var scheduler = require('./scheduler');
@@ -198,16 +197,29 @@ function testTuliHasMedicine() {
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(2);
         // console.log(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(
-            omitDeep(JSON.parse(data).message.medical_info, '_id'),
-            _.merge(medicalData, { medication: _.forEach(medicalData.medication, function (med) {
-                return _.merge(med, { last_taken: { } });
-            }) })
+            _.map(JSON.parse(data).message.medical_info.medication, 'medicine_id'),
+            _.map(medicalData.medication, 'medicine_id')
         )).to.be.true;
+        expect(_.every(JSON.parse(data).message.medical_info.medication, { 'last_taken': { } })).to.be.true;
         testTuliReportsTakenMedicine1();
     })
 }
 
-function testTweenyCanAddScheduledMedicineToTuli() {
+function testTweenyCanAddScheduledMedicineX123ToTuli() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tweenyEmail],
+        'PUT',
+        '/scheduledmedicine/' + userIds['tuli'],
+        scheduledMedicineX123,
+        function (data) {
+            console.log(data);
+            expect(JSON.parse(data).error).to.be.false;
+            testTuliHasMedicine();
+        }
+    );
+}
+
+function testTweenyCanAddScheduledMedicineX777ToTuli() {
     putOrPostToServer(
         jwtTokensForNonAdminUsers[tweenyEmail],
         'PUT',
@@ -216,7 +228,7 @@ function testTweenyCanAddScheduledMedicineToTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
-            testTuliHasMedicine();
+            testTweenyCanAddScheduledMedicineX123ToTuli();
         }
     );
 }
@@ -227,7 +239,7 @@ function testAdminCanAddImageToMedicine() {
     }, function (data) {
         console.log(data);
         expect(JSON.parse(data).error).to.be.false;
-        testTweenyCanAddScheduledMedicineToTuli();
+        testTweenyCanAddScheduledMedicineX777ToTuli();
     });
 }
 
