@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+var logger = require('./logger');
 require('./db');
 var scheduler = require('./scheduler');
 var addToFeed = require('./models/addToFeed').addToFeed;
@@ -237,7 +238,7 @@ function verifyGoogleToken(token, req, res, next) {
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {
             if (err) {
-                console.log('Failed to authenticate Google token, error is:', JSON.stringify(err.message));
+                logger('Failed to authenticate Google token, error is:', JSON.stringify(err.message));
                 return res.status(403).json({ error: true, message: err.message });
             }
             var payload = loginData.getPayload();
@@ -563,7 +564,7 @@ function initializeApp() {
     app.use(bodyParser.urlencoded({"extended": false}));
     app.use('/', router);
     app.listen(config.port);
-    console.log("Listening to PORT " + config.port);
+    logger("Listening to PORT " + config.port);
 }
 
 function serverMain(dbName, logFilePath) {

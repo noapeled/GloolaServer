@@ -1,3 +1,4 @@
+var logger = require('./logger');
 var _ = require('lodash');
 var firebaseNotify = require('../firebaseNotify').firebaseNotify;
 
@@ -21,7 +22,7 @@ function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventB
 function addToFeed(mongoose, patientUserid, feedEventBody) {
     (new mongoose.models.FeedEvent(feedEventBody)).save(function(err) {
         if (err) {
-            console.log('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
+            logger('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
         } else {
             __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserid, feedEventBody);
         }
