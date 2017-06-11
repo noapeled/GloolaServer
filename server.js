@@ -32,6 +32,7 @@ var config = {
 exports.schedulerFeatureFlag = false;
 
 var modelNameToIdentifier = {
+    ScheduledMedicine: 'scheduled_medicine_id',
     User: 'userid',
     Medicine: 'medicine_id',
     Image: 'image_id'
@@ -74,6 +75,7 @@ function updateExistingEntity(req, res) {
                     "message": (err ? "Error updating " : "Updated ") + identifier + " " + idOfEntityToBeUpdated
                 });
             });
+            // TODO: also record change in changes history.
         }
     });
 }
@@ -393,34 +395,6 @@ function getMedicineNamesByRegex(req, res) {
     });
 }
 
-function updateUser(req, res) {
-    var userid = req.params.userid;
-    mongoose.models.User.findOne({ userid: userid }, function(err, entity) {
-        if (err) {
-            res.status(500).json({ error: err, mesage: "Error fetching userid " + userid });
-        } else if (!entity) {
-            res.status(400).json({ error: true, message: "No user with userid " + userid });
-        } else {
-            _.forOwn(_.omit(req.body, 'userid'), function (value, key) {
-                entity[key] = value;
-            });
-            entity.save(function (err, userEntity) {
-                if (err) {
-                    res.status(statusCode(err)).json({
-                        error: err,
-                        message: "Failed to update user " + userid
-                    });
-                } else {
-                    res.json({
-                        error: false,
-                        message: "Updated user " + userid
-                    });
-                }
-            });
-        }
-    });
-}
-
 function initializeLoggingDbScheduler(dbName, logFilePath) {
     setupLogging(logFilePath);
 
@@ -457,10 +431,6 @@ function getScheduledMedicine(req, res) {
     });
 }
 
-function updateScheduledMedicine(req, res) {
-    throw 'Not implemented';
-}
-
 function createNewScheduledMedicine(req, res) {
     var userid = req.params.userid;
     var newScheduledMedicine = _.assign(req.body, {
@@ -492,7 +462,6 @@ function initializeRoutes() {
 
     router.route("/scheduledmedicine/:userid")
         .get(getScheduledMedicine)
-        .post(updateScheduledMedicine)
         .put(createNewScheduledMedicine);
 
     router.route("/medicine/names/:substringToMatch")
@@ -506,7 +475,6 @@ function initializeRoutes() {
         .put(createNewUserWithAutomaticId);
 
     router.route("/user/:userid")
-        .post(updateUser)
         .get(getUserWithAdditionalDetails);
 
     router.route("/takenmedicine")
