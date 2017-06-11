@@ -429,12 +429,8 @@ function initializeAuthentication() {
     // For obtaining a token from the server, rather than from Google.
     router.route("/authenticate")
         .post(authenticate);
-
     // All requests must first have their token verified, no matter the origin of the token.
     router.use(verifyToken);
-    // Find out the userid of the user making the request.
-    router.route("/whoami")
-        .get(whoAmI);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
         .get(authorizeAccessToEntireCollection)
@@ -445,6 +441,10 @@ function initializeAuthentication() {
 }
 
 function initializeRoutes() {
+    // Find out the userid of the user making the request.
+    router.route("/whoami")
+        .get(whoAmI);
+
     router.route("/medicine/names/:substringToMatch")
         .get(getMedicineNamesByRegex);
 
