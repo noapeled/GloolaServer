@@ -421,16 +421,6 @@ function initializeAuthentication() {
         .post(authorizeAccessToUserEntity);
 }
 
-function getScheduledMedicine(req, res) {
-    var userid = req.params.userid;
-    mongoose.ScheduledMedicine.find({ userid: userid, hidden: false }, function (err, scheduledMedicineEntities) {
-        res.status(statusCode(err)).json({
-            error: err ? err : false,
-            message: scheduledMedicineEntities
-        })
-    });
-}
-
 function createNewScheduledMedicine(req, res) {
     var userid = req.params.userid;
     var newScheduledMedicine = _.assign(req.body, {
@@ -461,7 +451,6 @@ function initializeRoutes() {
         .get(whoAmI);
 
     router.route("/scheduledmedicine/:userid")
-        .get(getScheduledMedicine)
         .put(createNewScheduledMedicine);
 
     router.route("/medicine/names/:substringToMatch")
