@@ -1,4 +1,4 @@
-var logger = require('./logger');
+var logger = require('../logger');
 var _ = require('lodash');
 var firebaseNotify = require('../firebaseNotify').firebaseNotify;
 
