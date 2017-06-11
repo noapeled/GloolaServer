@@ -16,27 +16,37 @@ exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 var cronTasks = { };
 var timedNotifications = { };
 
-function __firebaseNotify(pushTokens, payload) {
-    if (exports.hackishIsDebug) {
-        _.forEach(pushTokens, function (pushToken) {
-            console.log('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
-        });
-    } else {
-        _.forEach(pushTokens, function (pushToken) {
-            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                to: pushToken,
-                collapse_key: 'do_not_collapse',
-                data: payload
-            };
-            fcm.send(message, function (err, response) {
-                if (err) {
-                    throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
-                } else {
-                    console.log("Successfully sent notification", message, "got response", response);
-                }
-            });
-        });
-    }
+function __saveSentNotification(mongoose, patientUserId, recipientUserId, message) {
+    (new mongoose.models.SentNotification({
+        patient_userid: patientUserId,
+        recipient_userid: recipientUserId,
+        message: message
+    }).save(function (err) {
+        if (err) {
+            console.log('ERROR: failed to save notification sent to ' + userid + ': ' + JSON.stringify(message));
+        }
+    }));
+}
+
+function __firebaseNotify(mongoose, patientUserId, recipients, payload) {
+    _.forEach(recipients, function (recipient) {
+        _.forEach(recipient.push_tokens, function (pushToken) {
+            var message = { to: pushToken, collapse_key: 'do_not_collapse', data: payload };
+            if (exports.hackishIsDebug) {
+                console.log('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
+                __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
+            } else {
+                fcm.send(message, function (err, response) {
+                    if (err) {
+                        throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
+                    } else {
+                        console.log("Successfully sent notification", message, "got response", response);
+                        __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
+                    }
+                });
+            }
+        })
+    });
 }
 
 function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart) {
@@ -44,7 +54,7 @@ function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeSt
         if (err) {
             throw 'ERROR: failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id;
         } else {
-            __firebaseNotify(userEntity.push_tokens, {
+            __firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                 type: 'reminder_take_medicine',
                 userid: userid,
                 medicine_id: medicine_id,
@@ -77,7 +87,7 @@ function __nagPatientIfNeeded(mongoose, userid, medicine_id, checkTimeframeStart
                 throw 'ERROR: failed to retrieve patient ' + userid +
                 ' for nagging about medicine ' + medicine_id + 'not taken!';
             } else {
-                __firebaseNotify(userEntity.push_tokens, {
+                __firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                     type: 'nag_medicine_not_taken',
                     userid: userid,
                     medicine_id: medicine_id,
@@ -98,8 +108,10 @@ function __alertCaretakersIfNeeded(mongoose, userid, medicine_id, checkTimeframe
                 throw 'ERROR: failed to retrieve caretakers of patient ' + userid +
                 ' for alerting about medicine ' + medicine_id + 'not taken!';
             } else {
-                var caretakersPushTokens = _(caretakers).flatMap('push_tokens').uniq().value();
-                __firebaseNotify(caretakersPushTokens, {
+                var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
+                    return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
+                });
+                __firebaseNotify(mongoose, userid, caretakersPushTokens, {
                     type: 'alert_medicine_not_taken',
                     userid: userid,
                     medicine_id: medicine_id,
