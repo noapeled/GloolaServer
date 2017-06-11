@@ -80,7 +80,7 @@ function updateExistingScheduledMedicine(req, res) {
             });
             entity.update_history.push(detailsToUpdate);
             entity.save(function (err) {
-                if (_.isNull(err) && config.schedulerFeatureFlag) {
+                if (_.isNull(err) && exports.schedulerFeatureFlag) {
                     scheduler.updateTimersForScheduledMedicine(mongoose, entity);
                 }
                 res.status(statusCode(err)).json({

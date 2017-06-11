@@ -124,17 +124,19 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
         timedNotifications[scheduledMedicineId] = [];
     }
     _.forEach(timedNotifications[scheduledMedicineId], function (timeoutObject) {
-        timeoutObject.clearTimeout();
+        clearTimeout(timeoutObject);
     });
     if (cronTasks[scheduledMedicineId]) {
         cronTasks[scheduledMedicineId].destroy();
     }
-    var second = exports.hackishIsDebug ? '*/5 ' : '';
-    cronTasks[scheduledMedicineId] = cron.schedule(
-        second + getCronExpression(scheduledMedicineEntity.frequency),
-        _.partial(__remindPatientAndSetTimersForTakenMedicine,
-            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId),
-        true);
+    if (scheduledMedicineEntity.hidden === false) {
+        var second = exports.hackishIsDebug ? '*/2 ' : '';
+        cronTasks[scheduledMedicineId] = cron.schedule(
+            second + getCronExpression(scheduledMedicineEntity.frequency),
+            _.partial(__remindPatientAndSetTimersForTakenMedicine,
+                mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId),
+            true);
+    }
 }
 
 function createInitialTasks(mongoose) {

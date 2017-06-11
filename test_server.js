@@ -7,7 +7,7 @@ var testDbName = 'temporaryTestDb';
 
 var scheduler = require('./scheduler');
 scheduler.hackishIsDebug = true;
-scheduler.alertOffsetMilliseconds = 2000;
+scheduler.alertOffsetMilliseconds = 1000;
 
 var testAccessLog = './test_access.log';
 
@@ -37,6 +37,7 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
+scheduledMedicineIdForX123 = null;
 scheduledMedicineIdForX777 = null;
 adminToken = null;
 userIds = { };
@@ -84,7 +85,26 @@ function putOrPostToServer(token, method, path, postBody, callbackOnResponseData
 }
 
 function allTestsDone() {
-    console.log("All tests done. You should see repeated push notifications now!");
+    console.log('---------- All tests done ---------');
+}
+
+function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/scheduledmedicine/' + scheduledMedicineIdForX777,
+        { hidden: true },
+        function (data) {
+            console.log(data);
+            expect(JSON.parse(data).error).to.be.false;
+            console.log('There should be no more push notifications now.');
+            allTestsDone();
+        }
+    );
+}
+
+function waitForNotifications() {
+    console.log("You should see repeated push notifications now!");
+    setTimeout(testPushNotificationsStopAfterRemovingLastMedicineOfTuli, 5000);
 }
 
 function testGetMedicineNamesBySubstring() {
@@ -94,7 +114,7 @@ function testGetMedicineNamesBySubstring() {
         expect( _(sortedByMedicineId).differenceWith([
             { medicine_names: [ 'hello' ], medicine_id: 'x123' },
             { medicine_names: [ 'yellow' ], medicine_id: 'x7777' } ], _.isEqual).isEmpty()).to.be.true;
-        allTestsDone();
+        waitForNotifications();
     })
 }
 
@@ -157,7 +177,7 @@ function testTuliNowHasOnlyOneMedicine() {
 function testTuliCanRemoveMedicine() {
     putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail],
         'POST',
-        '/scheduledmedicine/' + scheduledMedicineIdForX777,
+        '/scheduledmedicine/' + scheduledMedicineIdForX123,
         { hidden: true },
         function (data) {
             console.log(data);
@@ -239,7 +259,7 @@ function testTweenyCanAddScheduledMedicineX123ToTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
-            scheduledMedicineIdForX777 = JSON.parse(data).scheduled_medicine_id;
+            scheduledMedicineIdForX123 = JSON.parse(data).scheduled_medicine_id;
             testTuliHasMedicine();
         }
     );
@@ -254,6 +274,7 @@ function testTweenyCanAddScheduledMedicineX777ToTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
+            scheduledMedicineIdForX777 = JSON.parse(data).scheduled_medicine_id;
             testTweenyCanAddScheduledMedicineX123ToTuli();
         }
     );
