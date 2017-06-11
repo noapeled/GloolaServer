@@ -444,10 +444,7 @@ function initializeAuthentication() {
         .post(authorizeAccessToUserEntity);
 }
 
-function serverMain(dbName, logFilePath) {
-    initializeLoggingDbScheduler(dbName, logFilePath);
-    initializeAuthentication();
-
+function initializeRoutes() {
     router.route("/medicine/names/:substringToMatch")
         .get(getMedicineNamesByRegex);
 
@@ -478,11 +475,15 @@ function serverMain(dbName, logFilePath) {
     router.route('/:collection/:entityId')
         .post(updateExistingEntity)
         .get(getByEntityId);
+}
 
+function serverMain(dbName, logFilePath) {
+    initializeLoggingDbScheduler(dbName, logFilePath);
+    initializeAuthentication();
+    initializeRoutes();
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({"extended": false}));
     app.use('/', router);
-
     app.listen(config.port);
     console.log("Listening to PORT " + config.port);
 }
