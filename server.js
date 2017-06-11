@@ -414,7 +414,7 @@ function updateUser(req, res) {
     });
 }
 
-function serverMain(dbName, logFilePath) {
+function initializeLoggingDbScheduler(dbName, logFilePath) {
     setupLogging(logFilePath);
 
     // Connect mongoose to database.
@@ -423,7 +423,9 @@ function serverMain(dbName, logFilePath) {
     if (exports.schedulerFeatureFlag) {
         scheduler.createInitialTasks(mongoose);
     }
+}
 
+function initializeAuthentication() {
     // For obtaining a token from the server, rather than from Google.
     router.route("/authenticate")
         .post(authenticate);
@@ -440,6 +442,11 @@ function serverMain(dbName, logFilePath) {
     router.route("/user/:userid")
         .get(authorizeAccessToUserEntity)
         .post(authorizeAccessToUserEntity);
+}
+
+function serverMain(dbName, logFilePath) {
+    initializeLoggingDbScheduler(dbName, logFilePath);
+    initializeAuthentication();
 
     router.route("/medicine/names/:substringToMatch")
         .get(getMedicineNamesByRegex);
