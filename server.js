@@ -477,15 +477,19 @@ function initializeRoutes() {
         .get(getByEntityId);
 }
 
-function serverMain(dbName, logFilePath) {
-    initializeLoggingDbScheduler(dbName, logFilePath);
-    initializeAuthentication();
-    initializeRoutes();
+function initializeApp() {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({"extended": false}));
     app.use('/', router);
     app.listen(config.port);
     console.log("Listening to PORT " + config.port);
+}
+
+function serverMain(dbName, logFilePath) {
+    initializeLoggingDbScheduler(dbName, logFilePath);
+    initializeAuthentication();
+    initializeRoutes();
+    initializeApp();
 }
 
 exports.serverMain = serverMain;
