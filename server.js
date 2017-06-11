@@ -37,7 +37,7 @@ var modelNames = {
     user: 'User',
     medicine: 'Medicine',
     image: 'Image'
-}
+};
 
 var modelNameToIdentifier = {
     ScheduledMedicine: 'scheduled_medicine_id',
@@ -126,13 +126,20 @@ function updateExistingEntity(req, res) {
 }
 
 function createNewTakenMedicine(req, res) {
-    new mongoose.models.TakenMedicine(_.assign(req.body, { userid: req.decodedToken.userid }))
-        .save(function(err, data) {
-        res.status(statusCode(err)).json({
-            "error" : err ? err : false,
-            "message" : err ? "Error creating takenmedicine" : "Created takenmedicine"
+    var userid = req.decodedToken.userid;
+    new mongoose.models.TakenMedicine(_.assign(req.body, { userid: userid }))
+        .save(function(err, takenMedicineEntity) {
+            addToFeed(mongoose, userid, {
+                userid: userid,
+                when: takenMedicineEntity.creation_date,
+                scheduled_medicine_id: takenMedicineEntity.scheduled_medicine_id,
+                event: { type: 'taken_medicine', contents: req.body }
+            });
+            res.status(statusCode(err)).json({
+                "error" : err ? err : false,
+                "message" : err ? "Error creating takenmedicine" : "Created takenmedicine"
+            });
         });
-    });
 }
 
 function createNewEntity(req, res) {
