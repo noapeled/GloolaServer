@@ -126,10 +126,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
         timedNotifications[scheduledMedicineId].push(setTimeout(
             _.partial(__alertCaretakersIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
             exports.alertOffsetMilliseconds));
-    } else if (!isBeforeEnd) {
-        cronTasks[scheduledMedicineId].destroy();
     }
-    // In all other cases, this function does nothing, and the next cron event for scheduledMedicineEntity is still scheduled.
 }
 
 function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
