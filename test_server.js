@@ -37,6 +37,7 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
+scheduledMedicineIdForX777 = null;
 adminToken = null;
 userIds = { };
 jwtTokensForNonAdminUsers = { };
@@ -141,12 +142,36 @@ function testUserCannotAccessAllUsers() {
     })
 }
 
+function testTuliNowHasOnlyOneMedicine() {
+    getFromServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        '/user/' + userIds['tuli'],
+        function (data) {
+            expect(_.get(JSON.parse(data), ['message', 'medical_info', 'medication']).length).to.equal(1);
+            expect(JSON.parse(data).message.medical_info.medication[0].medicine_id).to.equal('x777');
+            testUserCannotAccessAllUsers();
+        }
+    )
+}
+
+function testTuliCanRemoveMedicine() {
+    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/scheduledmedicine/' + scheduledMedicineIdForX777,
+        { hidden: true },
+        function (data) {
+            console.log(data);
+            expect(JSON.parse(data).error).to.be.false;
+            testTuliNowHasOnlyOneMedicine();
+        });
+}
+
 function testLastSingleTakenMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
         console.log(data);
         expect(JSON.parse(data).message.length).to.equal(1);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
-        testUserCannotAccessAllUsers();
+        testTuliCanRemoveMedicine();
     })
 }
 
@@ -214,6 +239,7 @@ function testTweenyCanAddScheduledMedicineX123ToTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
+            scheduledMedicineIdForX777 = JSON.parse(data).scheduled_medicine_id;
             testTuliHasMedicine();
         }
     );

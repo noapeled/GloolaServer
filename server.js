@@ -31,6 +31,13 @@ var config = {
 
 exports.schedulerFeatureFlag = false;
 
+var modelNames = {
+    scheduledmedicine: 'ScheduledMedicine',
+    user: 'User',
+    medicine: 'Medicine',
+    image: 'Image'
+}
+
 var modelNameToIdentifier = {
     ScheduledMedicine: 'scheduled_medicine_id',
     User: 'userid',
@@ -55,8 +62,38 @@ function getAllEntitiesInCollection(req, res) {
     }
 }
 
+function updateExistingScheduledMedicine(req, res) {
+    var model = modelNames['scheduledmedicine'];
+    var identifier = modelNameToIdentifier[model];
+    var idOfEntityToBeUpdated = req.params.entityId;
+    var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
+    mongoose.models[model].findOne(query, function(err, entity) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching " + identifier + " " + idOfEntityToBeUpdated});
+        } else if (!entity) {
+            res.status(400).json({ error: true, message: identifier + " " + idOfEntityToBeUpdated + " not found." });
+        } else {
+            // TODO: designate selected fields as non-updatable in schemas.
+            var detailsToUpdate = _.omit(req.body, identifier);
+            _.forOwn(detailsToUpdate, function (value, key) {
+                entity[key] = value;
+            });
+            entity.update_history.push(detailsToUpdate);
+            entity.save(function (err) {
+                if (_.isNull(err) && config.schedulerFeatureFlag) {
+                    scheduler.updateTimersForScheduledMedicine(mongoose, entity);
+                }
+                res.status(statusCode(err)).json({
+                    "error": err ? err : false,
+                    "message": (err ? "Error updating " : "Updated ") + identifier + " " + idOfEntityToBeUpdated
+                });
+            });
+        }
+    });
+}
+
 function updateExistingEntity(req, res) {
-    var model = _.startCase(req.params.collection);
+    var model = modelNames[req.params.collection];
     var identifier = modelNameToIdentifier[model];
     var idOfEntityToBeUpdated = req.params.entityId;
     var query = _.fromPairs([[identifier, idOfEntityToBeUpdated]]);
@@ -451,6 +488,9 @@ function initializeRoutes() {
     // Find out the userid of the user making the request.
     router.route("/whoami")
         .get(whoAmI);
+
+    router.route("/scheduledmedicine/:entityId")
+        .post(updateExistingScheduledMedicine);
 
     router.route("/scheduledmedicine/:userid")
         .put(createNewScheduledMedicine);

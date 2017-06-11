@@ -39,7 +39,7 @@ function __firebaseNotify(pushTokens, payload) {
     }
 }
 
-function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id) {
+function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id, scheduledMedicineId) {
     var checkTimeframeStart = new Date();
 
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
@@ -114,21 +114,26 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
         })
     }
 
-    timedNotifications[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
-    timedNotifications[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
+    timedNotifications[scheduledMedicineId].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
+    timedNotifications[scheduledMedicineId].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
 }
 
 function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
-    if (_.isUndefined(timedNotifications[scheduledMedicineEntity.userid])) {
-        timedNotifications[scheduledMedicineEntity.userid] = [];
+    var scheduledMedicineId = scheduledMedicineEntity.scheduled_medicine_id;
+    if (_.isUndefined(timedNotifications[scheduledMedicineId])) {
+        timedNotifications[scheduledMedicineId] = [];
     }
-    cronTasks[scheduledMedicineEntity.scheduled_medicine_id] ?
-        cronTasks[scheduledMedicineEntity.scheduled_medicine_id].destroy() : null;
+    _.forEach(timedNotifications[scheduledMedicineId], function (timeoutObject) {
+        timeoutObject.clearTimeout();
+    });
+    if (cronTasks[scheduledMedicineId]) {
+        cronTasks[scheduledMedicineId].destroy();
+    }
     var second = exports.hackishIsDebug ? '*/5 ' : '';
-    cronTasks[scheduledMedicineEntity.scheduled_medicine_id] = cron.schedule(
+    cronTasks[scheduledMedicineId] = cron.schedule(
         second + getCronExpression(scheduledMedicineEntity.frequency),
         _.partial(__remindPatientAndSetTimersForTakenMedicine,
-            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id),
+            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId),
         true);
 }
 
