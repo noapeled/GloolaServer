@@ -3,7 +3,7 @@
  */
 
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
-var addToFeed = require('./addToFeed').addToFeed;
+var addToFeed = require('./models/addToFeed').addToFeed;
 var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
 
 var _ = require('lodash');

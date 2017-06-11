@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var firebaseNotify = require('./firebaseNotify').firebaseNotify;
+var firebaseNotify = require('../firebaseNotify').firebaseNotify;
 
 function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventBody) {
     mongoose.models.User.find({ patients: { $all: [patientUserId] } }, function (err, caretakers) {
