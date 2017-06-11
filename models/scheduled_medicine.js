@@ -11,13 +11,8 @@ var __FrequencySchema = new mongoose.Schema({
     minute: { type: String, required: true }
 });
 
-function getCronExpression(frequencyObject) {
-    return [
-        frequencyObject.minute,
-        frequencyObject.hour,
-        frequencyObject.day_of_month,
-        frequencyObject.month_of_year,
-        frequencyObject.day_of_week].join(' ');
+function getCronExpression(freqObj) {
+    return [freqObj.minute, freqObj.hour, freqObj.day_of_month, freqObj.month_of_year, freqObj.day_of_week].join(' ');
 }
 
 var ScheduledMedicine = data_types.createSchema({
