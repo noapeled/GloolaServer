@@ -440,10 +440,25 @@ function initializeAuthentication() {
         .post(authorizeAccessToUserEntity);
 }
 
+function getScheduledMedicine(req, res) {
+    var userid = req.params.userid;
+    mongoose.ScheduledMedicine.find({ userid: userid, hidden: false }, function (err, scheduledMedicineEntities) {
+        res.status(statusCode(err)).json({
+            error: err ? err : false,
+            message: scheduledMedicineEntities
+        })
+    });
+}
+
 function initializeRoutes() {
     // Find out the userid of the user making the request.
     router.route("/whoami")
         .get(whoAmI);
+
+    router.route("/scheduledmedicine/:userid")
+        .get(getScheduledMedicine)
+        .post(updateScheduledMedicine)
+        .put(createNewScheduledMedicine);
 
     router.route("/medicine/names/:substringToMatch")
         .get(getMedicineNamesByRegex);
