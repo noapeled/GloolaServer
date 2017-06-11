@@ -2,6 +2,8 @@
  * Created by noa on 5/20/17.
  */
 
+require('./firebaseNotify').hackishIsDebug = true;
+
 var _ = require('lodash');
 var testDbName = 'temporaryTestDb';
 
@@ -96,14 +98,14 @@ function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
-            console.log('There should be no more push notifications about medicine to take.');
+            console.log('------------- There should be no more push notifications about medicine to take. -----------');
             allTestsDone();
         }
     );
 }
 
 function waitForNotifications() {
-    console.log("You should see repeated push notifications now!");
+    console.log("----------- You should see repeated push notifications now! ------------");
     setTimeout(testPushNotificationsStopAfterRemovingLastMedicineOfTuli, 5000);
 }
 

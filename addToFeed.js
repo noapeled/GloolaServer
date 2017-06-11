@@ -1,4 +1,5 @@
-var notifyCaretakersAboutNewFeedEvent = require('../scheduler').notifyCaretakersAboutNewFeedEvent;
+var notifyCaretakersAboutNewFeedEvent =
+    require('./notifyCaretakersAboutNewFeedEvent').notifyCaretakersAboutNewFeedEvent;
 
 function addToFeed(mongoose, patientUserid, feedEventBody) {
     (new mongoose.models.FeedEvent(feedEventBody)).save(function(err) {
@@ -11,4 +12,3 @@ function addToFeed(mongoose, patientUserid, feedEventBody) {
 }
 
 exports.addToFeed = addToFeed;
-

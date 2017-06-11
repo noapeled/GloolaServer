@@ -2,10 +2,9 @@
  * Created by noa on 5/23/17.
  */
 
+var firebaseNotify = require('./firebaseNotify').firebaseNotify;
+var addToFeed = require('./addToFeed').addToFeed;
 var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
-var FCM = require('fcm-node');
-var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
-var fcm = new FCM(SERVER_KEY);
 
 var _ = require('lodash');
 var cron = require('node-cron');
@@ -16,62 +15,12 @@ exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 var cronTasks = { };
 var timedNotifications = { };
 
-function notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventBody) {
-    mongoose.models.User.find({ patients: { $all: [patientUserId] } }, function (err, caretakers) {
-        if (err) {
-            throw 'ERROR: failed to retrieve caretakers of patient ' + userid + ' for notifying about new feed event ';
-        } else {
-            var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
-                return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
-            });
-            __firebaseNotify(mongoose, patientUserId, caretakersPushTokens, {
-                type: 'new_feed_event',
-                userid: patientUserId,
-                feed_event: feedEventBody
-            });
-        }
-    });
-}
-
-function __saveSentNotification(mongoose, patientUserId, recipientUserId, message) {
-    (new mongoose.models.SentNotification({
-        patient_userid: patientUserId,
-        recipient_userid: recipientUserId,
-        message: message
-    }).save(function (err) {
-        if (err) {
-            console.log('ERROR: failed to save notification sent to ' + userid + ': ' + JSON.stringify(message));
-        }
-    }));
-}
-
-function __firebaseNotify(mongoose, patientUserId, recipients, payload) {
-    _.forEach(recipients, function (recipient) {
-        _.forEach(recipient.push_tokens, function (pushToken) {
-            var message = { to: pushToken, collapse_key: 'do_not_collapse', data: payload };
-            if (exports.hackishIsDebug) {
-                console.log('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
-                __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
-            } else {
-                fcm.send(message, function (err, response) {
-                    if (err) {
-                        throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
-                    } else {
-                        console.log("Successfully sent notification", message, "got response", response);
-                        __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
-                    }
-                });
-            }
-        })
-    });
-}
-
 function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart) {
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
         if (err) {
             throw 'ERROR: failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id;
         } else {
-            __firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
+            firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                 type: 'reminder_take_medicine',
                 userid: userid,
                 medicine_id: medicine_id,
@@ -84,30 +33,29 @@ function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeSt
     });
 }
 
-function __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, medicine_id, checkTimeframeStart, callbackInCaseMedicineNotTaken) {
+function __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, callbackInCaseMedicineNotTaken) {
     mongoose.models.TakenMedicine.find({
         userid: userid,
-        medicine_id: medicine_id,
+        scheduled_medicine_id: scheduledMedicineId,
         when: { $gte: checkTimeframeStart }
     }, function (err, takenMedicineEntities) {
         if (_.isEmpty(takenMedicineEntities)) {
-            // TODO: check if alert already issued.
             callbackInCaseMedicineNotTaken();
         }
     });
 }
 
-function __nagPatientIfNeeded(mongoose, userid, medicine_id, checkTimeframeStart) {
-    __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, medicine_id, checkTimeframeStart, function () {
+function __nagPatientIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+    __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
             if (err) {
                 throw 'ERROR: failed to retrieve patient ' + userid +
-                ' for nagging about medicine ' + medicine_id + 'not taken!';
+                ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!';
             } else {
-                __firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
+                firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                     type: 'nag_medicine_not_taken',
                     userid: userid,
-                    medicine_id: medicine_id,
+                    scheduled_medicine_id: scheduledMedicineId,
                     timeframe: {
                         start: checkTimeframeStart,
                         elapsed_milliseconds: (new Date() - checkTimeframeStart)
@@ -118,8 +66,8 @@ function __nagPatientIfNeeded(mongoose, userid, medicine_id, checkTimeframeStart
     });
 }
 
-function __alertCaretakersIfNeeded(mongoose, userid, medicine_id, checkTimeframeStart) {
-    __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, medicine_id, checkTimeframeStart, function () {
+function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+    __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.find({ patients: { $all: [userid] } }, function (err, caretakers) {
             if (err) {
                 throw 'ERROR: failed to retrieve caretakers of patient ' + userid +
@@ -128,15 +76,25 @@ function __alertCaretakersIfNeeded(mongoose, userid, medicine_id, checkTimeframe
                 var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
                     return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
                 });
-                __firebaseNotify(mongoose, userid, caretakersPushTokens, {
+                var elapsed_milliseconds = new Date() - checkTimeframeStart;
+                firebaseNotify(mongoose, userid, caretakersPushTokens, {
                     type: 'alert_medicine_not_taken',
                     userid: userid,
-                    medicine_id: medicine_id,
+                    scheduled_medicine_id: scheduledMedicineId,
                     timeframe: {
                         start: checkTimeframeStart,
-                        elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                        elapsed_milliseconds: elapsed_milliseconds
                     }
                 });
+                addToFeed(mongoose, userid, {
+                    userid: userid,
+                    when: (new Date()).toISOString(),
+                    scheduled_medicine_id: scheduledMedicineId,
+                    event: { type: 'medicine_not_taken', contents: { timeframe: {
+                        start: checkTimeframeStart,
+                        elapsed_milliseconds: elapsed_milliseconds
+                    } }}
+                })
             }
         });
     })
@@ -150,10 +108,10 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
     if (isAfterStart && isBeforeEnd) {
         __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart);
         timedNotifications[scheduledMedicineId].push(setTimeout(
-            _.partial(__nagPatientIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
+            _.partial(__nagPatientIfNeeded, mongoose, userid, scheduledMedicineId, checkTimeframeStart),
             exports.alertOffsetMilliseconds / 2));
         timedNotifications[scheduledMedicineId].push(setTimeout(
-            _.partial(__alertCaretakersIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
+            _.partial(__alertCaretakersIfNeeded, mongoose, userid, scheduledMedicineId, checkTimeframeStart),
             exports.alertOffsetMilliseconds));
     }
 }
@@ -190,7 +148,6 @@ function createInitialTasks(mongoose) {
     });
 }
 
-exports.notifyCaretakersAboutNewFeedEvent = notifyCaretakersAboutNewFeedEvent;
 exports.updateTimersForScheduledMedicine = updateCronTaskForScheduledMedicine;
 exports.createInitialTasks = createInitialTasks;
 

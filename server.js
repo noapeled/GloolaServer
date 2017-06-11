@@ -7,7 +7,7 @@
 
 require('./db');
 var scheduler = require('./scheduler');
-var addToFeed = require('./models/addToFeed').addToFeed;
+var addToFeed = require('./addToFeed').addToFeed;
 
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
