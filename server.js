@@ -283,9 +283,6 @@ function createNewUserWithAutomaticId(req, res) {
                 message: "Error creating user"
             })
         } else {
-            if (exports.schedulerFeatureFlag) {
-                scheduler.updateTasksForUser(mongoose, userEntity);
-            }
             res.json({
                 error: false,
                 message: "Created user " + userEntity.userid,
@@ -401,9 +398,6 @@ function updateUser(req, res) {
                         message: "Failed to update user " + userid
                     });
                 } else {
-                    if (exports.schedulerFeatureFlag) {
-                        scheduler.updateTasksForUser(mongoose, userEntity);
-                    }
                     res.json({
                         error: false,
                         message: "Updated user " + userid
@@ -447,6 +441,34 @@ function getScheduledMedicine(req, res) {
             error: err ? err : false,
             message: scheduledMedicineEntities
         })
+    });
+}
+
+function updateScheduledMedicine(req, res) {
+    throw 'Not implemented';
+}
+
+function createNewScheduledMedicine(req, res) {
+    var userid = req.params.userid;
+    var newScheduledMedicine = _.assign(req.body, {
+        userid: userid,
+        scheduled_medicine_id: "scheduledMedicine" + Math.floor(Math.random() * 2000000000) + 1 });
+    new mongoose.models.ScheduledMedicine(newScheduledMedicine).save(function (err, scheduledMedicineEntity) {
+        if (err) {
+            res.status(statusCode(err)).json({
+                error: err,
+                message: "Error creating scheduledMedicine"
+            })
+        } else {
+            if (exports.schedulerFeatureFlag) {
+                scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
+            }
+            res.json({
+                error: false,
+                message: "Created scheduledMedicine " + scheduledMedicineEntity.scheduled_medicine_id,
+                scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id
+            });
+        }
     });
 }
 

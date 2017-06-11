@@ -13,8 +13,8 @@ var cron = require('node-cron');
 exports.hackishIsDebug = false;
 exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 
-var tasks = { };
-var timeouts = { };
+var cronTasks = { };
+var timedNotifications = { };
 
 function __firebaseNotify(pushTokens, payload) {
     if (exports.hackishIsDebug) {
@@ -114,40 +114,32 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
         })
     }
 
-    timeouts[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
-    timeouts[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
+    timedNotifications[userid].push(setTimeout(nagPatientIfNeeded, exports.alertOffsetMilliseconds / 2));
+    timedNotifications[userid].push(setTimeout(alertCaretakersIfNeeded, exports.alertOffsetMilliseconds));
 }
 
-function updateTasksForUser(mongoose, userEntity) {
-    var userid = userEntity.userid;
-    _.map(tasks[userid], function (task) {
-        task.destroy();
-    });
-    _.map(timeouts[userid], function (timeoutObject) {
-        clearTimeout(timeoutObject);
-    });
-    timeouts[userid] = [];
-    tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
-        var frequency = med.frequency.toObject()[0];
-        var second = exports.hackishIsDebug ? '*/5 ' : '';
-        return cron.schedule(
-            second + getCronExpression(frequency),
-            _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, userid, med.medicine_id),
-            true)
-    });
+function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
+    cronTasks[scheduledMedicineEntity.scheduled_medicine_id] ?
+        cronTasks[scheduledMedicineEntity.scheduled_medicine_id].destroy() : null;
+    var second = exports.hackishIsDebug ? '*/5 ' : '';
+    cronTasks[scheduledMedicineEntity.scheduled_medicine_id] = cron.schedule(
+        second + getCronExpression(scheduledMedicineEntity.frequency),
+        _.partial(__remindPatientAndSetTimersForTakenMedicine,
+            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id),
+        true);
 }
 
 function createInitialTasks(mongoose) {
-    mongoose.models.User.find({ }, function(err, userEntities) {
+    mongoose.models.ScheduledMedicine.find({ }, function(err, schedulesMedicineEntities) {
         if (err) {
-            throw 'ERROR: failed to obtain users for scheduling alerts';
+            throw 'ERROR: failed to obtain scheduled medicine for initializing cron tasks';
         } else {
-            _.map(userEntities, _.partial(updateTasksForUser, mongoose));
+            _.map(schedulesMedicineEntities, _.partial(updateCronTaskForScheduledMedicine, mongoose));
         }
     });
 }
 
-exports.updateTasksForUser = updateTasksForUser;
+exports.updateTimersForScheduledMedicine = updateCronTaskForScheduledMedicine;
 exports.createInitialTasks = createInitialTasks;
 
 // firebaseNotify(
