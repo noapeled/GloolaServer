@@ -96,7 +96,7 @@ function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
         function (data) {
             console.log(data);
             expect(JSON.parse(data).error).to.be.false;
-            console.log('There should be no more push notifications now.');
+            console.log('There should be no more push notifications about medicine to take.');
             allTestsDone();
         }
     );
