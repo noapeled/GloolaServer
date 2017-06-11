@@ -66,16 +66,18 @@ function updateExistingEntity(req, res) {
         } else if (!entity) {
             res.status(400).json({ error: true, message: identifier + " " + idOfEntityToBeUpdated + " not found." });
         } else {
-            _.forOwn(_.omit(req.body, identifier), function (value, key) {
+            // TODO: designate selected fields as non-updatable in schemas.
+            var detailsToUpdate = _.omit(req.body, identifier);
+            _.forOwn(detailsToUpdate, function (value, key) {
                 entity[key] = value;
             });
+            entity.update_history.push(detailsToUpdate);
             entity.save(function (err) {
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,
                     "message": (err ? "Error updating " : "Updated ") + identifier + " " + idOfEntityToBeUpdated
                 });
             });
-            // TODO: also record change in changes history.
         }
     });
 }
