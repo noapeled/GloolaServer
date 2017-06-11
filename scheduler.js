@@ -119,6 +119,9 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_
 }
 
 function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
+    if (_.isUndefined(timedNotifications[scheduledMedicineEntity.userid])) {
+        timedNotifications[scheduledMedicineEntity.userid] = [];
+    }
     cronTasks[scheduledMedicineEntity.scheduled_medicine_id] ?
         cronTasks[scheduledMedicineEntity.scheduled_medicine_id].destroy() : null;
     var second = exports.hackishIsDebug ? '*/5 ' : '';
