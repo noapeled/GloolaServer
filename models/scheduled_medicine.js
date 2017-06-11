@@ -24,8 +24,8 @@ var ScheduledMedicine = data_types.createSchema({
         validator: function(frequencyObject) {return cron.validate(getCronExpression(frequencyObject));},
         message: 'Joined frequency components form an invalid cron expression' }
     },
-    from_time: Date,
-    to_time: Date
+    start_time: Date,
+    end_time: Date
 });
 
 module.exports = mongoose.model('ScheduledMedicine', ScheduledMedicine, 'ScheduledMedicine');

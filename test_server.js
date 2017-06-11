@@ -162,6 +162,20 @@ function testUserCannotAccessAllUsers() {
     })
 }
 
+function testTuliCanSetScheduledMedicineToStartLater() {
+    var numSecondsLater = 5;
+    console.log('----- Postponing scheduled medicine x777 for Tuli to start ' + numSecondsLater + ' seconds from now -------');
+    var later = new Date();
+    later.setSeconds(later.getSeconds() + numSecondsLater);
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/scheduledmedicine/' + scheduledMedicineIdForX777,
+        { start_time: later.toISOString() },
+        function (data) { setTimeout(testUserCannotAccessAllUsers, numSecondsLater * 1000 + 3000); }
+    )
+}
+
 function testTuliNowHasOnlyOneMedicine() {
     getFromServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -169,13 +183,14 @@ function testTuliNowHasOnlyOneMedicine() {
         function (data) {
             expect(_.get(JSON.parse(data), ['message', 'medical_info', 'medication']).length).to.equal(1);
             expect(JSON.parse(data).message.medical_info.medication[0].medicine_id).to.equal('x777');
-            testUserCannotAccessAllUsers();
+            testTuliCanSetScheduledMedicineToStartLater();
         }
     )
 }
 
 function testTuliCanRemoveMedicine() {
-    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail],
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
         'POST',
         '/scheduledmedicine/' + scheduledMedicineIdForX123,
         { hidden: true },

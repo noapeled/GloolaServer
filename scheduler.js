@@ -113,15 +113,23 @@ function __alertCaretakersIfNeeded(mongoose, userid, medicine_id, checkTimeframe
     })
 }
 
-function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id, scheduledMedicineId) {
+function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id,
+                                                     scheduledMedicineId, scheduledStartTime, scheduledEndTime) {
     var checkTimeframeStart = new Date();
-    __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart);
-    timedNotifications[scheduledMedicineId].push(setTimeout(
-        _.partial(__nagPatientIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
-        exports.alertOffsetMilliseconds / 2));
-    timedNotifications[scheduledMedicineId].push(setTimeout(
-        _.partial(__alertCaretakersIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
-        exports.alertOffsetMilliseconds));
+    var isAfterStart = (!scheduledStartTime) || (scheduledStartTime <= checkTimeframeStart);
+    var isBeforeEnd = (!scheduledEndTime) || (scheduledEndTime >= checkTimeframeStart);
+    if (isAfterStart && isBeforeEnd) {
+        __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart);
+        timedNotifications[scheduledMedicineId].push(setTimeout(
+            _.partial(__nagPatientIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
+            exports.alertOffsetMilliseconds / 2));
+        timedNotifications[scheduledMedicineId].push(setTimeout(
+            _.partial(__alertCaretakersIfNeeded, mongoose, userid, medicine_id, checkTimeframeStart),
+            exports.alertOffsetMilliseconds));
+    } else if (!isBeforeEnd) {
+        cronTasks[scheduledMedicineId].destroy();
+    }
+    // In all other cases, this function does nothing, and the next cron event for scheduledMedicineEntity is still scheduled.
 }
 
 function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
@@ -140,7 +148,8 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
         cronTasks[scheduledMedicineId] = cron.schedule(
             second + getCronExpression(scheduledMedicineEntity.frequency),
             _.partial(__remindPatientAndSetTimersForTakenMedicine,
-                mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId),
+                mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId,
+                scheduledMedicineEntity.start_time, scheduledMedicineEntity.end_time),
             true);
     }
 }
