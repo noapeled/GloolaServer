@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
 var FCM = require('fcm-node');
 var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
 var fcm = new FCM(SERVER_KEY);
@@ -129,12 +130,8 @@ function updateTasksForUser(mongoose, userEntity) {
     tasks[userEntity.userid] = _.map(userEntity.medical_info.medication, function (med) {
         var frequency = med.frequency.toObject()[0];
         var second = exports.hackishIsDebug ? '*/5 ' : '';
-        return cron.schedule(second + [
-            frequency.minute,
-            frequency.hour,
-            frequency.day_of_month,
-            frequency.month_of_year,
-            frequency.day_of_week].join(' '),
+        return cron.schedule(
+            second + getCronExpression(frequency),
             _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, userid, med.medicine_id),
             true)
     });
