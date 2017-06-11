@@ -79,7 +79,7 @@ function updateExistingScheduledMedicine(req, res) {
             scheduledMedicineEntity.update_history.push(detailsToUpdate);
             scheduledMedicineEntity.save(function (err) {
                 if (_.isNull(err)) {
-                    addToFeed(mongoose, {
+                    addToFeed(mongoose, scheduledMedicineEntity.userid, {
                         userid: scheduledMedicineEntity.userid,
                         scheduled_medicine_id: scheduledMedicineId,
                         when: (new Date()).toISOString(),
@@ -478,7 +478,7 @@ function createNewScheduledMedicine(req, res) {
                 message: "Error creating scheduledMedicine"
             })
         } else {
-            addToFeed(mongoose, {
+            addToFeed(mongoose, userid, {
                 userid: userid,
                 when: scheduledMedicineEntity.creation_date,
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,

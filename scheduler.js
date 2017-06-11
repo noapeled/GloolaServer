@@ -16,6 +16,23 @@ exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 var cronTasks = { };
 var timedNotifications = { };
 
+function notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventBody) {
+    mongoose.models.User.find({ patients: { $all: [patientUserId] } }, function (err, caretakers) {
+        if (err) {
+            throw 'ERROR: failed to retrieve caretakers of patient ' + userid + ' for notifying about new feed event ';
+        } else {
+            var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
+                return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
+            });
+            __firebaseNotify(mongoose, patientUserId, caretakersPushTokens, {
+                type: 'new_feed_event',
+                userid: patientUserId,
+                feed_event: feedEventBody
+            });
+        }
+    });
+}
+
 function __saveSentNotification(mongoose, patientUserId, recipientUserId, message) {
     (new mongoose.models.SentNotification({
         patient_userid: patientUserId,
@@ -173,6 +190,7 @@ function createInitialTasks(mongoose) {
     });
 }
 
+exports.notifyCaretakersAboutNewFeedEvent = notifyCaretakersAboutNewFeedEvent;
 exports.updateTimersForScheduledMedicine = updateCronTaskForScheduledMedicine;
 exports.createInitialTasks = createInitialTasks;
 
