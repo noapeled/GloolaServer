@@ -7,6 +7,7 @@
 
 require('./db');
 var scheduler = require('./scheduler');
+var addToFeed = require('./models/addToFeed').addToFeed;
 
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
@@ -45,14 +46,6 @@ var modelNameToIdentifier = {
     Image: 'image_id'
 };
 
-function addToFeed(feedEventBody) {
-    (new mongoose.models.FeedEvent(feedEventBody)).save(function(err) {
-        if (err) {
-            console.log('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
-        }
-    })
-}
-
 function getAllEntitiesInCollection(req, res) {
     if (req.params.collection === 'image') {
         return res.status(400).json({
@@ -86,7 +79,7 @@ function updateExistingScheduledMedicine(req, res) {
             scheduledMedicineEntity.update_history.push(detailsToUpdate);
             scheduledMedicineEntity.save(function (err) {
                 if (_.isNull(err)) {
-                    addToFeed({
+                    addToFeed(mongoose, {
                         userid: scheduledMedicineEntity.userid,
                         scheduled_medicine_id: scheduledMedicineId,
                         when: (new Date()).toISOString(),
@@ -485,7 +478,7 @@ function createNewScheduledMedicine(req, res) {
                 message: "Error creating scheduledMedicine"
             })
         } else {
-            addToFeed({
+            addToFeed(mongoose, {
                 userid: userid,
                 when: scheduledMedicineEntity.creation_date,
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
