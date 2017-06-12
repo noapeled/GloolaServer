@@ -279,10 +279,10 @@ The following events are retained in a history feed for each patient.
 
  Event Type                           | Event Contents                                         
  -------------                  | ------------------------------------------------- 
- 'scheduled_medicine_not_taken' | Same contents as corresponding alert notification 
- 'scheduled_medicine_updated' | The JSON body of the corresponding POST request 
- 'scheduled_medicine_taken' | The contents of the corresponding taken_medicine entity  
- 'scheduled_medicine_created' | The contents of the corresponding, newly created ScheduledMedicine entity.
+ 'scheduled_medicine_created' | The contents of the corresponding ScheduledMedicine entity upon its creation.
+ 'scheduled_medicine_updated' | The JSON body of the corresponding POST request.
+ 'scheduled_medicine_taken' | The contents of the corresponding taken_medicine entity.  
+ 'scheduled_medicine_not_taken' | timeframe from corresponding alert notification.
 
 Each feed event has the following format.
 
@@ -306,6 +306,7 @@ To which the server responds with a list of all feed events for the patient, sor
 Note that the contents of a single 'scheduled_medicine_updated' event can hold multiple changed fields.
 
 ## Example Feed
+
     [
         // Scheduled medicine created
         { 
@@ -318,13 +319,34 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
             }
         },
         
+        // Scheduled medicine taken soon enough
+        { 
+            "userid" : "user1690785181", 
+            "when" : ISODate("2017-06-12T12:07:55.214Z"), 
+            "scheduled_medicine_id" : "scheduledMedicine4084133411",
+            "event" : {
+                "type" : "scheduled_medicine_taken"
+                "contents" : { "userid" : "user1690785181", "dosage" : 1.2, "scheduled_medicine_id" : "scheduledMedicine4084133411", "when" : "2017-05-19T23:33:45Z" } 
+            }
+        }
         
+        
+        // Scheduled medicine not taken soon enough
+        { 
+            "userid" : "user9994527191",
+            "when" : ISODate("2017-06-12T12:20:18.283Z"),
+            "scheduled_medicine_id" : "scheduledMedicine19947837171", 
+            "event" : { 
+                "type" : "scheduled_medicine_not_taken",
+                "contents" : { "timeframe" : { "elapsed_milliseconds" : 2005, "start" : ISODate("2017-06-12T12:20:16.278Z") 
+            } 
+        }
         
         // Scheduled medicine deleted
         { 
             "userid" : "user1690785181", 
             "scheduled_medicine_id" : "scheduledMedicine3983002771", 
-            "when" : ISODate("2017-06-12T12:07:55.413Z"), 
+            "when" : ISODate("2017-06-12T13:07:55.413Z"), 
             "event" : {
                 "type" : "scheduled_medicine_updated"
                 "contents" : { "hidden" : true },
