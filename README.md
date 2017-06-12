@@ -178,7 +178,7 @@ Note that when updating an entity, every specified field is COMPLETELY OVERWRITT
 So if you wish to preserve existing information -- e.g. push_tokens -- first GET the information, 
 then RE-POST it along with new information. 
 
-# Get User along with the user's Medical Information
+## Get User along with the user's Medical Information
     GET /user/<userid>
 
 The server will return user details, including the user's actively scheduled medication (i.e. medication which isn't hidden).
@@ -201,7 +201,7 @@ Each actively scheduled medication also indicates when the user last took it.
 
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
-* **scheduled_medicine_id** identifies the scheduled instance itself
+* **scheduled_medicine_id** identifies the scheduled instance itself.
 * **medicine_id** identifies which medicine is being scheduled.
 
 
