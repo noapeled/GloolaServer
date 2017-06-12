@@ -505,6 +505,8 @@ function initializeAuthentication() {
         .post(authenticate);
     // All requests must first have their token verified, no matter the origin of the token.
     router.use(verifyToken);
+    router.route("/caretakers/:userid")
+        .all(authorizeAccessToUserEntity);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
         .get(authorizeAccessToEntireCollection)
@@ -512,8 +514,6 @@ function initializeAuthentication() {
     router.route("/user/:userid")
         .get(authorizeAccessToUserEntity)
         .post(authorizeAccessToUserEntity);
-    router.route("/caretakers/:userid")
-        .all(authorizeAccessToUserEntity);
 }
 
 function initializeRoutes() {
