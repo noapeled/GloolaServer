@@ -7,6 +7,7 @@ var logger = require('./logger');
 var mongoose = require( 'mongoose' );
 
 // BRING IN YOUR SCHEMAS & MODELS
+require('./models/caretaker');
 require('./models/feed_event');
 require('./models/sent_notifications');
 require('./models/scheduled_medicine');

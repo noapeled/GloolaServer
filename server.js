@@ -34,6 +34,7 @@ var config = {
 exports.schedulerFeatureFlag = false;
 
 var modelNames = {
+    caretaker: 'Caretaker',
     scheduledmedicine: 'ScheduledMedicine',
     user: 'User',
     medicine: 'Medicine',
@@ -41,11 +42,22 @@ var modelNames = {
 };
 
 var modelNameToIdentifier = {
+    Caretaker: 'request_id',
     ScheduledMedicine: 'scheduled_medicine_id',
     User: 'userid',
     Medicine: 'medicine_id',
     Image: 'image_id'
 };
+
+function __getPatientUserIds(caretakerUserId, callbackOnSuccess, callbackOnError) {
+    mongoose.models.Caretaker.find( { caretaker: caretakerUserId, status: 'accepted' }, function (err, caretakerEntities) {
+        err ? callbackOnError(err) : callbackOnSuccess(_.map(caretakerEntities, 'patient'));
+    });
+}
+
+function __guid() {
+    return Math.floor(Math.random() * 2000000000) + 1;
+}
 
 function getAllEntitiesInCollection(req, res) {
     if (req.params.collection === 'image') {
@@ -141,6 +153,30 @@ function createNewTakenMedicine(req, res) {
                 "message" : err ? "Error creating takenmedicine" : "Created takenmedicine"
             });
         });
+}
+
+function createNewCaretaker(req, res) {
+    mongoose.models.User.findOne({ email: req.body.patient_email }, function (err, patientUserEntity) {
+        if (err) {
+            res.status(statusCode(err)).json({
+                error: err,
+                message: 'Failed to retrieve userid by patient email ' + req.body.patient_email
+            })
+        } else {
+            var newCaretaker = new mongoose.models.Caretaker({
+                request_id: 'caretakerRequest' + __guid(),
+                patient: patientUserEntity.userid,
+                caretaker: req.decodedToken.userid,
+                status: 'pending'
+            });
+            newCaretaker.save(function(err) {
+                res.status(statusCode(err)).json({
+                    "error" : err ? err : false,
+                    "message" : err ? "Error creating caretaker for patient " + patientUserEntity.userid : newCaretaker
+                });
+            });
+        }
+    });
 }
 
 function createNewEntity(req, res) {
@@ -299,38 +335,74 @@ function authorizeAccessToUserEntity(req, res, next) {
                 res.status(500).json({ error: err, mesage: "Error fetching user " + requestedUserId});
             } else if (!userEntity) {
                 res.status(400).json({ error: true, message: 'User ' + senderUserId + ' not found.' });
-            } else if (!_.includes(userEntity.patients, requestedUserId)) {
-                res.status(403).json({
-                    error: true,
-                    message: 'User ' + senderUserId + ' is not authorized to access user ' + requestedUserId });
             } else {
-                next();
+                __getPatientUserIds(
+                    senderUserId,
+                    function (patientUserIds) {
+                        if (!_.includes(patientUserIds, requestedUserId)) {
+                            res.status(403).json({
+                                error: true,
+                                message: 'User ' + senderUserId + ' is not authorized to access user ' + requestedUserId });
+                        } else {
+                            next();
+                        }
+                    },
+                    function (err) {
+                        res.status(statusCode(err)).json({
+                            err: err,
+                            message: 'Failed to retieve patients of ' + senderUserId })
+                    }
+                );
             }
         });
     }
 }
 
 function authorizeCreationOfEntity(req, res, next) {
-    return req.decodedToken.userid === 'admin' || req.params.collection === 'takenmedicine' ?
+    return req.decodedToken.userid === 'admin' || _.includes(['takenmedicine', 'caretaker'], req.params.collection) ?
         next() :
         res.status(403).json({
             error: true,
             message: 'User ' + req.decodedToken.userid + ' is not authorized to create new entities' });
 }
 
-function getCaretakers(req, res) {
-    var requestedUserId = req.params.userid;
-    mongoose.models.User.find({ patients: { $all: [requestedUserId] } }, function (err, caretakers) {
-        res.json({
-            message: err ? "Error fetching caretakers of user " + requestedUserId
-                : _.map(caretakers, function(caretaker) { return _.pick(caretaker, ['userid', 'name', 'email']); }),
-            error: err ? err : false
-        })
+function __getCaretakerUserEntities(patientUserid, callbackOnSuccess, callbackOnFailure) {
+    mongoose.models.Caretaker.find({ patient: patientUserid, status: 'accepted' }, function (err, caretakers) {
+        if (err) {
+            callbackOnFailure(err);
+        } else {
+            mongoose.models.User.find({ userid: { $in: _.map(caretakers, 'caretaker') } }, function(err, caretakerUsers) {
+                if (err) {
+                    callbackOnFailure(err);
+                } else {
+                    callbackOnSuccess(caretakerUsers);
+                }
+            });
+        }
     });
 }
 
+function getCaretakers(req, res) {
+    var patientUserid = req.params.patientId;
+    __getCaretakerUserEntities(
+        patientUserid,
+        function (caretakerUsers) {
+            res.json({
+                error: false,
+                message: _.map(caretakerUsers,
+                    function(caretakerUser) { return _.pick(caretakerUser, ['userid', 'name', 'email']); })
+            });
+        },
+        function (err) {
+            res.status(statusCode(err)).json({
+                error: err,
+                message: "Error fetching caretakers of patient " + patientUserid
+            });
+        });
+}
+
 function createNewUserWithAutomaticId(req, res) {
-    var newUser = _.assign(req.body, { userid: "user" + Math.floor(Math.random() * 2000000000) + 1 });
+    var newUser = _.assign(req.body, { userid: "user" + __guid() });
     new mongoose.models.User(newUser).save(function (err, userEntity) {
         if (err) {
             res.status(statusCode(err)).json({
@@ -381,6 +453,48 @@ function __addLastTaken(scheduledMedicineEntities, takenMedicineEntities) {
     });
 }
 
+function __addPatients(userEntityObject, req, res) {
+    __getPatientUserIds(
+        userEntityObject.userid,
+        function (patientUserIds) {
+            __addScheduledMedicineDetails(_.merge(userEntityObject, { patients: patientUserIds }), req, res);
+        },
+        function (err) {
+            res.status(statusCode(err)).json({
+                error: err,
+                message: 'Failed to retrieve patients of ' + userEntityObject.userid
+            });
+        }
+    );
+}
+
+function __addScheduledMedicineDetails(userEntityObject, req, res) {
+    mongoose.models.ScheduledMedicine.find({ userid: userEntityObject.userid, hidden: false }, function(err, scheduledMedicineEntities) {
+        if (err) {
+            res.status(statusCode(err)).json(
+                { error: err, message: 'Failed to retrieve scheduled medicine for user ' + userEntityObject.userid });
+        } else {
+            // TODO: inefficient, try to formulate a query with aggregate, which takes the latest of each medicine of the user.
+            mongoose.models.TakenMedicine.find({userid: userEntityObject.userid}, function (err, takenMedicineEntities) {
+                if (err) {
+                    res.status(500).json({
+                        error: err,
+                        mesage: "Failed to retrieve taken medicine for user " + userEntityObject.userid
+                    });
+                } else {
+                    res.json({
+                        error: false,
+                        message: _.merge(userEntityObject,
+                            { medical_info: {
+                                medication: __addLastTaken(scheduledMedicineEntities, takenMedicineEntities) }
+                            })
+                    })
+                }
+            });
+        }
+    });
+}
+
 function getUserWithAdditionalDetails(req, res) {
     var userid = req.params.userid;
     mongoose.models.User.findOne({ userid: userid }, function(err, userEntity) {
@@ -389,30 +503,7 @@ function getUserWithAdditionalDetails(req, res) {
         } else if (!userEntity) {
             res.status(400).json({ error: true, message: "No user " + userid });
         } else {
-            mongoose.models.ScheduledMedicine.find({ userid: userid, hidden: false }, function(err, scheduledMedicineEntities) {
-                if (err) {
-                    res.status(statusCode(err)).json(
-                        {error: err, message: 'Failed to retrieve scheduled medicine for user ' + userid});
-                } else {
-                    // TODO: inefficient, try to formulate a query with aggregate, which takes the latest of each medicine of the user.
-                    mongoose.models.TakenMedicine.find({userid: userEntity.userid}, function (err, takenMedicineEntities) {
-                        if (err) {
-                            res.status(500).json({
-                                error: err,
-                                mesage: "Failed to retrieve taken medicine for user " + userid
-                            });
-                        } else {
-                            res.json({
-                                error: false,
-                                message: _.merge(userEntity.toObject(),
-                                    { medical_info: {
-                                        medication: __addLastTaken(scheduledMedicineEntities, takenMedicineEntities) }
-                                    })
-                            })
-                        }
-                    });
-                }
-            });
+            __addPatients(userEntity.toObject(), req, res);
         }
     });
 }
@@ -460,7 +551,7 @@ function createNewScheduledMedicine(req, res) {
     var userid = req.params.userid;
     var newScheduledMedicine = _.assign(req.body, {
         userid: userid,
-        scheduled_medicine_id: "scheduledMedicine" + Math.floor(Math.random() * 2000000000) + 1 });
+        scheduled_medicine_id: "scheduledMedicine" + __guid() });
     new mongoose.models.ScheduledMedicine(newScheduledMedicine).save(function (err, scheduledMedicineEntity) {
         if (err) {
             res.status(statusCode(err)).json({
@@ -502,8 +593,6 @@ function initializeAuthentication() {
         .post(authenticate);
     // All requests must first have their token verified, no matter the origin of the token.
     router.use(verifyToken);
-    router.route("/caretakers/:userid")
-        .all(authorizeAccessToUserEntity);
     router.route("/:collection")
         .put(authorizeCreationOfEntity)
         .get(authorizeAccessToEntireCollection)
@@ -514,7 +603,6 @@ function initializeAuthentication() {
 }
 
 function initializeRoutes() {
-    // Find out the userid of the user making the request.
     router.route("/whoami")
         .get(whoAmI);
 
@@ -543,11 +631,14 @@ function initializeRoutes() {
     router.route("/takenmedicine/:userid")
         .get(getLatestTakenMedicine);
 
+    router.route('/caretaker')
+        .put(createNewCaretaker);
+
     router.route('/:collection')
         .get(getAllEntitiesInCollection)
         .put(createNewEntity);
 
-    router.route('/caretakers/:userid')
+    router.route('/caretaker/:patientId')
         .get(getCaretakers);
 
     router.route('/:collection/:entityId')

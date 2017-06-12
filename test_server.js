@@ -42,6 +42,7 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
+caretakerRequestID = null;
 scheduledMedicineIdForX123 = null;
 scheduledMedicineIdForX777 = null;
 adminToken = null;
@@ -364,13 +365,16 @@ function testAdminCanGetAllUsers() {
 }
 
 function testTuliHasCaretakerTweeny() {
-    getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/caretakers/' + userIds['tuli'], function (data) {
-       logger(data);
-       var caretakers = JSON.parse(data).message;
-       expect(caretakers.length).to.equal(1);
-       expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
-       testAdminCanGetAllUsers();
-    });
+    getFromServer(
+        jwtTokensForNonAdminUsers[tweenyEmail],
+        '/caretaker/' + userIds['tuli'],
+        function (data) {
+           logger(data);
+           var caretakers = JSON.parse(data).message;
+           expect(caretakers.length).to.equal(1);
+           expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
+           testAdminCanGetAllUsers();
+        });
 }
 
 function testTweenyCanSeeDetailsOfTuli() {
@@ -390,17 +394,35 @@ function testTweenyHasPatientTuli() {
     });
 }
 
+function testTuliCanApproveCaretakerTweeny() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/caretaker/' + caretakerRequestID,
+        { status: 'accepted' },
+        function (data) {
+            logger(data);
+            expect(JSON.parse(data).error).to.be.false;
+            testTweenyHasPatientTuli();
+        });
+}
+
 function testSetTweenyAsCaretakerOfTuli() {
-    logger(jwtTokensForNonAdminUsers);
-    logger(userIds);
-    putOrPostToServer(jwtTokensForNonAdminUsers[tweenyEmail], 'POST', '/user/' + userIds['tweeny'], {
-        patients: [userIds['tuli']]
-    }, function (chunk) {
-        logger(chunk);
-        var jsonBody = JSON.parse(chunk);
-        expect(jsonBody.error).to.be.false;
-        testTweenyHasPatientTuli();
-    });
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tweenyEmail],
+        'PUT',
+        '/caretaker',
+        { patient_email: tuliEmail },
+        function (data) {
+            logger(data);
+            expect(JSON.parse(data).error).to.be.false;
+            expect(JSON.parse(data).message.caretaker).to.equal(userIds['tweeny']);
+            expect(JSON.parse(data).message.patient).to.equal(userIds['tuli']);
+            expect(JSON.parse(data).message.status).to.equal('pending');
+            expect(JSON.parse(data).message.request_id).to.not.be.empty;
+            caretakerRequestID = JSON.parse(data).message.request_id;
+            testTuliCanApproveCaretakerTweeny();
+        });
 }
 
 function testTuliCanSeeItsOwnDetails() {
