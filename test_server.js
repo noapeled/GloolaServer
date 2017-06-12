@@ -2,6 +2,7 @@
  * Created by noa on 5/20/17.
  */
 
+var inspect = require('util').inspect;
 var logger = require('./logger');
 require('./firebaseNotify').hackishIsDebug = true;
 
@@ -92,8 +93,21 @@ function allTestsDone() {
     logger('---------- All tests done ---------');
 }
 
+function testGetFeedOfPatient() {
+    getFromServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        '/feed/' + userIds['tuli'],
+        function (data) {
+            logger(inspect(data));
+            expect(_.isEqual(_.map(data, 'when').sort(), _.map(data, 'when'))).to.be.true;
+            allTestsDone();
+        }
+    );
+}
+
 function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
-    putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail],
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
         'POST',
         '/scheduledmedicine/' + scheduledMedicineIdForX777,
         { hidden: true },
@@ -101,7 +115,7 @@ function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
             logger(data);
             expect(JSON.parse(data).error).to.be.false;
             logger('------------- There should be no more push notifications about medicine to take. -----------');
-            allTestsDone();
+            testGetFeedOfPatient();
         }
     );
 }
@@ -167,7 +181,7 @@ function testUserCannotAccessAllUsers() {
 }
 
 function testTuliCanSetScheduledMedicineToStartLater() {
-    var numSecondsLater = 5;
+    var numSecondsLater = 3;
     logger('----- Postponing scheduled medicine x777 for Tuli to start ' + numSecondsLater + ' seconds from now -------');
     var later = new Date();
     later.setSeconds(later.getSeconds() + numSecondsLater);

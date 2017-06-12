@@ -302,8 +302,36 @@ In addition, the entire feed is accessible through
 
     GET /feed/:patientid
     
-To which the server responds with an unordered list of all feed events for the patient.
+To which the server responds with a list of all feed events for the patient, sorted by "when".
+Note that the contents of a single 'scheduled_medicine_updated' event can hold multiple changed fields.
 
+## Example Feed
+    [
+        // Scheduled medicine created
+        { 
+            "userid" : "user18770455181", 
+            "when" : ISODate("2017-06-12T12:02:06.208Z"), 
+            "scheduled_medicine_id" : "scheduledMedicine923665291", 
+            "event" : { 
+                "type" : "scheduled_medicine_created"
+                "contents" : { "creation_date" : ISODate("2017-06-12T12:02:06.208Z"), "frequency" : ... }
+            }
+        },
+        
+        
+        
+        // Scheduled medicine deleted
+        { 
+            "userid" : "user1690785181", 
+            "scheduled_medicine_id" : "scheduledMedicine3983002771", 
+            "when" : ISODate("2017-06-12T12:07:55.413Z"), 
+            "event" : {
+                "type" : "scheduled_medicine_updated"
+                "contents" : { "hidden" : true },
+            }
+        }
+    ]
+    
 # Additional API
 
 ## Get Caretakers of Patient

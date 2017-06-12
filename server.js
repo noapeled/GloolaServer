@@ -494,7 +494,7 @@ function getFeed(req, res) {
     mongoose.models.FeedEvent.find({ userid: userid }, function(err, feedEventEntities) {
         res.status(statusCode(err)).json({
             error: err ? err : false,
-            message: err ? 'Failed to retrieve feed events for ' + userid : feedEventEntities
+            message: err ? 'Failed to retrieve feed events for ' + userid : _.sortBy(feedEventEntities, 'when')
         });
     });
 }
