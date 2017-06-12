@@ -14,19 +14,6 @@ var UserSchema = data_types.createSchema({
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true, match: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/ },
     patients: [String],
-    medical_info: {
-        medication: [{
-            medicine_id: { type: String, required: true },
-            dosage_size: data_types.positive_number_type,
-            frequency: [{ // TODO: validate precise cron-style patterns
-                day_of_week: String,
-                month_of_year: String,
-                day_of_month: String,
-                hour: String,
-                minute: String
-            }]
-        }]
-    },
     push_tokens: [String]
 });
 
