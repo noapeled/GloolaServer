@@ -89,7 +89,7 @@ function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkT
                     userid: userid,
                     when: (new Date()).toISOString(),
                     scheduled_medicine_id: scheduledMedicineId,
-                    event: { type: 'medicine_not_taken', contents: { timeframe: {
+                    event: { type: 'scheduled_medicine_not_taken', contents: { timeframe: {
                         start: checkTimeframeStart,
                         elapsed_milliseconds: elapsed_milliseconds
                     } }}

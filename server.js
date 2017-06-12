@@ -84,7 +84,7 @@ function updateExistingScheduledMedicine(req, res) {
                         userid: scheduledMedicineEntity.userid,
                         scheduled_medicine_id: scheduledMedicineId,
                         when: (new Date()).toISOString(),
-                        event: { type: 'update', 'contents': detailsToUpdate }
+                        event: { type: 'scheduled_medicine_updated', 'contents': detailsToUpdate }
                     });
                     if (exports.schedulerFeatureFlag) {
                         scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
@@ -134,7 +134,7 @@ function createNewTakenMedicine(req, res) {
                 userid: userid,
                 when: takenMedicineEntity.creation_date,
                 scheduled_medicine_id: takenMedicineEntity.scheduled_medicine_id,
-                event: { type: 'taken_medicine', contents: req.body }
+                event: { type: 'scheduled_medicine_taken', contents: req.body }
             });
             res.status(statusCode(err)).json({
                 "error" : err ? err : false,
@@ -490,7 +490,7 @@ function createNewScheduledMedicine(req, res) {
                 userid: userid,
                 when: scheduledMedicineEntity.creation_date,
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
-                event: { type: 'created', contents: scheduledMedicineEntity.toObject() }
+                event: { type: 'scheduled_medicine_created', contents: scheduledMedicineEntity.toObject() }
             });
             if (exports.schedulerFeatureFlag) {
                 scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
