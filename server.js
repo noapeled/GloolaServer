@@ -370,18 +370,14 @@ function setupLogging(logFilePath) {
     );
 }
 
-function addLastTaken(userEntity, takenMedicineEntities) {
-    return _.merge(userEntity.toObject(), {
-        medical_info: {
-            medication: _.forEach(userEntity.toObject().medical_info.medication, function (med) {
-                return _.merge(med, {
-                    last_taken: _.pick(_(takenMedicineEntities)
-                        .filter({scheduled_medicine_id: med.scheduled_medicine_id})
-                        .sortBy(['when'])
-                        .last(), ['when', 'dosage'])
-                });
-            })
-        }
+function __addLastTaken(scheduledMedicineEntities, takenMedicineEntities) {
+    return _.map(scheduledMedicineEntities, function (schedMed) {
+        return _.merge(schedMed.toObject(), {
+            last_taken: _.pick(_(takenMedicineEntities)
+                .filter({scheduled_medicine_id: schedMed.scheduled_medicine_id})
+                .sortBy(['when'])
+                .last(), ['when', 'dosage'])
+        });
     });
 }
 
@@ -408,9 +404,10 @@ function getUserWithAdditionalDetails(req, res) {
                         } else {
                             res.json({
                                 error: false,
-                                message: addLastTaken(
-                                    _.merge(userEntity, { medical_info: { medication: scheduledMedicineEntities } }),
-                                    takenMedicineEntities)
+                                message: _.merge(userEntity.toObject(),
+                                    { medical_info: {
+                                        medication: __addLastTaken(scheduledMedicineEntities, takenMedicineEntities) }
+                                    })
                             })
                         }
                     });
