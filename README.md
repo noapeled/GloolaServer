@@ -95,6 +95,8 @@ The server responds with message:
 In the JSON body, include the properties that you wish to OVERWRITE. 
 See next descriptions of available collections and entity details.
 
+# Image
+
 ## Create New Image
     PUT /image
     Content-Type:application/json
@@ -115,6 +117,7 @@ See next descriptions of available collections and entity details.
       "contents": "aHi32...t="
     }
 
+# Medicine
 
 ## Create New Medicine
     PUT /medicine
@@ -139,6 +142,8 @@ See next descriptions of available collections and entity details.
       dosage_form: "tablets"
     }
 
+# User
+
 ## Create New User
     PUT /user
     Content-Type:application/json
@@ -153,6 +158,7 @@ The server assigns to each new user a unique, automatically generated userid.
 
 ## Update Existing User
 Following are all the details you may update for a user, whether he/she is a patient or a caretaker.
+Note that medical information per user is updated through the separate ScheduledMedicine API.
 
     POST /user/<userid>
     Content-Type:application/json
@@ -163,26 +169,63 @@ Following are all the details you may update for a user, whether he/she is a pat
         password: ascii128 encoded,
         email: <<<UNIQUE among users>>>  RFC 822 address
         patients: [userid],
+    }
+
+For now, users can freely add other users as patients.
+At a later stage, patients will be added through a more secure mechanism.
+
+Note that when updating an entity, every specified field is COMPLETELY OVERWRITTEN.
+So if you wish to preserve existing information -- e.g. push_tokens -- first GET the information, 
+then RE-POST it along with new information. 
+
+# Get User along with the user's Medical Information
+    GET /user/<userid>
+
+The server will return user details, including the user's actively scheduled medication (i.e. medication which isn't hidden).
+Each actively scheduled medication also indicates when the user last took it.
+  
+    {
+        userid: userid
+        push_tokens: [ascii128 encoded],
+        name: [forname, middlename0, middlename1, ..., surname],
+        password: ascii128 encoded,
+        email: <<<UNIQUE among users>>>  RFC 822 address
+        patients: [userid],
         medical_info: {
-              medication: [{
-                  medicine_id: ascii128 string,
-                  dosage_size: positive number,
-                  frequency: [{ // Same format as for cron jobs
-                      day_of_week: ...,
-                      month_of_year: ...,
-                      day_of_month: ...,
-                      hour: ...,
-                      minute: ...
-                  }]
-              }]
+            medication: [{
+                    <details of scheduled medicine (see below)>,
+                    last_taken: Date
+            }]
         }
     }
 
-For now, users can freely add other users as patients. At a later stage, patients will be added through a more secure mechanism.
+# ScheduledMedicine
+Each scheduled medicine comprises of the following details. Note the difference in identifiers:
+* **scheduled_medicine_id** identifies the scheduled instance itself
+* **medicine_id** identifies which medicine is being scheduled.
 
-Note that when updating an entity, every specified field is COMPLETELY OVERWRITTEN.
-So if you wish to preserve existing information, first GET the information, then RE-POST it along with new information. 
-This applies also for updating medication for a user.
+
+    {
+        scheduled_medicine_id: <ascii128 string, automatically assigned>,
+        userid: ...,
+        medicine_id: ...,
+        dosage_size: <positive number>,
+        frequency: { // Same components as for cron jobs.
+            day_of_week: ...,
+            month_of_year: ...,
+            day_of_month: ...,
+            hour: ...,
+            minute: ... 
+        },
+        start_time: Optional ISO-8601 date, indicating when the schedule starts.
+                    Defaults to null, which means immediate start.    
+        end_time: Optional ISO-8601 date, indicating when the schedule ends.
+                  Defaults to null, which means the schedule never ends.
+        nag_offset_minutes: Optional positive number of minutes for a nag about medicine not taken. 
+                            Defaults to 30.
+        alert_offset_minutes: Optional positive number of minutes for alerts about medicine not taken.
+                            Defaults to 60.
+    }
 
 ### Example Users: Patient and Caretaker
 Yehoram is a patient who takes only one medicine: every day at 08:15pm, as well as every Tuesday and Saturday at 09:00am.
