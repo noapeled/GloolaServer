@@ -459,21 +459,6 @@ function initializeLoggingDbScheduler(dbName, logFilePath) {
     }
 }
 
-function initializeAuthentication() {
-    // For obtaining a token from the server, rather than from Google.
-    router.route("/authenticate")
-        .post(authenticate);
-    // All requests must first have their token verified, no matter the origin of the token.
-    router.use(verifyToken);
-    router.route("/:collection")
-        .put(authorizeCreationOfEntity)
-        .get(authorizeAccessToEntireCollection)
-        .post(authorizeAccessToEntireCollection);
-    router.route("/user/:userid")
-        .get(authorizeAccessToUserEntity)
-        .post(authorizeAccessToUserEntity);
-}
-
 function createNewScheduledMedicine(req, res) {
     var userid = req.params.userid;
     var newScheduledMedicine = _.assign(req.body, {
@@ -514,6 +499,23 @@ function getFeed(req, res) {
     });
 }
 
+function initializeAuthentication() {
+    // For obtaining a token from the server, rather than from Google.
+    router.route("/authenticate")
+        .post(authenticate);
+    // All requests must first have their token verified, no matter the origin of the token.
+    router.use(verifyToken);
+    router.route("/:collection")
+        .put(authorizeCreationOfEntity)
+        .get(authorizeAccessToEntireCollection)
+        .post(authorizeAccessToEntireCollection);
+    router.route("/user/:userid")
+        .get(authorizeAccessToUserEntity)
+        .post(authorizeAccessToUserEntity);
+    router.route("/caretakers/:userid")
+        .all(authorizeAccessToUserEntity);
+}
+
 function initializeRoutes() {
     // Find out the userid of the user making the request.
     router.route("/whoami")
@@ -530,9 +532,6 @@ function initializeRoutes() {
 
     router.route("/medicine/names/:substringToMatch")
         .get(getMedicineNamesByRegex);
-
-    router.route("/caretakers/:userid")
-        .all(authorizeAccessToUserEntity);
 
     // Next, access to collections.
     router.route("/user")
