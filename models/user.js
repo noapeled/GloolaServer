@@ -17,7 +17,7 @@ var UserSchema = data_types.createSchema({
     medical_info: {
         medication: [{
             medicine_id: { type: String, required: true },
-            dosage_size: data_types.dosage_size_type,
+            dosage_size: data_types.positive_number_type,
             frequency: [{ // TODO: validate precise cron-style patterns
                 day_of_week: String,
                 month_of_year: String,

@@ -13,8 +13,8 @@ exports.createSchema = function(schemaProperties) {
     })); // TODO: { strict: 'throw' }
 };
 
-exports.dosage_size_type = {
+exports.positive_number_type = {
     type: Number,
     required: true,
-    validate: { validator: function(v) { return v > 0 }, message: 'dosage_size must be positive' }
+    validate: { validator: function(v) { return v > 0 }, message: 'must be positive' }
 };

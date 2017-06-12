@@ -19,13 +19,23 @@ var ScheduledMedicine = data_types.createSchema({
     scheduled_medicine_id: { type: String, required: true, nullable: false, unique: true },
     userid: { type: String, required: true },
     medicine_id: { type: String, required: true },
-    dosage_size: data_types.dosage_size_type,
+    dosage_size: data_types.positive_number_type,
     frequency: { type: __FrequencySchema, required: true, validate: {
         validator: function(frequencyObject) {return cron.validate(getCronExpression(frequencyObject));},
         message: 'Joined frequency components form an invalid cron expression' }
     },
     start_time: Date,
-    end_time: Date
+    end_time: Date,
+    nag_offset_minutes: {
+        type: Number,
+        validate: { validator: function(v) { return v > 0 }, message: 'must be positive' },
+        default: 30
+    },
+    alert_offset_minutes: {
+        type: Number,
+        validate: { validator: function(v) { return v > 0 }, message: 'must be positive' },
+        default: 60
+    }
 });
 
 module.exports = mongoose.model('ScheduledMedicine', ScheduledMedicine, 'ScheduledMedicine');

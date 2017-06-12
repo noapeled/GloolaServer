@@ -10,7 +10,6 @@ var _ = require('lodash');
 var cron = require('node-cron');
 
 exports.hackishIsDebug = false;
-exports.alertOffsetMilliseconds = 60 * 60 * 1000; // I.e. 1 hour.
 
 var cronTasks = { };
 var timedNotifications = { };
@@ -100,19 +99,31 @@ function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkT
     })
 }
 
-function __remindPatientAndSetTimersForTakenMedicine(mongoose, userid, medicine_id,
-                                                     scheduledMedicineId, scheduledStartTime, scheduledEndTime) {
+function __minutes_to_milliseconds(m) {
+    return m * 60 * 1000;
+}
+
+function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
     var checkTimeframeStart = new Date();
-    var isAfterStart = (!scheduledStartTime) || (scheduledStartTime <= checkTimeframeStart);
-    var isBeforeEnd = (!scheduledEndTime) || (scheduledEndTime >= checkTimeframeStart);
+    var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
+    var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
     if (isAfterStart && isBeforeEnd) {
-        __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart);
-        timedNotifications[scheduledMedicineId].push(setTimeout(
-            _.partial(__nagPatientIfNeeded, mongoose, userid, scheduledMedicineId, checkTimeframeStart),
-            exports.alertOffsetMilliseconds / 2));
-        timedNotifications[scheduledMedicineId].push(setTimeout(
-            _.partial(__alertCaretakersIfNeeded, mongoose, userid, scheduledMedicineId, checkTimeframeStart),
-            exports.alertOffsetMilliseconds));
+        __pushReminderToPatient(
+            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, checkTimeframeStart);
+        timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+            _.partial(__nagPatientIfNeeded,
+                mongoose,
+                scheduledMedicineEntity.userid,
+                scheduledMedicineEntity.scheduled_medicine_id,
+                checkTimeframeStart),
+            __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes)));
+        timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+            _.partial(__alertCaretakersIfNeeded,
+                mongoose,
+                scheduledMedicineEntity.userid,
+                scheduledMedicineEntity.scheduled_medicine_id,
+                checkTimeframeStart),
+            __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes)));
     }
 }
 
@@ -131,9 +142,7 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
         var second = exports.hackishIsDebug ? '*/2 ' : '';
         cronTasks[scheduledMedicineId] = cron.schedule(
             second + getCronExpression(scheduledMedicineEntity.frequency),
-            _.partial(__remindPatientAndSetTimersForTakenMedicine,
-                mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, scheduledMedicineId,
-                scheduledMedicineEntity.start_time, scheduledMedicineEntity.end_time),
+            _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, scheduledMedicineEntity),
             true);
     }
 }

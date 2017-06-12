@@ -10,7 +10,6 @@ var testDbName = 'temporaryTestDb';
 
 var scheduler = require('./scheduler');
 scheduler.hackishIsDebug = true;
-scheduler.alertOffsetMilliseconds = 1000;
 
 var testAccessLog = './test_access.log';
 
@@ -31,12 +30,16 @@ var tuliEmail = 'tuli@t.com';
 var scheduledMedicineX777 = {
     medicine_id: "x777",
     dosage_size: 1.11,
-    frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" }
+    frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" },
+    nag_offset_minutes: 1.0 / 60.0,
+    alert_offset_minutes: 2.0 / 60.0
 };
 var scheduledMedicineX123 = {
     medicine_id: "x123",
     dosage_size: 2,
-    frequency: { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" }
+    frequency: { day_of_week: "3,7", month_of_year: "*", day_of_month: "*", hour: "09", minute: "00" },
+    nag_offset_minutes: 1.0 / 60.0,
+    alert_offset_minutes: 2.0 / 60.0
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
