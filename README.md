@@ -247,12 +247,7 @@ The following events are retained in a history feed for each patient.
  'scheduled_medicine_taken' | The contents of the corresponding taken_medicine entity  
  'scheduled_medicine_created' | The contents of the corresponding, newly created ScheduledMedicine entity.
 
-The server generates a push notification to all caretakers of the patient for each feed event.
-Additionally, the entire feed is accessible through
-
-    GET /feed/:userid
-    
-To which the server will respond with an unordered list of feed events, each having the following format:
+Each feed event has the following format.
 
     {
         userid: <patient's userid>,
@@ -263,7 +258,15 @@ To which the server will respond with an unordered list of feed events, each hav
             contents: <as in above table>
         }
     }
+
+
+The server generates a push notification to all caretakers of the patient for each feed event.
+Additionally, the entire feed is accessible through
+
+    GET /feed/:userid
     
+To which the server will respond with an unordered list of all feed events for the user.
+
 # Additional API
 
 ## Get Caretakers of Patient
