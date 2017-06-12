@@ -240,7 +240,7 @@ See above "Get User along with the user's Medical Information".
 The following events are retained in a history feed for each patient.
 
 
- Event Type                           | Event Contents                                          |
+ Event Type                           | Event Contents                                         
  -------------                  | ------------------------------------------------- 
  'scheduled_medicine_not_taken' | Same contents as corresponding alert notification 
  'scheduled_medicine_updated' | The JSON body of the corresponding POST request 
@@ -260,12 +260,12 @@ Each feed event has the following format.
     }
 
 
-The server generates a push notification to all caretakers of the patient for each feed event.
-Additionally, the entire feed is accessible through
+The server sends every new feed event as push notification to all caretakers of the patient.
+In addition, the entire feed is accessible through
 
-    GET /feed/:userid
+    GET /feed/:patientid
     
-To which the server will respond with an unordered list of all feed events for the user.
+To which the server will respond with an unordered list of all feed events for the patient.
 
 # Additional API
 
