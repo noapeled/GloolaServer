@@ -227,16 +227,53 @@ Each scheduled medicine comprises of the following details. Note the difference 
                             Defaults to 60.
     }
 
-# Creating and changing Scheduled Medicine
-Creation is done through HTTP PUT, similarly as for other collections.
+## Create Scheduled Medicine
+
+    PUT /scheduledmedicine/:patientid
+
+The patientid appears in the URL and so should be omitted from the request body.
+
 Notice that each ScheduledMedicine has exactly one frequency. For several frequencies per medicine, create multiple SheduledMedicine with the same medicine_id.
 
+## Update Scheduled Medicine
 Once created, all fields of the ScheduledMedicine instance get be changed through HTTP POST, except for userid and medicine_id.
 
-# Getting Scheduled Medicine of User
+**NOTE**: when a ScheduledMedicine instance is updated, it is re-scheduled for push notifications, and any pending nags and alerts for it are deleted. 
+
+# Delete Scheduled Medicine
+To deactivate a ScheduledMedicine, update it with
+
+    { hidden: true }
+
+# Get All Scheduled Medicine of User
 See above "Get User along with the user's Medical Information".
 
-# Patient Feed
+## Push Notifications
+Suppose that _S_ is a ScheduledMedicine for medicine _m_, which patient _p_ should take at moment _T_.
+Then at time _T_, the server sends to _p_ a reminder to take medicine _m_.
+Afterwards, the server checks twice whether _p_ has taken _m_:
+* If _p_ hasn't taken _m_ by time _T_+_S_.nag_offset_minutes, then the server sends a nag to _p_.
+* If _p_ hasn't taken _m_ by time _T_+_S_.alert_offset_minutes, then the server sends alerts to all caretakers of _p_.
+
+The server sends all the above messages as Firebase push messages.
+Nags and reminders are sent to all push_tokens of _p_, whereas alerts are sent to all push_tokens of all caretakers of _p_.
+In all cases, the messages have the following format.
+
+    {
+        to: pushToken,
+        collapse_key: 'do_not_collapse',
+        data: {
+            type: <One of: 'reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'>,
+            userid: userid,
+            medicine_id: medicine_id,
+            timeframe: {
+                start: <the time T when the patient should have taken the medicine>,
+                elapsed_milliseconds: <milliseconds since T>
+            }
+        }
+    }
+
+# Events Feed
 The following events are retained in a history feed for each patient.
 
 
@@ -265,7 +302,7 @@ In addition, the entire feed is accessible through
 
     GET /feed/:patientid
     
-To which the server will respond with an unordered list of all feed events for the patient.
+To which the server responds with an unordered list of all feed events for the patient.
 
 # Additional API
 
@@ -315,28 +352,3 @@ may be responded with the following message
         { medicine_names: ["hello"], medicine_id: "x111" },
         { medicine_names: ["yellow", "JeLLo"], medicine_id: "z66t42" }
     ]
-    
-## Push Notifications
-Suppose that at moment _T_, patient _p_ is scheduled to take medicine _m_.
-Then at time _T_, the server sends to _p_ a reminder to take medicine _m_.
-Afterwards, the server checks twice whether _p_ has taken _m_: at _T_+30min and at _T_+60min.
-* If _p_ hasn't taken _m_ by the time of the first check, then the server sends a nag to _p_.
-* If _p_ hasn't taken _m_ by the time of the second check, then the server sends alerts to all caretakers of _p_.
-
-The server sends all the above messages as Firebase push messages.
-Nags and reminders are sent to all push_tokens of _p_, whereas alerts are sent to all push_tokens of all caretakers of _p_.
-In all cases, the messages have the following format.
-
-    {
-        to: pushToken,
-        collapse_key: 'do_not_collapse',
-        data: {
-            type: <One of: 'reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'>,
-            userid: userid,
-            medicine_id: medicine_id,
-            timeframe: {
-                start: <the time T when the patient should have taken the medicine>,
-                elapsed_milliseconds: <milliseconds since T>
-            }
-        }
-    }
