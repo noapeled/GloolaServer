@@ -2,6 +2,7 @@
  * Created by noa on 5/20/17.
  */
 
+var fs = require('fs');
 var inspect = require('util').inspect;
 var logger = require('./logger');
 require('./firebaseNotify').hackishIsDebug = true;
@@ -326,6 +327,18 @@ function testAdminCanAddImageToMedicine() {
     });
 }
 
+function testAdminCanUploadLargeImage() {
+    var base64Contents = (new Buffer(fs.readFileSync('./large.bmp'))).toString('base64') + '=';
+    putOrPostToServer(adminToken, 'PUT', '/image', {
+        image_id: 'large',
+        format: 'bmp',
+        contents: base64Contents
+    }, function (data) {
+        expect(JSON.parse(data).error).to.be.false;
+        testAdminCanAddImageToMedicine();
+    });
+}
+
 function testAdminCanCreateNewImage() {
     putOrPostToServer(adminToken, 'PUT', '/image', {
         image_id: 'image555',
@@ -334,7 +347,7 @@ function testAdminCanCreateNewImage() {
     }, function (data) {
         logger(data);
         expect(JSON.parse(data).error).to.be.false;
-        testAdminCanAddImageToMedicine();
+        testAdminCanUploadLargeImage();
     });
 }
 
