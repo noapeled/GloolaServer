@@ -145,7 +145,7 @@ function createNewTakenMedicine(req, res) {
         .save(function(err, takenMedicineEntity) {
             addToFeed(mongoose, userid, {
                 userid: userid,
-                when: takenMedicineEntity.creation_date,
+                when: _.get(takenMedicineEntity, 'creation_date'),
                 scheduled_medicine_id: takenMedicineEntity.scheduled_medicine_id,
                 event: { type: 'scheduled_medicine_taken', contents: req.body }
             });
