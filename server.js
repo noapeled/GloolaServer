@@ -22,6 +22,7 @@ var router      =   express.Router();
 var mongoose    = require('mongoose');
 
 var config = {
+    max_request_size_mb: 20,
     port: 3000,
     auth: {
         gloolaServerGoogleApiClientId: '546989006297-aecc06fnfkmgvf8v22jm2gshbt909md0.apps.googleusercontent.com',
@@ -556,8 +557,8 @@ function initializeRoutes() {
 }
 
 function initializeApp() {
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({"extended": false}));
+    app.use(bodyParser.json({ limit: config.max_request_size_mb + 'mb' }));
+    app.use(bodyParser.urlencoded({ limit: config.max_request_size_mb + 'mb', extended: true }));
     app.use('/', router);
     app.listen(config.port);
     logger("Listening to PORT " + config.port);
