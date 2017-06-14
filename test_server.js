@@ -16,7 +16,6 @@ scheduler.hackishIsDebug = true;
 var testAccessLog = './test_access.log';
 
 var server = require('./server');
-server.schedulerFeatureFlag = true;
 
 var http = require('http');
 var expect = require('chai').expect;

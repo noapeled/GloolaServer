@@ -32,8 +32,6 @@ var config = {
     }
 };
 
-exports.schedulerFeatureFlag = false;
-
 var modelNames = {
     scheduledmedicine: 'ScheduledMedicine',
     user: 'User',
@@ -87,9 +85,7 @@ function updateExistingScheduledMedicine(req, res) {
                         when: (new Date()).toISOString(),
                         event: { type: 'scheduled_medicine_updated', 'contents': detailsToUpdate }
                     });
-                    if (exports.schedulerFeatureFlag) {
-                        scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
-                    }
+                    scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
                 }
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,
@@ -452,9 +448,7 @@ function initializeLoggingDbScheduler(dbName, logFilePath) {
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 
-    if (exports.schedulerFeatureFlag) {
-        scheduler.createInitialTasks(mongoose);
-    }
+    scheduler.createInitialTasks(mongoose);
 }
 
 function createNewScheduledMedicine(req, res) {
@@ -475,9 +469,7 @@ function createNewScheduledMedicine(req, res) {
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
                 event: { type: 'scheduled_medicine_created', contents: scheduledMedicineEntity.toObject() }
             });
-            if (exports.schedulerFeatureFlag) {
-                scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
-            }
+            scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
             res.json({
                 error: false,
                 message: "Created scheduledMedicine " + scheduledMedicineEntity.scheduled_medicine_id,
