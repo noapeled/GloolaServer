@@ -31,7 +31,7 @@ function firebaseNotify(mongoose, patientUserId, recipients, payload) {
                     if (err) {
                         throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
                     } else {
-                        logger("Successfully sent notification", message, "got response", response);
+                        logger("Successfully sent notification " + message + "; got response" + response);
                         __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
                     }
                 });
