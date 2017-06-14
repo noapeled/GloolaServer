@@ -10,6 +10,7 @@
   },
 
   "dependencies": {
+    "winston": "~2.3.1",
     "fcm-node": "~1.2.0",
     "node-cron": "~1.2.0",
     "google-auth-library": "~0.10.0",

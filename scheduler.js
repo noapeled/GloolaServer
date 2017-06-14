@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+var logger = require('./logger');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var addToFeed = require('./models/addToFeed').addToFeed;
 var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
@@ -104,26 +105,38 @@ function __minutes_to_milliseconds(m) {
 }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
+    logger('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
+        ' about medicine ' + scheduledMedicineEntity.medicine_id);
     var checkTimeframeStart = new Date();
     var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
     var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
     if (isAfterStart && isBeforeEnd) {
         __pushReminderToPatient(
             mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, checkTimeframeStart);
+
+        var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
             _.partial(__nagPatientIfNeeded,
                 mongoose,
                 scheduledMedicineEntity.userid,
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
-            __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes)));
+            nagMilliseconds));
+        logger('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+
+        var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
             _.partial(__alertCaretakersIfNeeded,
                 mongoose,
                 scheduledMedicineEntity.userid,
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
-            __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes)));
+                alertMilliseconds
+            ));
+        logger('Set alert timer to ' + alertMilliseconds + ' msec from now.');
+    } else {
+        logger('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
+            ' about medicine ' + scheduledMedicineEntity.medicine_id);
     }
 }
 
@@ -140,10 +153,13 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
     }
     if (scheduledMedicineEntity.hidden === false) {
         var second = exports.hackishIsDebug ? '*/2 ' : '';
+        var frequencyCronFormat = second + getCronExpression(scheduledMedicineEntity.frequency);
         cronTasks[scheduledMedicineId] = cron.schedule(
-            second + getCronExpression(scheduledMedicineEntity.frequency),
+            frequencyCronFormat,
             _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, scheduledMedicineEntity),
             true);
+        logger('Scheduled reminders with cron frequency [' + frequencyCronFormat + '] for ScheduledMedicine ' +
+            JSON.stringify(scheduledMedicineEntity.toObject()));
     }
 }
 
