@@ -147,11 +147,12 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
     if (scheduledMedicineEntity.hidden === false) {
         var second = exports.hackishIsDebug ? '*/2 ' : '';
         var frequencyCronFormat = second + getCronExpression(scheduledMedicineEntity.frequency);
-        logger('Scheduling reminders with cron frequency ' + frequencyCronFormat + ' for scheduled medicine ' + JSON.stringify(scheduledMedicineEntity.toObject()));
         cronTasks[scheduledMedicineId] = cron.schedule(
             frequencyCronFormat,
             _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, scheduledMedicineEntity),
             true);
+        logger('Scheduled reminders with cron frequency [' + frequencyCronFormat + '] for ScheduledMedicine ' +
+            JSON.stringify(scheduledMedicineEntity.toObject()));
     }
 }
 
