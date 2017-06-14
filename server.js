@@ -281,7 +281,7 @@ function verifyToken(req, res, next) {
 }
 
 function authorizeAccessToEntireCollection(req, res, next) {
-    return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image'], req.params.collection) ?
+    return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image', 'whoami'], req.params.collection) ?
         next() :
         res.status(403).json({
             error: true,
