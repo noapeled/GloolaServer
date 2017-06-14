@@ -189,8 +189,7 @@ function createNewCaretaker(req, res) {
                                [{ recipientUserid: patientUserEntity.userid, push_tokens: patientUserEntity.push_tokens }],
                                {
                                    type: 'caretaker_request',
-                                   request_id: newCaretaker.request_id,
-                                   request_created_on: newCaretaker.creation_date,
+                                   request: newCaretaker.toObject(),
                                    caretaker: _.pick(caretakerUserEntity, ['userid', 'name', 'email'])
                                });
                            res.json({
