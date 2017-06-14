@@ -113,6 +113,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     if (isAfterStart && isBeforeEnd) {
         __pushReminderToPatient(
             mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, checkTimeframeStart);
+        var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
             _.partial(__nagPatientIfNeeded,
                 mongoose,
@@ -120,13 +121,17 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
             __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes)));
+        logger('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+        var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
             _.partial(__alertCaretakersIfNeeded,
                 mongoose,
                 scheduledMedicineEntity.userid,
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
-            __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes)));
+                alertMilliseconds
+            ));
+        logger('Set alert timer to ' + alertMilliseconds + ' msec from now.');
     } else {
         logger('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
             ' about medicine ' + scheduledMedicineEntity.medicine_id);
