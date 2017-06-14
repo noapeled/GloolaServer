@@ -15,7 +15,7 @@ exports.hackishIsDebug = false;
 var cronTasks = { };
 var timedNotifications = { };
 
-function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeStart) {
+function __pushReminderToPatient(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
         if (err) {
             throw 'ERROR: failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id;
@@ -23,7 +23,7 @@ function __pushReminderToPatient(mongoose, userid, medicine_id, checkTimeframeSt
             firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                 type: 'reminder_take_medicine',
                 userid: userid,
-                medicine_id: medicine_id,
+                scheduled_medicine_id: scheduledMedicineId,
                 timeframe: {
                     start: checkTimeframeStart,
                     elapsed_milliseconds: (new Date() - checkTimeframeStart)
@@ -112,7 +112,10 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
     if (isAfterStart && isBeforeEnd) {
         __pushReminderToPatient(
-            mongoose, scheduledMedicineEntity.userid, scheduledMedicineEntity.medicine_id, checkTimeframeStart);
+            mongoose,
+            scheduledMedicineEntity.userid,
+            scheduledMedicineEntity.scheduled_medicine_id,
+            checkTimeframeStart);
 
         var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
