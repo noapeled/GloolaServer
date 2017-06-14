@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+var logger = require('./logger');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var addToFeed = require('./models/addToFeed').addToFeed;
 var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
@@ -104,6 +105,8 @@ function __minutes_to_milliseconds(m) {
 }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
+    logger('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
+        ' about medicine ' + scheduledMedicineEntity.medicine_id);
     var checkTimeframeStart = new Date();
     var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
     var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
@@ -124,6 +127,9 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
             __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes)));
+    } else {
+        logger('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
+            ' about medicine ' + scheduledMedicineEntity.medicine_id);
     }
 }
 
