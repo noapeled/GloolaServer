@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var logger = require('./logger');
 require('./db');
 var scheduler = require('./scheduler');
@@ -153,24 +154,51 @@ function createNewTakenMedicine(req, res) {
 }
 
 function createNewCaretaker(req, res) {
-    mongoose.models.User.findOne({ email: req.body.patient_email }, function (err, patientUserEntity) {
+    var patientEmail = req.body.patient_email;
+    var caretakerUserid = req.decodedToken.userid;
+    mongoose.models.User.findOne({ email: patientEmail }, function (err, patientUserEntity) {
         if (err) {
             res.status(statusCode(err)).json({
                 error: err,
-                message: 'Failed to retrieve userid by patient email ' + req.body.patient_email
-            })
-        } else {
-            var newCaretaker = new mongoose.models.Caretaker({
-                request_id: 'caretakerRequest' + __guid(),
-                patient: patientUserEntity.userid,
-                caretaker: req.decodedToken.userid,
-                status: 'pending'
+                message: 'Could not find user by email ' + req.body.patient_email
             });
-            newCaretaker.save(function(err) {
-                res.status(statusCode(err)).json({
-                    "error" : err ? err : false,
-                    "message" : err ? "Error creating caretaker for patient " + patientUserEntity.userid : newCaretaker
-                });
+        } else {
+            mongoose.models.User.findOne({ userid: caretakerUserid }, function(err, caretakerUserEntity) {
+               if (err) {
+                   res.status(statusCode(err)).json({
+                       error: err,
+                       message: 'Failed to retrieve details of caretaker ' + caretakerUserid
+                   })
+               } else {
+                   var newCaretaker = new mongoose.models.Caretaker({
+                       request_id: 'caretakerRequest' + __guid(),
+                       patient: patientUserEntity.userid,
+                       caretaker: caretakerUserid,
+                       status: 'pending'
+                   });
+                   newCaretaker.save(function(err) {
+                       if (err) {
+                           res.status(statusCode(err)).json({
+                               "error" : err ,
+                               "message" : "Error creating caretaker for patient " + patientUserEntity.userid
+                           });
+                       } else {
+                           firebaseNotify(
+                               mongoose,
+                               patientUserEntity.userid,
+                               [{ recipientUserid: patientUserEntity.userid, push_tokens: patientUserEntity.push_tokens }],
+                               {
+                                   type: 'caretaker_request',
+                                   request_created_on: newCaretaker.creation_date,
+                                   caretaker: _.pick(caretakerUserEntity, ['userid', 'name', 'email'])
+                               });
+                           res.json({
+                               "error" : false,
+                               "message" : newCaretaker
+                           });
+                       }
+                   });
+               }
             });
         }
     });
