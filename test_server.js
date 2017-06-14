@@ -10,8 +10,8 @@ require('./firebaseNotify').hackishIsDebug = true;
 var _ = require('lodash');
 var testDbName = 'temporaryTestDb';
 
-var scheduler = require('./scheduler');
-scheduler.hackishIsDebug = true;
+var schedulerForMedicine = require('./scheduler_medicine');
+schedulerForMedicine.hackishIsDebug = true;
 
 var testAccessLog = './test_access.log';
 

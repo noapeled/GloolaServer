@@ -8,7 +8,7 @@
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var logger = require('./logger');
 require('./db');
-var scheduler = require('./scheduler');
+var schedulerForMedicine = require('./scheduler_medicine');
 var addToFeed = require('./models/addToFeed').addToFeed;
 
 var GoogleAuth = require('google-auth-library');
@@ -98,7 +98,7 @@ function updateExistingScheduledMedicine(req, res) {
                         when: (new Date()).toISOString(),
                         event: { type: 'scheduled_medicine_updated', 'contents': detailsToUpdate }
                     });
-                    scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
+                    schedulerForMedicine.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
                 }
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,
@@ -567,7 +567,7 @@ function initializeLoggingDbScheduler(dbName, logFilePath) {
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 
-    scheduler.createInitialTasks(mongoose);
+    schedulerForMedicine.createInitialTasks(mongoose);
 }
 
 function createNewScheduledMedicine(req, res) {
@@ -588,7 +588,7 @@ function createNewScheduledMedicine(req, res) {
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
                 event: { type: 'scheduled_medicine_created', contents: scheduledMedicineEntity.toObject() }
             });
-            scheduler.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
+            schedulerForMedicine.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
             res.json({
                 error: false,
                 message: "Created scheduledMedicine " + scheduledMedicineEntity.scheduled_medicine_id,
