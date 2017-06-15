@@ -5,7 +5,7 @@ var CaretakerSchema = data_types.createSchema({
     request_id: { type: String, required: true, nullable: false, unique: true },
     caretaker: { type: String, required: true },
     patient: { type: String, required: true },
-    status: { type: String, required: true, enum: ['pending', 'accepted', 'denied'] }
+    status: { type: String, required: true, enum: ['pending', 'accepted', 'rejected'] }
 });
 
 module.exports = mongoose.model('Caretaker', CaretakerSchema, 'Caretaker');

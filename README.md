@@ -168,7 +168,6 @@ Note that medical information per user is updated through the separate Scheduled
         name: [forname, middlename0, middlename1, ..., surname],
         password: ascii128 encoded,
         email: <<<UNIQUE among users>>>  RFC 822 address
-        patients: [userid],
     }
 
 For now, users can freely add other users as patients.
@@ -178,7 +177,7 @@ Note that when updating an entity, every specified field is COMPLETELY OVERWRITT
 So if you wish to preserve existing information -- e.g. push_tokens -- first GET the information, 
 then RE-POST it along with new information. 
 
-## Get User along with the user's Medical Information
+## Get User along with Medical Information and Patients
     GET /user/<userid>
 
 The server will return user details, including the user's actively scheduled medication (i.e. medication which isn't hidden).
@@ -189,8 +188,8 @@ Each actively scheduled medication also indicates when the user last took it.
         push_tokens: [ascii128 encoded],
         name: [forname, middlename0, middlename1, ..., surname],
         password: ascii128 encoded,
-        email: <<<UNIQUE among users>>>  RFC 822 address
-        patients: [userid],
+        email: <<<UNIQUE among users>>>  RFC 822 address,
+        patients: [userid], // If this user is the caretaker of any patient
         medical_info: {
             medication: [{
                     <details of scheduled medicine (see below)>,
@@ -198,6 +197,61 @@ Each actively scheduled medication also indicates when the user last took it.
             }]
         }
     }
+
+# Caretaker
+
+## Request to Become a Caretaker of a Patient
+
+    PUT /caretaker
+    
+    {
+        patient_email: <RFC 822 address>
+    }
+    
+The server will create a corresponding caretaker request:
+
+    {
+        request_id: <unique ascii string>,
+        patient: <patient's userid>,
+        caretaker: <caretaker's Userid>,
+        status: 'pending'
+    }
+
+The server will also immediately push a nag to the patient:
+
+    {
+        type: 'caretaker_request',
+        request: <the above-mentioned request object>,
+        caretaker: { userid: ..., name: [...], email: ... }
+    }
+
+The nag is repeated once an hour, until the patient either accepts or rejects the request, see next.
+
+## Patient Accepts or Rejects a Caretaker Request
+
+    POST /caretaker
+    
+    {
+        request_id: ...,
+        status: 'accepted' or 'rejected'
+    }
+
+## Get All Caretakers of a Patient
+
+    GET /caretaker/:userid
+    
+Where userid identifies the patient. Note: singular "caretaker", not "caretakers".
+The server will reply with all caretakers of the patient, in the following JSON body:
+    
+    [
+        {"userid": ..., "name": ..., "email": ...},
+    ]
+
+## Get All Patients of a Caretaker
+
+    GET /user/:caretakerUserid
+    
+See "patients" above.
 
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
@@ -298,6 +352,7 @@ Each feed event has the following format.
 
 
 The server sends every new feed event as push notification to all caretakers of the patient.
+
 In addition, the entire feed is accessible through
 
     GET /feed/:patientid
@@ -356,17 +411,6 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
     
 # Additional API
 
-## Get Caretakers of Patient
-
-    GET /caretakers/:userid
-    
-Where userid identifies the patient.
-The server will reply with all caretakers of the patient, in the following JSON body:
-    
-    [
-        {"userid": ..., "name": ..., "email": ...},
-    ]
-    
 ## Indicate Medicine Taken
     PUT /takenmedicine
     
