@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var schedulerForCaretakerRequests = require('./scheduler_caretaker_request');
 var logger = require('./logger');
 require('./db');
@@ -104,6 +105,51 @@ function updateExistingScheduledMedicine(req, res) {
                     "error": err ? err : false,
                     "message": (err ? "Error updating " : "Updated ") + scheduledMedicineId
                 });
+            });
+        }
+    });
+}
+
+function updateExistingCaretaker(req, res) {
+    var requestId = req.params.requestId;
+    mongoose.models.Caretaker.findOne({ request_id: requestId }, function(err, caretakerRequestEntity) {
+        if (err) {
+            res.status(500).json({ error: err, mesage: "Error fetching " + requestId });
+        } else if (!caretakerRequestEntity) {
+            res.status(400).json({ error: true, message: "Caretaker request " + requestId + " not found." });
+        } else {
+            mongoose.models.User.findOne({userid: caretakerRequestEntity.caretaker}, function (err, caretakerUserEntity) {
+                if (err) {
+                    res.status(500).json({
+                        error: err,
+                        message: "Failed to fetch caretaker " + caretakerUserEntity.caretaker
+                    });
+                } else {
+                    // TODO: designate selected fields as non-updatable in schemas.
+                    var detailsToUpdate = _.omit(req.body, ['request_id', 'patient', 'caretaker']);
+                    _.forOwn(detailsToUpdate, function (value, key) {
+                        caretakerRequestEntity[key] = value;
+                    });
+                    caretakerRequestEntity.update_history.push(detailsToUpdate);
+                    caretakerRequestEntity.save(function (err) {
+                        if (err) {
+                            res.status(statusCode(err)).json({ "error": err, "message": "Error updating " + requestId });
+                        } else {
+                            firebaseNotify(
+                                mongoose,
+                                caretakerRequestEntity.patient,
+                                [{
+                                    recipientUserid: caretakerUserEntity.userid,
+                                    push_tokens: caretakerUserEntity.push_tokens
+                                }],
+                                {
+                                    type: 'caretaker_request_updated',
+                                    request: caretakerRequestEntity.toObject()
+                                });
+                            res.json({ error: false, message: "Updated " + requestId });
+                        }
+                    });
+                }
             });
         }
     });
@@ -609,6 +655,9 @@ function initializeRoutes() {
     router.route("/whoami")
         .get(whoAmI);
 
+    router.route("/caretaker/:requestId")
+        .post(updateExistingCaretaker);
+
     router.route("/feed/:userid")
         .get(getFeed);
 
@@ -641,7 +690,7 @@ function initializeRoutes() {
         .get(getAllEntitiesInCollection)
         .put(createNewEntity);
 
-    router.route('/caretaker/:patientId')
+    router.route('/allcaretakers/:patientId')
         .get(getCaretakers);
 
     router.route('/:collection/:entityId')

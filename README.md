@@ -236,11 +236,12 @@ The nag is repeated once an hour, until the patient either accepts or rejects th
         status: 'accepted' or 'rejected'
     }
 
+
+
 ## Get All Caretakers of a Patient
 
-    GET /caretaker/:userid
+    GET /allcaretakers/:patientUserid
     
-Where userid identifies the patient. Note: singular "caretaker", not "caretakers".
 The server will reply with all caretakers of the patient, in the following JSON body:
     
     [

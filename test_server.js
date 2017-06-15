@@ -382,7 +382,7 @@ function testAdminCanGetAllUsers() {
 function testTuliHasCaretakerTweeny() {
     getFromServer(
         jwtTokensForNonAdminUsers[tweenyEmail],
-        '/caretaker/' + userIds['tuli'],
+        '/allcaretakers/' + userIds['tuli'],
         function (data) {
            logger(data);
            var caretakers = JSON.parse(data).message;
