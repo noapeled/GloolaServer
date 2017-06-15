@@ -198,6 +198,28 @@ Each actively scheduled medication also indicates when the user last took it.
         }
     }
 
+# Take Medicine
+
+## Indicate Medicine Taken
+    PUT /takenmedicine
+    
+    {
+        scheduled_medicine_id: ...
+        userid: ...
+        when: ISO-8601 Date
+        dosage: ...
+    }
+    
+Note that scheduled_medicine_id is used, not medicine_id.
+That is, each indication of taken medicine is associated with a certain scheduled medicine.
+Although userid is a redundant detail, it is required for ease of retrieval.
+
+## Query taken medicine
+    GET /takenmedicine/:userid?latest=<number>
+    
+The server will respond with the latest <number> records of medicine taken by userid.
+If parameter latest is omitted, defaults to all records.
+
 # Caretaker
 
 ## Request to Become a Caretaker of a Patient
@@ -411,26 +433,6 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
     ]
     
 # Additional API
-
-## Indicate Medicine Taken
-    PUT /takenmedicine
-    
-    {
-        scheduled_medicine_id: ...
-        userid: ...
-        when: ISO-8601 Date
-        dosage: ...
-    }
-    
-Note that scheduled_medicine_id is used, not medicine_id.
-That is, each indication of taken medicine is associated with a certain scheduled medicine.
-Although userid is a redundant detail, it is required for ease of retrieval.
-
-## Query taken medicine
-    GET /takenmedicine/:userid?latest=<number>
-    
-The server will respond with the latest <number> records of medicine taken by userid.
-If parameter latest is omitted, defaults to all records.
 
 ## Get Medicine Names by Substring
 
