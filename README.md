@@ -261,6 +261,7 @@ Each scheduled medicine comprises of the following details. Note the difference 
 * **medicine_id** identifies which medicine is being scheduled.
 
 
+
     {
         scheduled_medicine_id: <ascii128 string, automatically assigned>,
         userid: ...,
