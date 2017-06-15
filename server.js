@@ -5,7 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
-var firebaseNotify = require('./firebaseNotify').firebaseNotify;
+var schedulerForCaretakerRequests = require('./scheduler_caretaker_request');
 var logger = require('./logger');
 require('./db');
 var schedulerForMedicine = require('./scheduler_medicine');
@@ -163,42 +163,23 @@ function createNewCaretaker(req, res) {
                 message: 'Could not find user by email ' + req.body.patient_email
             });
         } else {
-            mongoose.models.User.findOne({ userid: caretakerUserid }, function(err, caretakerUserEntity) {
-               if (err) {
-                   res.status(statusCode(err)).json({
-                       error: err,
-                       message: 'Failed to retrieve details of caretaker ' + caretakerUserid
-                   })
-               } else {
-                   var newCaretaker = new mongoose.models.Caretaker({
-                       request_id: 'caretakerRequest' + __guid(),
-                       patient: patientUserEntity.userid,
-                       caretaker: caretakerUserid,
-                       status: 'pending'
-                   });
-                   newCaretaker.save(function(err) {
-                       if (err) {
-                           res.status(statusCode(err)).json({
-                               "error" : err ,
-                               "message" : "Error creating caretaker for patient " + patientUserEntity.userid
-                           });
-                       } else {
-                           firebaseNotify(
-                               mongoose,
-                               patientUserEntity.userid,
-                               [{ recipientUserid: patientUserEntity.userid, push_tokens: patientUserEntity.push_tokens }],
-                               {
-                                   type: 'caretaker_request',
-                                   request: newCaretaker.toObject(),
-                                   caretaker: _.pick(caretakerUserEntity, ['userid', 'name', 'email'])
-                               });
-                           res.json({
-                               "error" : false,
-                               "message" : newCaretaker
-                           });
-                       }
-                   });
-               }
+            var newCaretaker = new mongoose.models.Caretaker({
+                request_id: 'caretakerRequest' + __guid(),
+                patient: patientUserEntity.userid,
+                caretaker: caretakerUserid,
+                status: 'pending'
+            });
+            newCaretaker.save(function(err) {
+                if (err) {
+                    res.status(statusCode(err)).json({
+                        "error" : err ,
+                        "message" : "Error creating caretaker for patient " + patientUserEntity.userid
+                    });
+                } else {
+                    schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
+                        mongoose, newCaretaker.request_id);
+                    res.json({ "error" : false, "message" : newCaretaker });
+                }
             });
         }
     });
@@ -561,13 +542,14 @@ function getMedicineNamesByRegex(req, res) {
     });
 }
 
-function initializeLoggingDbScheduler(dbName, logFilePath) {
+function initializeLoggingDbSchedulers(dbName, logFilePath) {
     setupLogging(logFilePath);
 
     // Connect mongoose to database.
     require('./db').connectToDatabase(dbName);
 
     schedulerForMedicine.createInitialTasks(mongoose);
+    schedulerForCaretakerRequests.createInitialTasks(mongoose);
 }
 
 function createNewScheduledMedicine(req, res) {
@@ -676,7 +658,7 @@ function initializeApp() {
 }
 
 function serverMain(dbName, logFilePath) {
-    initializeLoggingDbScheduler(dbName, logFilePath);
+    initializeLoggingDbSchedulers(dbName, logFilePath);
     initializeAuthentication();
     initializeRoutes();
     initializeApp();

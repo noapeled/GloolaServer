@@ -13,6 +13,9 @@ var testDbName = 'temporaryTestDb';
 var schedulerForMedicine = require('./scheduler_medicine');
 schedulerForMedicine.hackishIsDebug = true;
 
+var schedulerForCaretaker = require('./scheduler_caretaker_request');
+schedulerForCaretaker.hackishIsDebug = true;
+
 var testAccessLog = './test_access.log';
 
 var server = require('./server');
@@ -407,16 +410,18 @@ function testTweenyHasPatientTuli() {
 }
 
 function testTuliCanApproveCaretakerTweeny() {
-    putOrPostToServer(
-        jwtTokensForNonAdminUsers[tuliEmail],
-        'POST',
-        '/caretaker/' + caretakerRequestID,
-        { status: 'accepted' },
-        function (data) {
-            logger(data);
-            expect(JSON.parse(data).error).to.be.false;
-            testTweenyHasPatientTuli();
-        });
+    setTimeout(function () {
+        putOrPostToServer(
+            jwtTokensForNonAdminUsers[tuliEmail],
+            'POST',
+            '/caretaker/' + caretakerRequestID,
+            { status: 'accepted' },
+            function (data) {
+                logger(data);
+                expect(JSON.parse(data).error).to.be.false;
+                testTweenyHasPatientTuli();
+            });
+    }, 2000);
 }
 
 function testSetTweenyAsCaretakerOfTuli() {

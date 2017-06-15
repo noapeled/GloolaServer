@@ -39,15 +39,25 @@ function notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEnt
     });
 }
 
-function nagPatientAboutPendingCaretakerRequest(mongoose, pendingCaretakerRequestEntity) {
-    notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
-    if (timedNotifications[pendingCaretakerRequestEntity.request_id]) {
-        clearTimeout(timedNotifications[pendingCaretakerRequestEntity.request_id]);
+function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
+    if (timedNotifications[requestId]) {
+        clearTimeout(timedNotifications[requestId]);
     }
-    timedNotifications[requestId] = setTimeout(
-        nagPatientAboutPendingCaretakerRequest,
-        __minutes_to_milliseconds(exports.NAG_INTERVAL_MINUTES)
-    );
+    mongoose.models.Caretaker.findOne({ request_id: requestId }, function (err, caretakerRequestEntity) {
+        if (err) {
+            logger('ERROR: failed to retrieve caretaker request ' + requestId + ', will retry');
+        } else {
+            if ((caretakerRequestEntity.hidden) || (caretakerRequestEntity.status !== 'pending')) {
+                logger('Request ' + requestId + ' is not pending anymore, nags stopped.');
+            } else {
+                notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
+                timedNotifications[requestId] = setTimeout(
+                    _.partial(nagPatientAboutPendingCaretakerRequest, mongoose, requestId),
+                    exports.hackishIsDebug ? 500 : __minutes_to_milliseconds(exports.NAG_INTERVAL_MINUTES)
+                );
+            }
+        }
+    });
 }
 
 function createInitialTasks(mongoose) {
@@ -55,7 +65,9 @@ function createInitialTasks(mongoose) {
         if (err) {
             throw 'ERROR: failed to obtain all pending caretaker requests for initializing cron tasks';
         } else {
-            _.map(pendingCaretakerEntities, _.partial(nagPatientAboutPendingCaretakerRequest, mongoose));
+            _.map(pendingCaretakerEntities, function (caretakerEntity) {
+                nagPatientAboutPendingCaretakerRequest(mongoose, caretakerEntity.request_id);
+            });
         }
     });
 }
