@@ -257,9 +257,7 @@ where userid is the caretaker's userid.
 
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
-* **scheduled_medicine_id** identifies the scheduled instance itself.
-* **medicine_id** identifies which medicine is being scheduled.
-
+**scheduled_medicine_id** identifies the scheduled instance itself, whereas **medicine_id** identifies which medicine is being scheduled.
 
 
     {
