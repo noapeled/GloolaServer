@@ -225,7 +225,7 @@ The server will also immediately push a nag to the patient:
         caretaker: { userid: ..., name: [...], email: ... }
     }
 
-The nag is repeated once an hour, until the patient either accepts or rejects the request, see next.
+The server then repeats the nag once an hour, until the patient either accepts or rejects the request, see next.
 
 ## Patient Accepts or Rejects a Caretaker Request
 
@@ -236,7 +236,7 @@ The nag is repeated once an hour, until the patient either accepts or rejects th
         status: 'accepted' or 'rejected'
     }
 
-
+The server will update the status of the request, then notify the issuer of the caretaker request accordingly through push notification.
 
 ## Get All Caretakers of a Patient
 
@@ -249,10 +249,11 @@ The server will reply with all caretakers of the patient, in the following JSON 
     ]
 
 ## Get All Patients of a Caretaker
+As described before, use
 
-    GET /user/:caretakerUserid
+    GET /user/:userid
     
-See "patients" above.
+where userid is the caretaker's userid.
 
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
