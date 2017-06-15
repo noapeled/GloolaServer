@@ -94,7 +94,7 @@ function putOrPostToServer(token, method, path, postBody, callbackOnResponseData
 }
 
 function allTestsDone() {
-    logger('---------- All tests done ---------');
+    logger.info('---------- All tests done ---------');
 }
 
 function testGetFeedOfPatient() {
@@ -102,7 +102,7 @@ function testGetFeedOfPatient() {
         jwtTokensForNonAdminUsers[tuliEmail],
         '/feed/' + userIds['tuli'],
         function (data) {
-            logger(inspect(data));
+            logger.info(inspect(data));
             expect(_.isEqual(_.map(data, 'when').sort(), _.map(data, 'when'))).to.be.true;
             allTestsDone();
         }
@@ -116,22 +116,22 @@ function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
         '/scheduledmedicine/' + scheduledMedicineIdForX777,
         { hidden: true },
         function (data) {
-            logger(data);
+            logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
-            logger('------------- There should be no more push notifications about medicine to take. -----------');
+            logger.info('------------- There should be no more push notifications about medicine to take. -----------');
             testGetFeedOfPatient();
         }
     );
 }
 
 function waitForNotifications() {
-    logger("----------- You should see repeated push notifications now! ------------");
+    logger.info("----------- You should see repeated push notifications now! ------------");
     setTimeout(testPushNotificationsStopAfterRemovingLastMedicineOfTuli, 5000);
 }
 
 function testGetMedicineNamesBySubstring() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine/names/LL', function (data) {
-        logger(data);
+        logger.info(data);
         var sortedByMedicineId = _.sortBy(JSON.parse(data).message, ['medicine_id']);
         expect( _(sortedByMedicineId).differenceWith([
             { medicine_names: [ 'hello' ], medicine_id: 'x123' },
@@ -147,7 +147,7 @@ function testCreateAnotherMedicine2() {
         route_of_administration: "oral",
         dosage_form: "tablets"
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testGetMedicineNamesBySubstring();
     })
@@ -161,7 +161,7 @@ function testCreateAnotherMedicine1() {
         route_of_administration: "oral",
         dosage_form: "tablets"
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testCreateAnotherMedicine2();
     })
@@ -169,7 +169,7 @@ function testCreateAnotherMedicine1() {
 
 function testUserCanAccessAllMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine', function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         expect(JSON.parse(data).message[0].medicine_id).to.equal('x123');
         testCreateAnotherMedicine1();
@@ -178,7 +178,7 @@ function testUserCanAccessAllMedicine() {
 
 function testUserCannotAccessAllUsers() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user', function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.true;
         testUserCanAccessAllMedicine();
     })
@@ -186,7 +186,7 @@ function testUserCannotAccessAllUsers() {
 
 function testTuliCanSetScheduledMedicineToStartLater() {
     var numSecondsLater = 3;
-    logger('----- Postponing scheduled medicine x777 for Tuli to start ' + numSecondsLater + ' seconds from now -------');
+    logger.info('----- Postponing scheduled medicine x777 for Tuli to start ' + numSecondsLater + ' seconds from now -------');
     var later = new Date();
     later.setSeconds(later.getSeconds() + numSecondsLater);
     putOrPostToServer(
@@ -217,7 +217,7 @@ function testTuliCanRemoveMedicine() {
         '/scheduledmedicine/' + scheduledMedicineIdForX123,
         { hidden: true },
         function (data) {
-            logger(data);
+            logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
             testTuliNowHasOnlyOneMedicine();
         });
@@ -225,7 +225,7 @@ function testTuliCanRemoveMedicine() {
 
 function testLastSingleTakenMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=1', function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).message.length).to.equal(1);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
         testTuliCanRemoveMedicine();
@@ -234,7 +234,7 @@ function testLastSingleTakenMedicine() {
 
 function testAllLatestTakenMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/takenmedicine/' + userIds['tuli'] + '?latest=40', function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).message.length).to.equal(2);
         expect(JSON.parse(data).message[0].when).to.equal('2017-05-19T23:33:45.000Z');
         testLastSingleTakenMedicine();
@@ -259,7 +259,7 @@ function testTuliReportsTakenMedicine2() {
     putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2016-01-01T12:00:00Z', scheduled_medicine_id: scheduledMedicineIdForX123, dosage: 3
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testLastTaken();
     });
@@ -269,7 +269,7 @@ function testTuliReportsTakenMedicine1() {
     putOrPostToServer(jwtTokensForNonAdminUsers[tuliEmail], 'PUT', '/takenmedicine', {
         when: '2017-05-19T23:33:45Z', scheduled_medicine_id: scheduledMedicineIdForX777, dosage: 1.2
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testTuliReportsTakenMedicine2();
     });
@@ -277,9 +277,9 @@ function testTuliReportsTakenMedicine1() {
 
 function testTuliHasMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tuliEmail], '/user/' + userIds['tuli'], function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).message.medical_info.medication.length).to.equal(2);
-        // logger(omitDeep(JSON.parse(data).message.medical_info, '_id'));
+        // logger.info(omitDeep(JSON.parse(data).message.medical_info, '_id'));
         expect(_.isEqual(
             _.map(JSON.parse(data).message.medical_info.medication, 'medicine_id'),
             _.map(medicalData.medication, 'medicine_id')
@@ -296,7 +296,7 @@ function testTweenyCanAddScheduledMedicineX123ToTuli() {
         '/scheduledmedicine/' + userIds['tuli'],
         scheduledMedicineX123,
         function (data) {
-            logger(data);
+            logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
             scheduledMedicineIdForX123 = JSON.parse(data).scheduled_medicine_id;
             testTuliHasMedicine();
@@ -311,7 +311,7 @@ function testTweenyCanAddScheduledMedicineX777ToTuli() {
         '/scheduledmedicine/' + userIds['tuli'],
         scheduledMedicineX777,
         function (data) {
-            logger(data);
+            logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
             scheduledMedicineIdForX777 = JSON.parse(data).scheduled_medicine_id;
             testTweenyCanAddScheduledMedicineX123ToTuli();
@@ -323,7 +323,7 @@ function testAdminCanAddImageToMedicine() {
     putOrPostToServer(adminToken, 'POST', '/medicine/x123', {
         images: ['image555']
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testTweenyCanAddScheduledMedicineX777ToTuli();
     });
@@ -347,21 +347,21 @@ function testAdminCanCreateNewImage() {
         format: 'png',
         contents: 'iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAMAAAAM7l6QAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACcFBMVEUAAACXJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB+XJB/////0TRaIAAAAznRSTlMAAAYoRFBKMw894vf7+fJ+ZK4EBQIBIarcQgUABQESlIw9adr+7pQ3bao3AoL98vj98PzAGDvq/nsDnP3SiWd4uPbZICHe/JwcCmfs/V0PlPi3EgF2/cUvCIf/+VQc18MgXP7mJwSupwJe/uQkA6qpAgFz/vZHFM62EQh07aQJYPn7px4k4fd9DAJI3v1hB6z4tGJCUZTq4ypL8/33+/+PAgea/P3/+//TJR+0sWCM7vq1WpTLTRAJBT2/5mIQAxMDarQGR/ONDEZpd3BWHo3mDFUAAAABYktHRM+D3sJpAAAAB3RJTUUH4QQdEwoufmazaQAAAYVJREFUKM9jYKAPYGRiZmFlY+dgZMQuzcnFzcPLx49LWuAcCAgKoUszMgqLMIqKiYOlJSSlGKVlZJHUMMrJKygqKauApc+pqqlraGohrGDU1tE9p6d/DgYMDI3OGZswwo02NTuHDswtYNoZLa0gQtY2tnb2Do4QjpMzTNrFFSzg5u7ByMjo6eUN5vn4wqT9/ANAAoFBIAHG4JBQEC8sHG55RGTUuXPRMRDbGGPjgLLxCUhOT0w6dy45BcJnTE0DSqdnIDzOmJl17lx2DlQ6Nw8onV+A0FxYVHzuXEkp1PCycqB0RSXcY1XVNSDH1NaBncZY3wDkNDY1w6RbWsFeaWvvAHqss6sbzOvphUn39UNCYsLESZOnTJ0G4UyfAZNmnDkLGpSz58ydB2XOXwD398JF584tXgIP76XLlp9bsRLhcsZVq9esXbceKrth46bNW7YipRlGxm3bGXfs3AWW3b1nL+O+/Qcwk8xBsPShwzjS2pGjIOljuJLi8RMnT50+cxaHNPUBAKaI25/rA/PEAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTA0LTI5VDE5OjEwOjQ2KzAyOjAwaQg1YQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0wNC0yOVQxOToxMDo0NiswMjowMBhVjd0AAAAASUVORK5CYII='
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testAdminCanUploadLargeImage();
     });
 }
 
 function testAdminCanCreateNewMedicine() {
-    logger('------In testAdminCanCreateNewMedicine-----------');
+    logger.info('------In testAdminCanCreateNewMedicine-----------');
     putOrPostToServer(adminToken, 'PUT', '/medicine', {
         medicine_id: "x123",
         medicine_names: ['hello', 'world'],
         route_of_administration: "oral",
         dosage_form: "tablets"
     }, function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testAdminCanCreateNewImage();
     });
@@ -369,7 +369,7 @@ function testAdminCanCreateNewMedicine() {
 
 function testAdminCanGetAllUsers() {
     getFromServer(adminToken, '/user', function (data) {
-        logger(data);
+        logger.info(data);
         expect(_.isEqual(
             [tuliEmail, tweenyEmail].sort(),
             _.map(JSON.parse(data).message, 'email').sort()
@@ -384,7 +384,7 @@ function testTuliHasCaretakerTweeny() {
         jwtTokensForNonAdminUsers[tweenyEmail],
         '/allcaretakers/' + userIds['tuli'],
         function (data) {
-           logger(data);
+           logger.info(data);
            var caretakers = JSON.parse(data).message;
            expect(caretakers.length).to.equal(1);
            expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
@@ -395,7 +395,7 @@ function testTuliHasCaretakerTweeny() {
 function testTweenyCanSeeDetailsOfTuli() {
     // TODO: Re-enable googleTokensForNonAdminUsers[tweenyEmail] after figuring out how to extend the token life.
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user/' + userIds['tuli'], function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
         testTuliHasCaretakerTweeny();
     });
@@ -403,7 +403,7 @@ function testTweenyCanSeeDetailsOfTuli() {
 
 function testTweenyHasPatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user/' + userIds['tweeny'], function (data) {
-        logger(data);
+        logger.info(data);
         expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
         testTweenyCanSeeDetailsOfTuli();
     });
@@ -417,7 +417,7 @@ function testTuliCanApproveCaretakerTweeny() {
             '/caretaker/' + caretakerRequestID,
             { status: 'accepted' },
             function (data) {
-                logger(data);
+                logger.info(data);
                 expect(JSON.parse(data).error).to.be.false;
                 testTweenyHasPatientTuli();
             });
@@ -431,7 +431,7 @@ function testSetTweenyAsCaretakerOfTuli() {
         '/caretaker',
         { patient_email: tuliEmail },
         function (data) {
-            logger(data);
+            logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
             expect(JSON.parse(data).message.caretaker).to.equal(userIds['tweeny']);
             expect(JSON.parse(data).message.patient).to.equal(userIds['tuli']);
@@ -456,7 +456,7 @@ function testLoginAsTuli() {
 function testTweenyCanGetItsUseridByGoogleToken() {
     // TODO: Re-enable this function after figuring out how to extend the token life.
     getFromServer(googleTokensForNonAdminUsers[tweenyEmail], '/whoami', function (data) {
-        logger(data);
+        logger.info(data);
        expect(JSON.parse(data).error).to.be.false;
        expect(JSON.parse(data).message.userid).to.equal(userIds['tweeny']);
        testLoginAsTuli();
@@ -472,7 +472,7 @@ function testCreateUserTuli() {
 }
 
 function createNewUserAsAdmin(name, email, password, continueCallback) {
-    // logger('createNewUserAsAdmin started with admin token ' + adminToken);
+    // logger.info('createNewUserAsAdmin started with admin token ' + adminToken);
     putOrPostToServer(
         adminToken,
         'PUT',
@@ -480,7 +480,7 @@ function createNewUserAsAdmin(name, email, password, continueCallback) {
         { name: name, email: email, password: password, push_tokens: ['mockPushTokenFor' + name[0]] },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
-            logger(jsonBody);
+            logger.info(jsonBody);
             expect(jsonBody.error).to.be.false;
             expect(jsonBody.userid).to.be.defined;
             userIds[name[0].toLowerCase()] = jsonBody.userid;
@@ -497,7 +497,7 @@ function testGetUserToken(email, password, continueCallback) {
         { email: email, password: password },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
-            logger(jsonBody);
+            logger.info(jsonBody);
             expect(jsonBody.error).to.be.false;
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;
@@ -519,7 +519,7 @@ function testGetAdminJwtToken() {
         { userid: 'admin', password: 'gloola123!' },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
-            // logger(jsonBody);
+            // logger.info(jsonBody);
             expect(jsonBody.error).to.be.false;
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;

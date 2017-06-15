@@ -18,7 +18,7 @@ var timedNotifications = { };
 function __pushReminderToPatient(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
         if (err) {
-            throw 'ERROR: failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id;
+            logger.error('Failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id);
         } else {
             firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                 type: 'reminder_take_medicine',
@@ -49,8 +49,8 @@ function __nagPatientIfNeeded(mongoose, userid, scheduledMedicineId, checkTimefr
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
             if (err) {
-                throw 'ERROR: failed to retrieve patient ' + userid +
-                ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!';
+                logger.error('Failed to retrieve patient ' + userid +
+                    ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!');
             } else {
                 firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                     type: 'nag_medicine_not_taken',
@@ -70,8 +70,8 @@ function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkT
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.find({ patients: { $all: [userid] } }, function (err, caretakers) {
             if (err) {
-                throw 'ERROR: failed to retrieve caretakers of patient ' + userid +
-                ' for alerting about medicine ' + medicine_id + 'not taken!';
+                logger.error('Failed to retrieve caretakers of patient ' + userid +
+                    ' for alerting about medicine ' + medicine_id + 'not taken!');
             } else {
                 var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
                     return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
@@ -105,7 +105,7 @@ function __minutes_to_milliseconds(m) {
 }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
-    logger('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
+    logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
     var checkTimeframeStart = new Date();
     var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
@@ -125,7 +125,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                 scheduledMedicineEntity.scheduled_medicine_id,
                 checkTimeframeStart),
             nagMilliseconds));
-        logger('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+        logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
 
         var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
         timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
@@ -136,9 +136,9 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                 checkTimeframeStart),
                 alertMilliseconds
             ));
-        logger('Set alert timer to ' + alertMilliseconds + ' msec from now.');
+        logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
     } else {
-        logger('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
+        logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
             ' about medicine ' + scheduledMedicineEntity.medicine_id);
     }
 }
@@ -161,7 +161,7 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
             frequencyCronFormat,
             _.partial(__remindPatientAndSetTimersForTakenMedicine, mongoose, scheduledMedicineEntity),
             true);
-        logger('Scheduled reminders with cron frequency [' + frequencyCronFormat + '] for ScheduledMedicine ' +
+        logger.info('Scheduled reminders with cron frequency [' + frequencyCronFormat + '] for ScheduledMedicine ' +
             JSON.stringify(scheduledMedicineEntity.toObject()));
     }
 }
@@ -169,7 +169,7 @@ function updateCronTaskForScheduledMedicine(mongoose, scheduledMedicineEntity) {
 function createInitialTasks(mongoose) {
     mongoose.models.ScheduledMedicine.find({ }, function(err, schedulesMedicineEntities) {
         if (err) {
-            throw 'ERROR: failed to obtain scheduled medicine for initializing cron tasks';
+            logger.error('Failed to obtain scheduled medicine for initializing cron tasks');
         } else {
             _.map(schedulesMedicineEntities, _.partial(updateCronTaskForScheduledMedicine, mongoose));
         }

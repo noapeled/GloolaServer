@@ -14,7 +14,7 @@ function __saveSentNotification(mongoose, patientUserId, recipientUserId, messag
         message: message
     }).save(function (err) {
         if (err) {
-            logger('ERROR: failed to save notification sent to ' + userid + ': ' + JSON.stringify(message));
+            logger.error('Failed to save notification sent to ' + userid + ': ' + JSON.stringify(message));
         }
     }));
 }
@@ -24,14 +24,14 @@ function firebaseNotify(mongoose, patientUserId, recipients, payload) {
         _.forEach(recipient.push_tokens, function (pushToken) {
             var message = { to: pushToken, collapse_key: 'do_not_collapse', data: payload };
             if (exports.hackishIsDebug) {
-                logger('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
+                logger.info('Mocking push to ' + pushToken + ' with payload ' + JSON.stringify(payload));
                 __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
             } else {
                 fcm.send(message, function (err, response) {
                     if (err) {
-                        throw 'ERROR: failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err);
+                        logger.error('Failed to send notification: ' + JSON.stringify(message) + ' ; error is ' + JSON.stringify(err));
                     } else {
-                        logger("Successfully sent notification " + JSON.stringify(message) + "; got response " + response);
+                        logger.info("Successfully sent notification " + JSON.stringify(message) + "; got response " + response);
                         __saveSentNotification(mongoose, patientUserId, recipient.recipientUserid, message);
                     }
                 });

@@ -5,7 +5,7 @@ var firebaseNotify = require('../firebaseNotify').firebaseNotify;
 function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventBody) {
     mongoose.models.User.find({ patients: { $all: [patientUserId] } }, function (err, caretakers) {
         if (err) {
-            throw 'ERROR: failed to retrieve caretakers of patient ' + userid + ' for notifying about new feed event ';
+            logger.error('Failed to retrieve caretakers of patient ' + userid + ' for notifying about new feed event ');
         } else {
             var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
                 return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
@@ -22,7 +22,7 @@ function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventB
 function addToFeed(mongoose, patientUserid, feedEventBody) {
     (new mongoose.models.FeedEvent(feedEventBody)).save(function(err) {
         if (err) {
-            logger('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
+            logger.info('Error: failed to add event to feed: ' + JSON.stringify(feedEventBody) + ' -- error is ' + JSON.stringify(err));
         } else {
             __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserid, feedEventBody);
         }

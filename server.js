@@ -326,7 +326,7 @@ function verifyGoogleToken(token, req, res, next) {
         config.auth.gloolaServerGoogleApiClientId,
         function(err, loginData) {
             if (err) {
-                logger('Failed to authenticate Google token, error is:', JSON.stringify(err.message));
+                logger.error('Failed to authenticate Google token, error is:', JSON.stringify(err.message));
                 return res.status(403).json({ error: true, message: err.message });
             }
             var payload = loginData.getPayload();
@@ -703,7 +703,7 @@ function initializeApp() {
     app.use(bodyParser.urlencoded({ limit: config.max_request_size_mb + 'mb', extended: true }));
     app.use('/', router);
     app.listen(config.port);
-    logger("Listening to PORT " + config.port);
+    logger.info("Listening to PORT " + config.port);
 }
 
 function serverMain(dbName, logFilePath) {
