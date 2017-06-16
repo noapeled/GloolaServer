@@ -90,7 +90,6 @@ function updateExistingScheduledMedicine(req, res) {
             _.forOwn(detailsToUpdate, function (value, key) {
                 scheduledMedicineEntity[key] = value;
             });
-            scheduledMedicineEntity.update_history.push(detailsToUpdate);
             scheduledMedicineEntity.save(function (err) {
                 if (_.isNull(err)) {
                     addToFeed(mongoose, scheduledMedicineEntity.userid, {
@@ -130,7 +129,6 @@ function updateExistingCaretaker(req, res) {
                     _.forOwn(detailsToUpdate, function (value, key) {
                         caretakerRequestEntity[key] = value;
                     });
-                    caretakerRequestEntity.update_history.push(detailsToUpdate);
                     caretakerRequestEntity.save(function (err) {
                         if (err) {
                             res.status(statusCode(err)).json({ "error": err, "message": "Error updating " + requestId });
@@ -171,7 +169,6 @@ function updateExistingEntity(req, res) {
             _.forOwn(detailsToUpdate, function (value, key) {
                 entity[key] = value;
             });
-            entity.update_history.push(detailsToUpdate);
             entity.save(function (err) {
                 res.status(statusCode(err)).json({
                     "error": err ? err : false,

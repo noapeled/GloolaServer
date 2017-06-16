@@ -8,8 +8,7 @@ var mongoose = require('mongoose');
 exports.createSchema = function(schemaProperties) {
     return mongoose.Schema(_.merge(schemaProperties, {
         creation_date: { type: Date, default: Date.now },
-        hidden: { type: Boolean, default: false },
-        update_history: [{ date: Date, contents: mongoose.Schema.Types.Mixed }]
+        hidden: { type: Boolean, default: false }
     })); // TODO: { strict: 'throw' }
 };
 
