@@ -16,6 +16,7 @@ function getCronExpression(freqObj) {
 }
 
 var ScheduledMedicine = data_types.createSchema({
+    instructions: String,
     scheduled_medicine_id: { type: String, required: true, nullable: false, unique: true },
     userid: { type: String, required: true },
     medicine_id: { type: String, required: true },
