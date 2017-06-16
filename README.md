@@ -283,6 +283,7 @@ Each scheduled medicine comprises of the following details. Note the difference 
 
 
     {
+        instructions: <optional ; ascii128 string>,
         scheduled_medicine_id: <ascii128 string, automatically assigned>,
         userid: ...,
         medicine_id: ...,
@@ -364,6 +365,7 @@ The following events are retained in a history feed for each patient.
 Each feed event has the following format.
 
     {
+        medicine_names: [...],
         userid: <patient's userid>,
         when: ISO-8601 Date,
         scheduled_medicine_id: ...,
@@ -388,6 +390,7 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
     [
         // Scheduled medicine created
         { 
+            "medicine_names": ['meow', 'hatula'],
             "userid" : "user18770455181", 
             "when" : ISODate("2017-06-12T12:02:06.208Z"), 
             "scheduled_medicine_id" : "scheduledMedicine923665291", 
@@ -398,7 +401,8 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
         },
         
         // Scheduled medicine taken soon enough
-        { 
+        {
+            "medicine_names": ['meow', 'hatula'],
             "userid" : "user1690785181", 
             "when" : ISODate("2017-06-12T12:07:55.214Z"), 
             "scheduled_medicine_id" : "scheduledMedicine4084133411",
@@ -411,6 +415,7 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
         
         // Scheduled medicine not taken soon enough
         { 
+            "medicine_names": ['meow', 'hatula'],
             "userid" : "user9994527191",
             "when" : ISODate("2017-06-12T12:20:18.283Z"),
             "scheduled_medicine_id" : "scheduledMedicine19947837171", 
@@ -422,6 +427,7 @@ Note that the contents of a single 'scheduled_medicine_updated' event can hold m
         
         // Scheduled medicine deleted
         { 
+            "medicine_names": ['meow', 'hatula'],
             "userid" : "user1690785181", 
             "scheduled_medicine_id" : "scheduledMedicine3983002771", 
             "when" : ISODate("2017-06-12T13:07:55.413Z"), 
