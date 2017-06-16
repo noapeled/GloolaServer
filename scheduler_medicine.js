@@ -4,7 +4,7 @@
 
 var logger = require('./logger');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
-var addToFeed = require('./models/addToFeed').addToFeed;
+var addEventAboutScheduledMedicine = require('./models/addToFeed').addEventAboutScheduledMedicine;
 var getCronExpression = require('./models/scheduled_medicine').getCronExpression;
 
 var _ = require('lodash');
@@ -68,13 +68,13 @@ function __nagPatientIfNeeded(mongoose, userid, scheduledMedicineId, checkTimefr
 
 function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
-        mongoose.models.User.find({ patients: { $all: [userid] } }, function (err, caretakers) {
+        mongoose.models.User.find({patients: {$all: [userid]}}, function (err, caretakers) {
             if (err) {
                 logger.error('Failed to retrieve caretakers of patient ' + userid +
                     ' for alerting about medicine ' + medicine_id + 'not taken!');
             } else {
                 var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
-                    return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
+                    return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens};
                 });
                 var elapsed_milliseconds = new Date() - checkTimeframeStart;
                 firebaseNotify(mongoose, userid, caretakersPushTokens, {
@@ -86,18 +86,20 @@ function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkT
                         elapsed_milliseconds: elapsed_milliseconds
                     }
                 });
-                addToFeed(mongoose, userid, {
-                    userid: userid,
-                    when: (new Date()).toISOString(),
-                    scheduled_medicine_id: scheduledMedicineId,
-                    event: { type: 'scheduled_medicine_not_taken', contents: { timeframe: {
-                        start: checkTimeframeStart,
-                        elapsed_milliseconds: elapsed_milliseconds
-                    } }}
-                })
+                addEventAboutScheduledMedicine(
+                    mongoose,
+                    scheduledMedicineId,
+                    (new Date()).toISOString(),
+                    'scheduled_medicine_not_taken',
+                    {
+                        timeframe: {
+                            start: checkTimeframeStart,
+                            elapsed_milliseconds: elapsed_milliseconds
+                        }
+                    });
             }
         });
-    })
+    });
 }
 
 function __minutes_to_milliseconds(m) {

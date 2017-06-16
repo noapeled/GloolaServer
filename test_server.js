@@ -136,7 +136,7 @@ function testGetMedicineNamesBySubstring() {
         var sortedByMedicineId = _.sortBy(JSON.parse(data).message, ['medicine_id']);
         expect( _(sortedByMedicineId).differenceWith([
             { medicine_names: [ 'hello' ], medicine_id: 'x123' },
-            { medicine_names: [ 'yellow' ], medicine_id: 'x7777' } ], _.isEqual).isEmpty()).to.be.true;
+            { medicine_names: [ 'yellow' ], medicine_id: 'z66666' } ], _.isEqual).isEmpty()).to.be.true;
         waitForNotifications();
     })
 }
@@ -157,7 +157,7 @@ function testCreateAnotherMedicine2() {
 
 function testCreateAnotherMedicine1() {
     putOrPostToServer(adminToken, 'PUT', '/medicine', {
-        medicine_id: "x7777",
+        medicine_id: "z66666",
         medicine_names: ['brick', 'yellow', 'road'],
         route_of_administration: "oral",
         dosage_form: "tablets"
@@ -172,7 +172,7 @@ function testUserCanAccessAllMedicine() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/medicine', function (data) {
         logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
-        expect(JSON.parse(data).message[0].medicine_id).to.equal('x123');
+        expect(_.isEqual(['x123', 'x777'], _.map(JSON.parse(data).message, 'medicine_id').sort())).to.be.true;
         testCreateAnotherMedicine1();
     })
 }
@@ -512,6 +512,19 @@ function testCreateUserTweeny() {
     createNewUserAsAdmin(tweenyName, tweenyEmail, tweenyPassword, testCreateUserTuli);
 }
 
+function testCreateMedicineX777() {
+    putOrPostToServer(adminToken, 'PUT', '/medicine', {
+        medicine_id: "x777",
+        medicine_names: ['ponpon', 'qqqqqq'],
+        route_of_administration: "oral",
+        dosage_form: "tablets"
+    }, function (data) {
+        logger.info(data);
+        expect(JSON.parse(data).error).to.be.false;
+        testCreateUserTweeny();
+    })
+}
+
 function testGetAdminJwtToken() {
     putOrPostToServer(
         '',
@@ -525,7 +538,7 @@ function testGetAdminJwtToken() {
             expect(jsonBody.message).to.be.defined;
             expect(jsonBody.token).to.be.defined;
             adminToken = 'JWT ' + jsonBody.token;
-            testCreateUserTweeny();
+            testCreateMedicineX777();
         }
     );
 }

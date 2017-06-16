@@ -10,7 +10,7 @@ var schedulerForCaretakerRequests = require('./scheduler_caretaker_request');
 var logger = require('./logger');
 require('./db');
 var schedulerForMedicine = require('./scheduler_medicine');
-var addToFeed = require('./models/addToFeed').addToFeed;
+var addEventAboutScheduledMedicine = require('./models/addToFeed').addEventAboutScheduledMedicine;
 
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
@@ -92,12 +92,13 @@ function updateExistingScheduledMedicine(req, res) {
             });
             scheduledMedicineEntity.save(function (err) {
                 if (_.isNull(err)) {
-                    addToFeed(mongoose, scheduledMedicineEntity.userid, {
-                        userid: scheduledMedicineEntity.userid,
-                        scheduled_medicine_id: scheduledMedicineId,
-                        when: (new Date()).toISOString(),
-                        event: { type: 'scheduled_medicine_updated', 'contents': detailsToUpdate }
-                    });
+                    addEventAboutScheduledMedicine(
+                        mongoose,
+                        scheduledMedicineId,
+                        (new Date()).toISOString(),
+                        'scheduled_medicine_updated',
+                        detailsToUpdate
+                    );
                     schedulerForMedicine.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
                 }
                 res.status(statusCode(err)).json({
@@ -183,12 +184,13 @@ function createNewTakenMedicine(req, res) {
     var userid = req.decodedToken.userid;
     new mongoose.models.TakenMedicine(_.assign(req.body, { userid: userid }))
         .save(function(err, takenMedicineEntity) {
-            addToFeed(mongoose, userid, {
-                userid: userid,
-                when: _.get(takenMedicineEntity, 'creation_date'),
-                scheduled_medicine_id: takenMedicineEntity.scheduled_medicine_id,
-                event: { type: 'scheduled_medicine_taken', contents: req.body }
-            });
+            addEventAboutScheduledMedicine(
+                mongoose,
+                takenMedicineEntity.scheduled_medicine_id,
+                _.get(takenMedicineEntity, 'creation_date'),
+                'scheduled_medicine_taken',
+                req.body
+            );
             res.status(statusCode(err)).json({
                 "error" : err ? err : false,
                 "message" : err ? "Error creating takenmedicine" : "Created takenmedicine"
@@ -415,7 +417,7 @@ function authorizeCreationOfEntity(req, res, next) {
             message: 'User ' + req.decodedToken.userid + ' is not authorized to create new entities' });
 }
 
-function __getCaretakerUserEntities(patientUserid, callbackOnSuccess, callbackOnFailure) {
+function getCaretakerUserEntities(patientUserid, callbackOnSuccess, callbackOnFailure) {
     mongoose.models.Caretaker.find({ patient: patientUserid, status: 'accepted' }, function (err, caretakers) {
         if (err) {
             callbackOnFailure(err);
@@ -433,7 +435,7 @@ function __getCaretakerUserEntities(patientUserid, callbackOnSuccess, callbackOn
 
 function getCaretakers(req, res) {
     var patientUserid = req.params.patientId;
-    __getCaretakerUserEntities(
+    getCaretakerUserEntities(
         patientUserid,
         function (caretakerUsers) {
             res.json({
@@ -607,12 +609,13 @@ function createNewScheduledMedicine(req, res) {
                 message: "Error creating scheduledMedicine"
             })
         } else {
-            addToFeed(mongoose, userid, {
-                userid: userid,
-                when: scheduledMedicineEntity.creation_date,
-                scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
-                event: { type: 'scheduled_medicine_created', contents: scheduledMedicineEntity.toObject() }
-            });
+            addEventAboutScheduledMedicine(
+                mongoose,
+                scheduledMedicineEntity.scheduled_medicine_id,
+                scheduledMedicineEntity.creation_date,
+                'scheduled_medicine_created',
+                scheduledMedicineEntity.toObject()
+            );
             schedulerForMedicine.updateTimersForScheduledMedicine(mongoose, scheduledMedicineEntity);
             res.json({
                 error: false,
