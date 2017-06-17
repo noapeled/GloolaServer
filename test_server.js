@@ -104,7 +104,10 @@ function testGetFeedOfPatient() {
         '/feed/' + userIds['tuli'],
         function (data) {
             logger.info(inspect(data));
-            expect(_.isEqual(_.map(data, 'when').sort(), _.map(data, 'when'))).to.be.true;
+            var feedEvents = JSON.parse(data).message;
+            expect(_.isEmpty(feedEvents)).to.be.false;
+            expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
+            expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
             allTestsDone();
         }
     );
