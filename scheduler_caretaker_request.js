@@ -15,12 +15,12 @@ function notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEnt
     var patientUserid = caretakerRequestEntity.patient;
     var caretakerUserid = caretakerRequestEntity.caretaker;
     mongoose.models.User.findOne({ userid: patientUserid }, function(err, patientUserEntity) {
-        if (err) {
+        if (err || !patientUserEntity) {
             logger.error('Failed to retrieve patient ' + patientUserid + ' for nagging about caretaker request ' +
                 caretakerRequestEntity.request_id);
         } else {
             mongoose.models.User.findOne({ userid: caretakerUserid }, function(err, caretakerUserEntity) {
-                if (err) {
+                if (err || !caretakerUserEntity) {
                     logger.error('Failed to retrieve caretaker ' + caretakerUserid + ' to nag patient ' +
                         patientUserid + ' about pending caretaker request');
                 } else {
@@ -44,7 +44,7 @@ function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
         clearTimeout(timedNotifications[requestId]);
     }
     mongoose.models.Caretaker.findOne({ request_id: requestId }, function (err, caretakerRequestEntity) {
-        if (err) {
+        if (err || !caretakerRequestEntity) {
             logger.error('Failed to retrieve caretaker request ' + requestId + ', will retry');
         } else {
             if ((caretakerRequestEntity.hidden) || (caretakerRequestEntity.status !== 'pending')) {
@@ -62,7 +62,7 @@ function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
 
 function createInitialTasks(mongoose) {
     mongoose.models.Caretaker.find({ status: 'pending', hidden: 'false' }, function(err, pendingCaretakerEntities) {
-        if (err) {
+        if (err || !pendingCaretakerEntities) {
             logger.error('Failed to obtain all pending caretaker requests for initializing cron tasks');
         } else {
             _.map(pendingCaretakerEntities, function (caretakerEntity) {
