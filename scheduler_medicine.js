@@ -17,8 +17,8 @@ var timedNotifications = { };
 
 function __pushReminderToPatient(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
-        if (err) {
-            logger.error('Failed to retrieve patient ' + userid + ' for reminding to take medicine ' + medicine_id);
+        if (err || !userEntity) {
+            logger.error('Failed to retrieve patient ' + userid + ' about scheduled medicine ' + scheduledMedicineId);
         } else {
             firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
                 type: 'reminder_take_medicine',
@@ -48,7 +48,7 @@ function __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMe
 function __nagPatientIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
-            if (err) {
+            if (err || !userEntity) {
                 logger.error('Failed to retrieve patient ' + userid +
                     ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!');
             } else {

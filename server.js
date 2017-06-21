@@ -119,7 +119,7 @@ function updateExistingCaretaker(req, res) {
             res.status(400).json({ error: true, message: "Caretaker request " + requestId + " not found." });
         } else {
             mongoose.models.User.findOne({userid: caretakerRequestEntity.caretaker}, function (err, caretakerUserEntity) {
-                if (err) {
+                if (err || !caretakerUserEntity) {
                     res.status(500).json({
                         error: err,
                         message: "Failed to fetch caretaker " + caretakerUserEntity.caretaker
@@ -200,34 +200,40 @@ function createNewTakenMedicine(req, res) {
 
 function createNewCaretaker(req, res) {
     var patientEmail = req.body.patient_email;
-    var caretakerUserid = req.decodedToken.userid;
-    mongoose.models.User.findOne({ email: patientEmail }, function (err, patientUserEntity) {
-        if (err) {
-            res.status(statusCode(err)).json({
-                error: err,
-                message: 'Could not find user by email ' + req.body.patient_email
-            });
-        } else {
-            var newCaretaker = new mongoose.models.Caretaker({
-                request_id: 'caretakerRequest' + __guid(),
-                patient: patientUserEntity.userid,
-                caretaker: caretakerUserid,
-                status: 'pending'
-            });
-            newCaretaker.save(function(err) {
-                if (err) {
-                    res.status(statusCode(err)).json({
-                        "error" : err ,
-                        "message" : "Error creating caretaker for patient " + patientUserEntity.userid
-                    });
-                } else {
-                    schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
-                        mongoose, newCaretaker.request_id);
-                    res.json({ "error" : false, "message" : newCaretaker });
-                }
-            });
-        }
-    });
+    if (_.isUndefined(patientEmail)) {
+        res.status(400).json({ error: true, message: 'patient_email must be specified' });
+    } else {
+        var caretakerUserid = req.decodedToken.userid;
+        mongoose.models.User.findOne({ email: patientEmail }, function (err, patientUserEntity) {
+            if (err) {
+                res.status(statusCode(err)).json({
+                    error: err,
+                    message: 'Failed to retrieve user by email ' + patientEmail
+                });
+            } else if (!patientUserEntity) {
+                res.status(400).json({ error: true, message: 'No user with email ' + patientEmail });
+            } else {
+                var newCaretaker = new mongoose.models.Caretaker({
+                    request_id: 'caretakerRequest' + __guid(),
+                    patient: patientUserEntity.userid,
+                    caretaker: caretakerUserid,
+                    status: 'pending'
+                });
+                newCaretaker.save(function (err) {
+                    if (err) {
+                        res.status(statusCode(err)).json({
+                            "error": err,
+                            "message": "Error creating caretaker for patient " + patientUserEntity.userid
+                        });
+                    } else {
+                        schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
+                            mongoose, newCaretaker.request_id);
+                        res.json({"error": false, "message": newCaretaker});
+                    }
+                });
+            }
+        });
+    }
 }
 
 function createNewEntity(req, res) {

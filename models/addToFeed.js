@@ -39,13 +39,13 @@ function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventB
 
 function addEventAboutScheduledMedicine(mongoose, scheduledMedicineId, when, eventType, eventContents) {
     mongoose.models.ScheduledMedicine.findOne({ scheduled_medicine_id: scheduledMedicineId }, function (err, scheduledMedicineEntity) {
-        if (err) {
+        if (err || !scheduledMedicineEntity) {
             logger.error('Failed to retrieve scheduled medicine ' + scheduledMedicineId + ' for feed event: '
                 + JSON.stringify(err));
         } else {
             var patientUserid = scheduledMedicineEntity.userid;
             mongoose.models.Medicine.findOne({ medicine_id: scheduledMedicineEntity.medicine_id }, function (err, medicineEntity) {
-                if (err) {
+                if (err || !medicineEntity) {
                     logger.error('Failed to retrieve medicine ' + scheduledMedicineEntity.medicine_id + ' for feed event: '
                         + JSON.stringify(err));
                 } else {

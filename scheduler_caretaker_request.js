@@ -62,7 +62,7 @@ function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
 
 function createInitialTasks(mongoose) {
     mongoose.models.Caretaker.find({ status: 'pending', hidden: 'false' }, function(err, pendingCaretakerEntities) {
-        if (err || !pendingCaretakerEntities) {
+        if (err) {
             logger.error('Failed to obtain all pending caretaker requests for initializing cron tasks');
         } else {
             _.map(pendingCaretakerEntities, function (caretakerEntity) {
