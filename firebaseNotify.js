@@ -2,7 +2,7 @@ var logger = require('./logger');
 var _ = require('lodash');
 
 var FCM = require('fcm-node');
-var SERVER_KEY = 'AAAAC_-M5RQ:APA91bFGcMxQyiFfy0BTPAPk-hLUU1IptF9Vy_NvFXcrebF2f0CC876IHEU0O6cpxjgnKe8ooz2SZIRCIsFmsAyTZHtTyfbfRQ2aljZaSdVRtYJHy3lzBGijVqkr5SmW1HXxV3EMnVe3'; //put your server key here
+var SERVER_KEY = 'AAAAf1sV3dk:APA91bHoY3lH3ppTODcg8y-ib7rQHKoDlCSFhK948k3S_rMMXUtszN0PwB35y6UVWMsJBSYC6fqAeiELFm-kvdovU-JtbAsszDDHEsE3fLR9r_9-s5yBxCo4HE4k5FvbtzaXKHcVoMk-';
 var fcm = new FCM(SERVER_KEY);
 
 exports.hackishIsDebug = false;
