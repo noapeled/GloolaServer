@@ -251,10 +251,9 @@ The server then repeats the nag once an hour, until the patient either accepts o
 
 ## Patient Accepts or Rejects a Caretaker Request
 
-    POST /caretaker
+    POST /caretaker/:requestId
     
     {
-        request_id: ...,
         status: 'accepted' or 'rejected'
     }
 
