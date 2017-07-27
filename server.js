@@ -309,7 +309,7 @@ function authenticateUserNotAdmin(req, res) {
 }
 
 function authenticate(req, res) {
-    logger.info("Request to authenticate");
+    logger.info("Request to authenticate: " + JSON.stringify(req.body));
     return req.body.userid === 'admin' ? authenticateAdmin(req, res) : authenticateUserNotAdmin(req, res);
 }
 
