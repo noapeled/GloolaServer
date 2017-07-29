@@ -112,11 +112,11 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     var checkTimeframeStart = new Date();
 
     var currentDay = checkTimeframeStart.getDay();
-    var startDayOfWeek = scheduledMedicineEntity.start_time.getDay();
+    var dayOfStartTime = scheduledMedicineEntity.start_time.getDay();
     var dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
-    if (dailyFrequency && (((currentDay - startDayOfWeek) % dailyFrequency) !== 0)) {
+    if (dailyFrequency && (((currentDay - dayOfStartTime) % dailyFrequency) !== 0)) {
         logger.info('Not per daily frequency: ' +
-            'every_x_days = ' + dailyFrequency + ', today = ' + currentDay + ', startDayOfWeek = ' + startDayOfWeek);
+            'every_x_days = ' + dailyFrequency + ', today = ' + currentDay + ', dayOfStartTime = ' + dayOfStartTime);
     } else {
         var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
         var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
