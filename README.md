@@ -227,7 +227,8 @@ If parameter latest is omitted, defaults to all records.
     PUT /caretaker
     
     {
-        patient_email: <RFC 822 address>
+        patient_email: <RFC 822 address>,
+        nfc: <Optional, true if this request is initiated through NFC with the patient's device>
     }
     
 The server will create a corresponding caretaker request:
