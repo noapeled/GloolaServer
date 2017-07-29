@@ -374,7 +374,7 @@ function verifyToken(req, res, next) {
 }
 
 function authorizeAccessToEntireCollection(req, res, next) {
-    return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image', 'whoami', 'caretaker'], req.params.collection) ?
+    return req.decodedToken.userid === 'admin' || _.includes(['medicine', 'image', 'whoami'], req.params.collection) ?
         next() :
         res.status(403).json({
             error: true,
@@ -644,7 +644,7 @@ function getFeed(req, res) {
 }
 
 function getCaretakerRequests(req, res) {
-    var userid = req.decodedToken.userid;
+    var userid = req.params.userid;
     mongoose.models.Caretaker.find({ $or: [{ patient: userid }, { caretaker: userid }] },
         function (err, caretakerEntities) {
             if (err) {
@@ -702,8 +702,10 @@ function initializeRoutes() {
     router.route("/takenmedicine/:userid")
         .get(getLatestTakenMedicine);
 
+    router.route('/caretakerrequest/:userid')
+        .get(getCaretakerRequests);
+
     router.route('/caretaker')
-        .get(getCaretakerRequests)
         .put(createNewCaretaker);
 
     router.route('/:collection')

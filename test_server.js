@@ -385,6 +385,30 @@ function testAdminCanGetAllUsers() {
     })
 }
 
+function testTuliCanGetHisRequestToBecomeCaredFor() {
+    getFromServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        '/caretakerrequest/' + userIds['tuli'],
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).message[0].patient).to.equal(userIds['tuli']);
+            expect(JSON.parse(data).message[0].status).to.equal('accepted');
+            testAdminCanGetAllUsers();
+        });
+}
+
+function testTweenyCanGetHisRequestToBecomeCaretaker() {
+    getFromServer(
+        jwtTokensForNonAdminUsers[tweenyEmail],
+        '/caretakerrequest/' + userIds['tweeny'],
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).message[0].caretaker).to.equal(userIds['tweeny']);
+            expect(JSON.parse(data).message[0].status).to.equal('accepted');
+            testTuliCanGetHisRequestToBecomeCaredFor();
+        });
+}
+
 function testTuliHasCaretakerTweeny() {
     getFromServer(
         jwtTokensForNonAdminUsers[tweenyEmail],
@@ -394,7 +418,7 @@ function testTuliHasCaretakerTweeny() {
            var caretakers = JSON.parse(data).message;
            expect(caretakers.length).to.equal(1);
            expect(_.isEqual(caretakers[0], { userid: userIds['tweeny'], 'name': tweenyName, 'email': tweenyEmail })).to.be.true;
-           testAdminCanGetAllUsers();
+           testTweenyCanGetHisRequestToBecomeCaretaker();
         });
 }
 
