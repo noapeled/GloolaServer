@@ -121,8 +121,10 @@ function testShuntziCanAskToBeCaretakerOfTuliViaNFC() {
         { nfc: true, patient_email: tuliEmail },
         function (data) {
             logger.info(data);
+            logger.info('There should be no push notification to Tuli about this caretaker request!');
             expect(JSON.parse(data).error).to.be.false;
             expect(JSON.parse(data).message.request_id).to.not.be.empty;
+            expect(JSON.parse(data).message.nfc).to.be.true;
             shuntziCaretakerRequestId = JSON.parse(data).message.request_id;
             putOrPostToServer(
                 jwtTokensForNonAdminUsers[tuliEmail],

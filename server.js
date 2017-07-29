@@ -214,6 +214,7 @@ function createNewCaretaker(req, res) {
                 res.status(400).json({ error: true, message: 'No user with email ' + patientEmail });
             } else {
                 var newCaretaker = new mongoose.models.Caretaker({
+                    nfc: req.body.nfc || false,
                     request_id: 'caretakerRequest' + __guid(),
                     patient: patientUserEntity.userid,
                     caretaker: caretakerUserid,
