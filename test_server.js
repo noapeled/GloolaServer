@@ -31,6 +31,10 @@ var tuliPassword = 'lll';
 var tweenyEmail = 'tweenyhasleftthebuilding@gmail.com';
 var tuliEmail = 'tuli@t.com';
 
+var shuntziName = ['Shuntzi', 'Edwardo'];
+var shuntziPassword = 'zzz';
+var shuntziEmail = 'shuntzi@z.com';
+
 var scheduledMedicineX777 = {
     start_time: new Date(),
     medicine_id: "x777",
@@ -48,7 +52,8 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
-caretakerRequestID = null;
+shuntziCaretakerRequestId = null;
+tweenyCaretakerRequestID = null;
 scheduledMedicineIdForX123 = null;
 scheduledMedicineIdForX777 = null;
 adminToken = null;
@@ -100,6 +105,46 @@ function allTestsDone() {
     logger.info('---------- All tests done ---------');
 }
 
+function testShuntziHasPatientTuli() {
+    getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
+        logger.info(data);
+        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        allTestsDone();
+    });
+}
+
+function testShuntziCanAskToBeCaretakerOfTuliViaNFC() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[shuntziEmail],
+        'PUT',
+        '/caretaker',
+        { nfc: true, patient_email: tuliEmail },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.be.false;
+            expect(JSON.parse(data).message.request_id).to.not.be.empty;
+            shuntziCaretakerRequestId = JSON.parse(data).message.request_id;
+            putOrPostToServer(
+                jwtTokensForNonAdminUsers[tuliEmail],
+                'POST',
+                '/caretaker/' + shuntziCaretakerRequestId,
+                { status: 'accepted' },
+                function (data) {
+                    logger.info(data);
+                    expect(JSON.parse(data).error).to.be.false;
+                    testShuntziHasPatientTuli();
+                });
+        });
+}
+
+function testLoginAsShuntzi() {
+    testGetUserToken(shuntziEmail, shuntziPassword, testShuntziCanAskToBeCaretakerOfTuliViaNFC);
+}
+
+function testCreateUserShuntzi() {
+    createNewUserAsAdmin(shuntziName, shuntziEmail, shuntziPassword, testLoginAsShuntzi);
+}
+
 function testGetFeedOfPatient() {
     getFromServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -110,7 +155,7 @@ function testGetFeedOfPatient() {
             expect(_.isEmpty(feedEvents)).to.be.false;
             expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
             expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
-            allTestsDone();
+            testCreateUserShuntzi();
         }
     );
 }
@@ -444,7 +489,7 @@ function testTuliCanApproveCaretakerTweeny() {
         putOrPostToServer(
             jwtTokensForNonAdminUsers[tuliEmail],
             'POST',
-            '/caretaker/' + caretakerRequestID,
+            '/caretaker/' + tweenyCaretakerRequestID,
             { status: 'accepted' },
             function (data) {
                 logger.info(data);
@@ -467,7 +512,7 @@ function testSetTweenyAsCaretakerOfTuli() {
             expect(JSON.parse(data).message.patient).to.equal(userIds['tuli']);
             expect(JSON.parse(data).message.status).to.equal('pending');
             expect(JSON.parse(data).message.request_id).to.not.be.empty;
-            caretakerRequestID = JSON.parse(data).message.request_id;
+            tweenyCaretakerRequestID = JSON.parse(data).message.request_id;
             testTuliCanApproveCaretakerTweeny();
         });
 }
