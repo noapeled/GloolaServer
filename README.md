@@ -276,6 +276,13 @@ As described before, use
     
 where userid is the caretaker's userid.
 
+## Get All caretaker requests
+Patients and caretakers can get all caretaker requests which involve them, using
+
+    GET /caretakerrequest/:userid
+
+The server will reply with all caretaker requests where patient or caretaker is userid, regardless of status.
+
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
 **scheduled_medicine_id** identifies the scheduled instance itself, whereas **medicine_id** identifies which medicine is being scheduled.
