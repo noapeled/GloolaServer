@@ -287,15 +287,15 @@ Each scheduled medicine comprises of the following details. Note the difference 
         userid: ...,
         medicine_id: ...,
         dosage_size: <positive number>,
-        frequency: { // Same components as for cron jobs.
+        frequency: { // Similar components as for cron jobs.
             day_of_week: ...,
             month_of_year: ...,
             day_of_month: ...,
             hour: ...,
-            minute: ... 
+            minute: ...,
+            every_x_days: <positive number or null>
         },
-        start_time: Optional ISO-8601 date, indicating when the schedule starts.
-                    Defaults to null, which means immediate start.    
+        start_time: ISO-8601 date, indicating when the schedule starts. If every_x_days applies, then start_time provides the reference start day.
         end_time: Optional ISO-8601 date, indicating when the schedule ends.
                   Defaults to null, which means the schedule never ends.
         nag_offset_minutes: Optional positive number of minutes for a nag about medicine not taken. 
