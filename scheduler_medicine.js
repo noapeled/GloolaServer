@@ -110,7 +110,6 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
     var checkTimeframeStart = new Date();
-
     var currentDay = checkTimeframeStart.getDay();
     var dayOfStartTime = scheduledMedicineEntity.start_time.getDay();
     var dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
