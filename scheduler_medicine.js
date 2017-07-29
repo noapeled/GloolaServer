@@ -110,38 +110,47 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
     var checkTimeframeStart = new Date();
-    var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
-    var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
-    if (isAfterStart && isBeforeEnd) {
-        __pushReminderToPatient(
-            mongoose,
-            scheduledMedicineEntity.userid,
-            scheduledMedicineEntity.scheduled_medicine_id,
-            checkTimeframeStart);
 
-        var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
-        timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
-            _.partial(__nagPatientIfNeeded,
+    var currentDay = checkTimeframeStart.getDay();
+    var startDayOfWeek = scheduledMedicineEntity.start_time.getDay();
+    var dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
+    if (dailyFrequency && (((currentDay - startDayOfWeek) % dailyFrequency) !== 0)) {
+        logger.info('Not per daily frequency: ' +
+            'every_x_days = ' + dailyFrequency + ', today = ' + currentDay + ', startDayOfWeek = ' + startDayOfWeek);
+    } else {
+        var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
+        var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
+        if (isAfterStart && isBeforeEnd) {
+            __pushReminderToPatient(
                 mongoose,
                 scheduledMedicineEntity.userid,
                 scheduledMedicineEntity.scheduled_medicine_id,
-                checkTimeframeStart),
-            nagMilliseconds));
-        logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+                checkTimeframeStart);
 
-        var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
-        timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
-            _.partial(__alertCaretakersIfNeeded,
-                mongoose,
-                scheduledMedicineEntity.userid,
-                scheduledMedicineEntity.scheduled_medicine_id,
-                checkTimeframeStart),
+            var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
+            timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+                _.partial(__nagPatientIfNeeded,
+                    mongoose,
+                    scheduledMedicineEntity.userid,
+                    scheduledMedicineEntity.scheduled_medicine_id,
+                    checkTimeframeStart),
+                nagMilliseconds));
+            logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+
+            var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
+            timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+                _.partial(__alertCaretakersIfNeeded,
+                    mongoose,
+                    scheduledMedicineEntity.userid,
+                    scheduledMedicineEntity.scheduled_medicine_id,
+                    checkTimeframeStart),
                 alertMilliseconds
             ));
-        logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
-    } else {
-        logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
-            ' about medicine ' + scheduledMedicineEntity.medicine_id);
+            logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
+        } else {
+            logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
+                ' about medicine ' + scheduledMedicineEntity.medicine_id);
+        }
     }
 }
 

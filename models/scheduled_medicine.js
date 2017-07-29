@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 
 // TODO: validate precise cron-style patterns
 var __FrequencySchema = new mongoose.Schema({
+    every_x_days: { type: Number, required: false, nullable: true },
     day_of_week: { type: String, required: true },
     month_of_year: { type: String, required: true },
     day_of_month: { type: String, required: true },
