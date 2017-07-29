@@ -32,6 +32,7 @@ var tweenyEmail = 'tweenyhasleftthebuilding@gmail.com';
 var tuliEmail = 'tuli@t.com';
 
 var scheduledMedicineX777 = {
+    start_time: new Date(),
     medicine_id: "x777",
     dosage_size: 1.11,
     frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" },
@@ -39,6 +40,7 @@ var scheduledMedicineX777 = {
     alert_offset_minutes: 2.0 / 60.0
 };
 var scheduledMedicineX123 = {
+    start_time: new Date(),
     instructions: "Swallow with water",
     medicine_id: "x123",
     dosage_size: 2,
