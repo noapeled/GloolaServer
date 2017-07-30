@@ -52,7 +52,8 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
-shuntziCaretakerRequestId = null;
+shuntziSecondCaretakerRequestId = null;
+shuntziFirstCaretakerRequestId = null;
 tweenyCaretakerRequestID = null;
 scheduledMedicineIdForX123 = null;
 scheduledMedicineIdForX777 = null;
@@ -105,11 +106,40 @@ function allTestsDone() {
     logger.info('---------- All tests done ---------');
 }
 
+function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/caretaker/' + shuntziSecondCaretakerRequestId,
+        { status: 'rejected' },
+        function (data) {
+            expect(JSON.parse(data).error).to.equal(false);
+            allTestsDone();
+        }
+    )
+}
+
+function testShuntziCanAskAgainToBeomeCaretakerOfTuli() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[shuntziEmail],
+        'PUT',
+        '/caretaker',
+        { patient_email: tuliEmail },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.be.false;
+            expect(JSON.parse(data).message.request_id).to.not.be.empty;
+            shuntziSecondCaretakerRequestId = JSON.parse(data).message.request_id;
+            expect(shuntziSecondCaretakerRequestId).to.not.equal(shuntziFirstCaretakerRequestId);
+            testTuliCanDenyTheSecondCaretakerRequestFromShuntzi();
+        });
+}
+
 function testShuntziDoesNotHavePatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
         logger.info(data);
         expect(JSON.parse(data).message.patients).to.not.contain(userIds['tuli']);
-        allTestsDone();
+        testShuntziCanAskAgainToBeomeCaretakerOfTuli();
     });
 }
 
@@ -117,7 +147,7 @@ function testTuliRemovesCaretakerShuntzi() {
     putOrPostToServer(
         jwtTokensForNonAdminUsers[tuliEmail],
         'POST',
-        '/caretaker/' + shuntziCaretakerRequestId,
+        '/caretaker/' + shuntziFirstCaretakerRequestId,
         { status: 'rejected' },
         function (data) {
             expect(JSON.parse(data).error).to.equal(false);
@@ -126,12 +156,53 @@ function testTuliRemovesCaretakerShuntzi() {
     )
 }
 
+function testShuntziCannotAskAgainWhenCaretakerRequestAccepted() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[shuntziEmail],
+        'PUT',
+        '/caretaker',
+        { patient_email: tuliEmail },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.not.be.false;
+            expect(_.map(JSON.parse(data).message, 'request_id')).to.contain(shuntziFirstCaretakerRequestId);
+            testTuliRemovesCaretakerShuntzi();
+        });
+}
+
 function testShuntziHasPatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
         logger.info(data);
         expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
-        testTuliRemovesCaretakerShuntzi();
+        testShuntziCannotAskAgainWhenCaretakerRequestAccepted();
     });
+}
+
+function testTuliCanApproveCaretakerShuntzi() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/caretaker/' + shuntziFirstCaretakerRequestId,
+        { status: 'accepted' },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.be.false;
+            testShuntziHasPatientTuli();
+        });
+}
+
+function testShuntziCannotAskAgainWhileCaretakerRequestIsPending() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[shuntziEmail],
+        'PUT',
+        '/caretaker',
+        { patient_email: tuliEmail },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.not.be.false;
+            expect(_.map(JSON.parse(data).message, 'request_id')).to.contain(shuntziFirstCaretakerRequestId);
+            testTuliCanApproveCaretakerShuntzi();
+        });
 }
 
 function testShuntziCanAskToBeCaretakerOfTuliViaNFC() {
@@ -146,17 +217,8 @@ function testShuntziCanAskToBeCaretakerOfTuliViaNFC() {
             expect(JSON.parse(data).error).to.be.false;
             expect(JSON.parse(data).message.request_id).to.not.be.empty;
             expect(JSON.parse(data).message.nfc).to.be.true;
-            shuntziCaretakerRequestId = JSON.parse(data).message.request_id;
-            putOrPostToServer(
-                jwtTokensForNonAdminUsers[tuliEmail],
-                'POST',
-                '/caretaker/' + shuntziCaretakerRequestId,
-                { status: 'accepted' },
-                function (data) {
-                    logger.info(data);
-                    expect(JSON.parse(data).error).to.be.false;
-                    testShuntziHasPatientTuli();
-                });
+            shuntziFirstCaretakerRequestId = JSON.parse(data).message.request_id;
+            testShuntziCannotAskAgainWhileCaretakerRequestIsPending();
         });
 }
 
