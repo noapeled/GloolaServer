@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+var defaults = require('./models/defaults');
 var logger = require('./logger');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var addEventAboutScheduledMedicine = require('./models/addToFeed').addEventAboutScheduledMedicine;
@@ -136,39 +137,51 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     } else {
         var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
         var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
-        if (isAfterStart && isBeforeEnd) {
-            __pushReminderToPatient(
-                scheduledMedicineEntity.medicine_id,
-                mongoose,
-                scheduledMedicineEntity.userid,
-                scheduledMedicineEntity.scheduled_medicine_id,
-                checkTimeframeStart);
-
-            var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
-            timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
-                _.partial(__nagPatientIfNeeded,
-                    scheduledMedicineEntity.medicine_id,
-                    mongoose,
-                    scheduledMedicineEntity.userid,
-                    scheduledMedicineEntity.scheduled_medicine_id,
-                    checkTimeframeStart),
-                nagMilliseconds));
-            logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
-
-            var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
-            timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
-                _.partial(__alertCaretakersIfNeeded,
-                    scheduledMedicineEntity.medicine_id,
-                    mongoose,
-                    scheduledMedicineEntity.userid,
-                    scheduledMedicineEntity.scheduled_medicine_id,
-                    checkTimeframeStart),
-                alertMilliseconds
-            ));
-            logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
-        } else {
+        if (!(isAfterStart && isBeforeEnd)) {
             logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
                 ' about medicine ' + scheduledMedicineEntity.medicine_id);
+        } else {
+            var already_taken_time_start = new Date(new Date().setMinutes((new Date()).getMinutes() -
+                scheduledMedicineEntity.no_notifications_if_taken_minutes_before_schedule));
+            mongoose.models.TakenMedicine.find({
+                scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
+                when: {$gte: already_taken_time_start}
+            }, function (err, takenMedicineEntities) {
+                if (!_.isEmpty(takenMedicineEntities)) {
+                    logger.info('Medicine already taken, no need to nag: ' +
+                        JSON.stringify(scheduledMedicineEntity) + ' ; ' + JSON.stringfy(takenMedicineEntities));
+                } else {
+                    __pushReminderToPatient(
+                        scheduledMedicineEntity.medicine_id,
+                        mongoose,
+                        scheduledMedicineEntity.userid,
+                        scheduledMedicineEntity.scheduled_medicine_id,
+                        checkTimeframeStart);
+
+                    var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
+                    timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+                        _.partial(__nagPatientIfNeeded,
+                            scheduledMedicineEntity.medicine_id,
+                            mongoose,
+                            scheduledMedicineEntity.userid,
+                            scheduledMedicineEntity.scheduled_medicine_id,
+                            checkTimeframeStart),
+                        nagMilliseconds));
+                    logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
+
+                    var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
+                    timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
+                        _.partial(__alertCaretakersIfNeeded,
+                            scheduledMedicineEntity.medicine_id,
+                            mongoose,
+                            scheduledMedicineEntity.userid,
+                            scheduledMedicineEntity.scheduled_medicine_id,
+                            checkTimeframeStart),
+                        alertMilliseconds
+                    ));
+                    logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
+                }
+            });
         }
     }
 }

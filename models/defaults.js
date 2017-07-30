@@ -1,0 +1,1 @@
+exports.default_no_notifications_if_taken_minutes_before_schedule = 300;
