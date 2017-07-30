@@ -15,19 +15,30 @@ exports.hackishIsDebug = false;
 var cronTasks = { };
 var timedNotifications = { };
 
-function __pushReminderToPatient(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+function __getMedicineNames(mongoose, medicineId, callbackWhichTakesMedicineNames) {
+    mongoose.models.Medicine.findOne(
+        { medicine_id: medicineId }, function (err, medicineEntity) {
+            callbackWhichTakesMedicineNames(_.get(medicineEntity, 'medicine_names') || null);
+        });
+}
+
+
+function __pushReminderToPatient(medicineId, mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
         if (err || !userEntity) {
             logger.error('Failed to retrieve patient ' + userid + ' about scheduled medicine ' + scheduledMedicineId);
         } else {
-            firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
-                type: 'reminder_take_medicine',
-                userid: userid,
-                scheduled_medicine_id: scheduledMedicineId,
-                timeframe: {
-                    start: checkTimeframeStart,
-                    elapsed_milliseconds: (new Date() - checkTimeframeStart)
-                }
+            __getMedicineNames(mongoose, medicineId, function (medicineNames) {
+                firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
+                    medicine_names: medicineNames,
+                    type: 'reminder_take_medicine',
+                    userid: userid,
+                    scheduled_medicine_id: scheduledMedicineId,
+                    timeframe: {
+                        start: checkTimeframeStart,
+                        elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                    }
+                });
             });
         }
     });
@@ -45,28 +56,31 @@ function __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMe
     });
 }
 
-function __nagPatientIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+function __nagPatientIfNeeded(medicineId, mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.findOne({ userid: userid }, function (err, userEntity) {
             if (err || !userEntity) {
                 logger.error('Failed to retrieve patient ' + userid +
                     ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!');
             } else {
-                firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
-                    type: 'nag_medicine_not_taken',
-                    userid: userid,
-                    scheduled_medicine_id: scheduledMedicineId,
-                    timeframe: {
-                        start: checkTimeframeStart,
-                        elapsed_milliseconds: (new Date() - checkTimeframeStart)
-                    }
+                __getMedicineNames(mongoose, medicineId, function (medicineNames) {
+                    firebaseNotify(mongoose, userid, [{recipientUserid: userid, push_tokens: userEntity.push_tokens}], {
+                        medicine_names: medicineNames,
+                        type: 'nag_medicine_not_taken',
+                        userid: userid,
+                        scheduled_medicine_id: scheduledMedicineId,
+                        timeframe: {
+                            start: checkTimeframeStart,
+                            elapsed_milliseconds: (new Date() - checkTimeframeStart)
+                        }
+                    });
                 });
             }
         });
     });
 }
 
-function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+function __alertCaretakersIfNeeded(medicineId, mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
         mongoose.models.User.find({patients: {$all: [userid]}}, function (err, caretakers) {
             if (err) {
@@ -77,14 +91,17 @@ function __alertCaretakersIfNeeded(mongoose, userid, scheduledMedicineId, checkT
                     return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens};
                 });
                 var elapsed_milliseconds = new Date() - checkTimeframeStart;
-                firebaseNotify(mongoose, userid, caretakersPushTokens, {
-                    type: 'alert_medicine_not_taken',
-                    userid: userid,
-                    scheduled_medicine_id: scheduledMedicineId,
-                    timeframe: {
-                        start: checkTimeframeStart,
-                        elapsed_milliseconds: elapsed_milliseconds
-                    }
+                __getMedicineNames(mongoose, medicineId, function (medicineNames) {
+                    firebaseNotify(mongoose, userid, caretakersPushTokens, {
+                        medicine_names: medicineNames,
+                        type: 'alert_medicine_not_taken',
+                        userid: userid,
+                        scheduled_medicine_id: scheduledMedicineId,
+                        timeframe: {
+                            start: checkTimeframeStart,
+                            elapsed_milliseconds: elapsed_milliseconds
+                        }
+                    });
                 });
                 addEventAboutScheduledMedicine(
                     mongoose,
@@ -121,6 +138,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
         var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
         if (isAfterStart && isBeforeEnd) {
             __pushReminderToPatient(
+                scheduledMedicineEntity.medicine_id,
                 mongoose,
                 scheduledMedicineEntity.userid,
                 scheduledMedicineEntity.scheduled_medicine_id,
@@ -129,6 +147,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
             var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
             timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
                 _.partial(__nagPatientIfNeeded,
+                    scheduledMedicineEntity.medicine_id,
                     mongoose,
                     scheduledMedicineEntity.userid,
                     scheduledMedicineEntity.scheduled_medicine_id,
@@ -139,6 +158,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
             var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
             timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
                 _.partial(__alertCaretakersIfNeeded,
+                    scheduledMedicineEntity.medicine_id,
                     mongoose,
                     scheduledMedicineEntity.userid,
                     scheduledMedicineEntity.scheduled_medicine_id,
