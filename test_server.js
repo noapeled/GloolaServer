@@ -52,6 +52,7 @@ var scheduledMedicineX123 = {
 };
 var medicalData = { medication: [scheduledMedicineX777, scheduledMedicineX123]};
 
+scheduledMedicineIdForTestingNoNags = null;
 shuntziSecondCaretakerRequestId = null;
 shuntziFirstCaretakerRequestId = null;
 tweenyCaretakerRequestID = null;
@@ -260,6 +261,53 @@ function testGetFeedOfPatient() {
     );
 }
 
+function waitForSkippingOfNagsThenRemoveNaggingMedicine() {
+    logger.info('------------- You should now see some skipping of nags, followed by resumed push notifications. -----------');
+    setTimeout(function () {
+        putOrPostToServer(
+            jwtTokensForNonAdminUsers[tuliEmail],
+            'POST',
+            '/scheduledmedicine/' + scheduledMedicineIdForTestingNoNags,
+            { hidden: true },
+            function (data) {
+                logger.info(data);
+                expect(JSON.parse(data).error).to.be.false;
+                testGetFeedOfPatient();
+            });
+    }, 10000);
+}
+
+function tuliCanAddMedicineForTestingNoNags() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'PUT',
+        '/scheduledmedicine/' + userIds['tuli'],
+        {
+            no_notifications_if_taken_seconds_before_schedule: 7,
+            start_time: new Date(),
+            medicine_id: "z66666",
+            dosage_size: 2.3,
+            frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" },
+            nag_offset_minutes: 1.0 / 60.0,
+            alert_offset_minutes: 2.0 / 60.0
+        },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.be.false;
+            scheduledMedicineIdForTestingNoNags = JSON.parse(data).scheduled_medicine_id;
+            putOrPostToServer(
+                jwtTokensForNonAdminUsers[tuliEmail],
+                'PUT',
+                '/takenmedicine',
+                { when: new Date(), scheduled_medicine_id: scheduledMedicineIdForTestingNoNags, dosage: 3 }, function (data) {
+                    logger.info(data);
+                    expect(JSON.parse(data).error).to.be.false;
+                    waitForSkippingOfNagsThenRemoveNaggingMedicine();
+            });
+        }
+    );
+}
+
 function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
     putOrPostToServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -270,7 +318,7 @@ function testPushNotificationsStopAfterRemovingLastMedicineOfTuli() {
             logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
             logger.info('------------- There should be no more push notifications about medicine to take. -----------');
-            testGetFeedOfPatient();
+            tuliCanAddMedicineForTestingNoNags();
         }
     );
 }

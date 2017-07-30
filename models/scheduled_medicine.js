@@ -18,8 +18,8 @@ function getCronExpression(freqObj) {
 }
 
 var ScheduledMedicine = data_types.createSchema({
-    no_notifications_if_taken_minutes_before_schedule: { type: Number, required: false, nullable: true,
-        default: defaults.default_no_notifications_if_taken_minutes_before_schedule },
+    no_notifications_if_taken_seconds_before_schedule: { type: Number, required: false, nullable: true,
+        default: defaults.default_no_notifications_if_taken_seconds_before_schedule },
     instructions: String,
     scheduled_medicine_id: { type: String, required: true, nullable: false, unique: true },
     userid: { type: String, required: true },

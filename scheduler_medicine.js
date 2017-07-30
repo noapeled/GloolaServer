@@ -141,15 +141,15 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
             logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
                 ' about medicine ' + scheduledMedicineEntity.medicine_id);
         } else {
-            var already_taken_time_start = new Date(new Date().setMinutes((new Date()).getMinutes() -
-                scheduledMedicineEntity.no_notifications_if_taken_minutes_before_schedule));
+            var already_taken_time_start = new Date(new Date().setSeconds((new Date()).getSeconds() -
+                scheduledMedicineEntity.no_notifications_if_taken_seconds_before_schedule));
             mongoose.models.TakenMedicine.find({
                 scheduled_medicine_id: scheduledMedicineEntity.scheduled_medicine_id,
-                when: {$gte: already_taken_time_start}
+                when: { $gte: already_taken_time_start }
             }, function (err, takenMedicineEntities) {
                 if (!_.isEmpty(takenMedicineEntities)) {
                     logger.info('Medicine already taken, no need to nag: ' +
-                        JSON.stringify(scheduledMedicineEntity) + ' ; ' + JSON.stringfy(takenMedicineEntities));
+                        JSON.stringify(scheduledMedicineEntity) + ' ; ' + JSON.stringify(takenMedicineEntities));
                 } else {
                     __pushReminderToPatient(
                         scheduledMedicineEntity.medicine_id,
