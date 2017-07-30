@@ -351,6 +351,7 @@ In all cases, the messages have the following format.
             type: <One of: 'reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'>,
             userid: userid,
             medicine_id: medicine_id,
+            medicine_names: <array of medicine names, or null in case of retrieval error>,
             timeframe: {
                 start: <the time T when the patient should have taken the medicine>,
                 elapsed_milliseconds: <milliseconds since T>
