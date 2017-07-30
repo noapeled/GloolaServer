@@ -105,11 +105,32 @@ function allTestsDone() {
     logger.info('---------- All tests done ---------');
 }
 
+function testShuntziDoesNotHavePatientTuli() {
+    getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
+        logger.info(data);
+        expect(JSON.parse(data).message.patients).to.not.contain(userIds['tuli']);
+        allTestsDone();
+    });
+}
+
+function testTuliRemovesCaretakerShuntzi() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        'POST',
+        '/caretaker/' + shuntziCaretakerRequestId,
+        { status: 'rejected' },
+        function (data) {
+            expect(JSON.parse(data).error).to.equal(false);
+            testShuntziDoesNotHavePatientTuli();
+        }
+    )
+}
+
 function testShuntziHasPatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
         logger.info(data);
         expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
-        allTestsDone();
+        testTuliRemovesCaretakerShuntzi();
     });
 }
 
@@ -205,7 +226,6 @@ function testCreateAnotherMedicine2() {
         testGetMedicineNamesBySubstring();
     })
 }
-
 
 function testCreateAnotherMedicine1() {
     putOrPostToServer(adminToken, 'PUT', '/medicine', {
@@ -438,6 +458,7 @@ function testTuliCanGetHisRequestToBecomeCaredFor() {
         '/caretakerrequest/' + userIds['tuli'],
         function (data) {
             logger.info(data);
+            expect(JSON.parse(data).message[0].request_id).to.equal(tweenyCaretakerRequestID);
             expect(JSON.parse(data).message[0].patient).to.equal(userIds['tuli']);
             expect(JSON.parse(data).message[0].status).to.equal('accepted');
             testAdminCanGetAllUsers();
