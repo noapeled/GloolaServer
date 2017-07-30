@@ -290,6 +290,7 @@ Each scheduled medicine comprises of the following details. Note the difference 
 
 
     {
+        no_notifications_if_taken_seconds_before_schedule: <optional number of seconds, defaults to 5 * 3600 (=5 hours)>,
         instructions: <optional ; ascii128 string>,
         scheduled_medicine_id: <ascii128 string, automatically assigned>,
         userid: ...,
