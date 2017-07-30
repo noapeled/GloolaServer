@@ -106,6 +106,20 @@ function allTestsDone() {
     logger.info('---------- All tests done ---------');
 }
 
+function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNames() {
+    getFromServer(adminToken, '/sentnotification', function (data) {
+       logger.info(data);
+       var SentNotificationsAboutScheduledMedicine = _.filter(
+            _.map(JSON.parse(data).message, obj => obj.message.data),
+            obj => _.includes(
+                ['reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'], obj.type));
+       expect(SentNotificationsAboutScheduledMedicine).to.not.be.empty;
+       expect(_.every(SentNotificationsAboutScheduledMedicine),
+           notification => notification.medicine_names.length > 0).to.be.true;
+       allTestsDone();
+    });
+}
+
 function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
     putOrPostToServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -113,8 +127,9 @@ function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
         '/caretaker/' + shuntziSecondCaretakerRequestId,
         { status: 'rejected' },
         function (data) {
+            logger.info(data);
             expect(JSON.parse(data).error).to.equal(false);
-            allTestsDone();
+            testAllSentNotificationsAboutScheduledMedicineHaveMedicineNames();
         }
     )
 }

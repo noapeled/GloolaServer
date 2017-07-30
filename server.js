@@ -35,6 +35,7 @@ var config = {
 };
 
 var modelNames = {
+    sentnotification: 'SentNotification',
     caretaker: 'Caretaker',
     scheduledmedicine: 'ScheduledMedicine',
     user: 'User',
@@ -67,7 +68,7 @@ function getAllEntitiesInCollection(req, res) {
             message : "GET all images is disabled, payload may be very large"
         });
     } else {
-        var model = _.startCase(req.params.collection);
+        var model = modelNames[req.params.collection] || _.startCase(req.params.collection);
         mongoose.models[model].find({}, function (err, data) {
             res.json({
                 "message": err ? "Error fetching data" : data,
