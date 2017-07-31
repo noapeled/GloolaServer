@@ -242,4 +242,4 @@ exports.createInitialTasks = createInitialTasks;
 //     { demo: "payload" }
 // );
 
-uniTestCheckIfPerDailyFrequency();
+// uniTestCheckIfPerDailyFrequency();
