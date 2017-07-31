@@ -147,7 +147,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
     const now = new Date();
     const dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
     if (dailyFrequency && (!__isPerDailyFrequency(now, scheduledMedicineEntity.start_time, dailyFrequency))) {
-        logger.info('Not per daily frequency: every_x_days =' + dailyFrequency +
+        logger.info('Not per daily frequency: every_x_days = ' + dailyFrequency +
             ', start_time = ' + scheduledMedicineEntity.start_time);
     } else {
         var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= now);

@@ -1,7 +1,3 @@
-/**
- * Created by inon on 6/4/17.
- */
-
 var _ = require('lodash');
 
 var m = [
