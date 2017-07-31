@@ -68,6 +68,7 @@ function allTestsDone() {
 }
 
 function waitThenCheckReminders() {
+    logger.info('---------- Waiting ' + NUM_MINUTES_TO_WAIT + ' minutes... ---------');
     setTimeout(function () {
         getFromServer(adminToken, '/sentnotification', function (sentNotificationEntities) {
             logger.info(sentNotificationEntities);
