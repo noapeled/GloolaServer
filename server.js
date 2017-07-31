@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+var defaults = require('./models/defaults');
 var _ = require('lodash-joins');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var schedulerForCaretakerRequests = require('./scheduler_caretaker_request');
@@ -214,11 +215,17 @@ function createNewCaretaker(req, res) {
             } else if (!patientUserEntity) {
                 res.status(400).json({ error: true, message: 'No user with email ' + patientEmail });
             } else {
-                mongoose.models.Caretaker.find({
-                    patient: patientUserEntity.userid,
-                    caretaker: caretakerUserid,
-                    status: { $in: ['pending', 'accepted'] }
-                }, function (err, caretakerRequestEntities) {
+                var earliestDateForNfc = new Date(new Date().setSeconds(new Date().getSeconds() -
+                    defaults.default_seconds_until_nfc_caretaker_request_is_considered_expired));
+                mongoose.models.Caretaker.find({ $and: [
+                    { $or: [
+                        { nfc: { $ne: true } },
+                        { creation_date: { $gte: earliestDateForNfc } }
+                    ] },
+                    { patient: patientUserEntity.userid },
+                    { caretaker: caretakerUserid },
+                    { status: { $in: ['pending', 'accepted'] } }
+                ]}, function (err, caretakerRequestEntities) {
                     if (!_.isEmpty(caretakerRequestEntities)) {
                         res.status(400).json({
                             error: 'There are already pending or accepted caretaker requests for same patient and caretaker',
