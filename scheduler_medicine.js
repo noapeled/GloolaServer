@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+const moment = require('moment');
 var defaults = require('./models/defaults');
 var logger = require('./logger');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
@@ -124,17 +125,19 @@ function __minutes_to_milliseconds(m) {
     return m * 60 * 1000;
 }
 
+function __checkIfPerDailyFrequency(startTime, dailyFrequency) {
+    return moment().diff(moment(startTime), 'days') % dailyFrequency === 0;
+}
+
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
-    var checkTimeframeStart = new Date();
-    var currentDay = checkTimeframeStart.getDay();
-    var dayOfStartTime = scheduledMedicineEntity.start_time.getDay();
-    var dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
-    if (dailyFrequency && (((currentDay - dayOfStartTime) % dailyFrequency) !== 0)) {
-        logger.info('Not per daily frequency: ' +
-            'every_x_days = ' + dailyFrequency + ', today = ' + currentDay + ', dayOfStartTime = ' + dayOfStartTime);
+    const dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
+    if (dailyFrequency && (!__checkIfPerDailyFrequency(scheduledMedicineEntity.start_time, dailyFrequency))) {
+        logger.info('Not per daily frequency: every_x_days =' + dailyFrequency +
+            ', start_time = ' + scheduledMedicineEntity.start_time);
     } else {
+        var checkTimeframeStart = new Date();
         var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
         var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
         if (!(isAfterStart && isBeforeEnd)) {
