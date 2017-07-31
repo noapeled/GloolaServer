@@ -125,20 +125,28 @@ function __minutes_to_milliseconds(m) {
     return m * 60 * 1000;
 }
 
-function __checkIfPerDailyFrequency(now, startTime, dailyFrequency) {
+function __isPerDailyFrequency(now, startTime, dailyFrequency) {
     return moment(now).diff(moment(startTime), 'days') % dailyFrequency === 0;
 }
 
-// function uniTestCheckIfPerDailyFrequency() {
-//
-// }
+function uniTestCheckIfPerDailyFrequency() {
+    const now = moment("20170701T143325Z");
+    for (let addedDays = 0 ; addedDays < 70 ; addedDays++) {
+        for (let dailyFrequency = 1 ; dailyFrequency <= 8 ; dailyFrequency++) {
+            if (__isPerDailyFrequency(now, moment(now).add(addedDays, 'days'), dailyFrequency) !==
+                ((addedDays % dailyFrequency) === 0)) {
+                throw [addedDays, dailyFrequency];
+            }
+        }
+    }
+}
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
     const now = new Date();
     const dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
-    if (dailyFrequency && (!__checkIfPerDailyFrequency(now, scheduledMedicineEntity.start_time, dailyFrequency))) {
+    if (dailyFrequency && (!__isPerDailyFrequency(now, scheduledMedicineEntity.start_time, dailyFrequency))) {
         logger.info('Not per daily frequency: every_x_days =' + dailyFrequency +
             ', start_time = ' + scheduledMedicineEntity.start_time);
     } else {
@@ -233,3 +241,5 @@ exports.createInitialTasks = createInitialTasks;
 //     ['fIKWkUBNKM0:APA91bFmK8wrswXHUSX7OW5p9nxUc8MuJFhYPxxhrvspaqLJSIZCpEBrxLR-SokGxzOUag6puenfShLVnYQrOrUx2LhVQ-_kHJl8JhO0UEgJep82krLvUwpu1b04vzPLlPHxF82eFtJ6'],
 //     { demo: "payload" }
 // );
+
+// uniTestCheckIfPerDailyFrequency();
