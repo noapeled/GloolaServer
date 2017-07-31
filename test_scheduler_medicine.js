@@ -4,31 +4,25 @@
 
 const NUM_MINUTES_TO_WAIT = 2;
 const NUM_MEDICINE = 15;
-const moment = require('moment');
-var fs = require('fs');
-var logger = require('./logger');
+
 require('./firebaseNotify').hackishIsDebug = true;
+const logger = require('./logger');
 
-var _ = require('lodash');
-var testDbName = 'temporaryTestDb';
+const moment = require('moment');
+const _ = require('lodash');
+const server = require('./server');
+const http = require('http');
+const expect = require('chai').expect;
 
-var testAccessLog = './test_access.log';
-
-var server = require('./server');
-
-var http = require('http');
-var expect = require('chai').expect;
-
-var tweenyGoogleToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ3MWJjZmJmMDY2ZmFlNWNkNTVkNmYyZmVjZWEyMDlhZjQ3YTQ0MDcifQ.eyJhenAiOiI3OTgzNTg0ODQ2OTItZ3I4NTk1amx2cXRzbHF0ZTFnamczYmY4ZmIxY2xnZzMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3OTgzNTg0ODQ2OTItZ3I4NTk1amx2cXRzbHF0ZTFnamczYmY4ZmIxY2xnZzMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDcxNDc3Njk3MDYzODk1ODA4NjEiLCJlbWFpbCI6InR3ZWVueWhhc2xlZnR0aGVidWlsZGluZ0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjFuVjhTNmZVajNQTW1lMEFRRk1IMkEiLCJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiaWF0IjoxNDk2NTgxMjMwLCJleHAiOjE0OTY1ODQ4MzAsIm5hbWUiOiJUd2VlbnkgUGVsZWQiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDYuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1QOXloYXFFeVJlUS9BQUFBQUFBQUFBSS9BQUFBQUFBQUFBQS9BQXlZQkY3bVZ1YThNNEJ4WklNTU9WR1IxQlVkYTFJQWZ3L3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJUd2VlbnkiLCJmYW1pbHlfbmFtZSI6IlBlbGVkIiwibG9jYWxlIjoiZW4ifQ.PnjNzUY9oliH_GF1uQ2AmwNDdZotHBnfna0x2aXgKEpE_bzEdg61h9XYSIbMHS6Y6TgRHCeMf1OadyrMEZeREOtQKLs7Lueh9zzXLMqDH3I5WITvRdvDnQZA1KFOHvKRHVW972Cmqe_LlFZi4fj_nAJhmXIQMmme9-Y47IryJGZ_xAJhCIQYSg5gQfsKnJB81vrtUmc86P9nyZfA23J1pp06ZWYksj1TomCb7u455-KxikYnLd0JM69mdp6-wBw9kfIBrXNBBPsGcruR4cOTVA1CZxk6Kx-CzHwvFYlBQ27fNspjZEQba4aV-sMEoW6Mt8jCRx2kvFFOhEpZiaKYcQ';
-var tweenyName = ['Tweeny', 'Peled'];
-var tweenyPassword = 'ttt';
-var tweenyEmail = 'tweenyhasleftthebuilding@gmail.com';
+const testDbName = 'temporaryTestDb';
+const testAccessLog = './test_access.log';
+const tweenyName = ['Tweeny', 'Peled'];
+const tweenyPassword = 'ttt';
+const tweenyEmail = 'tweenyhasleftthebuilding@gmail.com';
 
 adminToken = null;
 userIds = { };
 jwtTokensForNonAdminUsers = { };
-googleTokensForNonAdminUsers = _.fromPairs([[tweenyEmail, 'google ' + tweenyGoogleToken]]);
-
 
 function getFromServer(token, path, callbackOnResponseData) {
     var getOptions = {
