@@ -126,14 +126,14 @@ function __minutes_to_milliseconds(m) {
 }
 
 function __isPerDailyFrequency(now, startTime, dailyFrequency) {
-    return moment(now).diff(moment(startTime), 'days') % dailyFrequency === 0;
+    return moment(now).startOf('day').diff(moment(startTime).startOf('day'), 'days') % dailyFrequency === 0;
 }
 
 function uniTestCheckIfPerDailyFrequency() {
-    const now = moment("20170701T143325Z");
+    const now = moment("2017-07-01T14:33:25Z");
     for (let addedDays = 0 ; addedDays < 70 ; addedDays++) {
         for (let dailyFrequency = 1 ; dailyFrequency <= 8 ; dailyFrequency++) {
-            if (__isPerDailyFrequency(now, moment(now).add(addedDays, 'days'), dailyFrequency) !==
+            if (__isPerDailyFrequency(now, moment("2017-07-01T00:00:00Z").add(addedDays, 'days'), dailyFrequency) !==
                 ((addedDays % dailyFrequency) === 0)) {
                 throw [addedDays, dailyFrequency];
             }
@@ -242,4 +242,4 @@ exports.createInitialTasks = createInitialTasks;
 //     { demo: "payload" }
 // );
 
-// uniTestCheckIfPerDailyFrequency();
+uniTestCheckIfPerDailyFrequency();
