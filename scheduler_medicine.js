@@ -129,17 +129,17 @@ function __isPerDailyFrequency(now, startTime, dailyFrequency) {
     return moment(now).startOf('day').diff(moment(startTime).startOf('day'), 'days') % dailyFrequency === 0;
 }
 
-function uniTestCheckIfPerDailyFrequency() {
-    const now = moment("2017-07-01T14:33:25Z");
-    for (let addedDays = 0 ; addedDays < 70 ; addedDays++) {
-        for (let dailyFrequency = 1 ; dailyFrequency <= 8 ; dailyFrequency++) {
-            if (__isPerDailyFrequency(now, moment("2017-07-03T07:18:22Z").add(addedDays, 'days'), dailyFrequency) !==
-                (((addedDays + 2) % dailyFrequency) === 0)) {
-                throw [addedDays, dailyFrequency];
-            }
-        }
-    }
-}
+// function uniTestCheckIfPerDailyFrequency() {
+//     const now = moment("2017-07-01T14:33:25Z");
+//     for (let addedDays = 0 ; addedDays < 70 ; addedDays++) {
+//         for (let dailyFrequency = 1 ; dailyFrequency <= 8 ; dailyFrequency++) {
+//             if (__isPerDailyFrequency(now, moment("2017-07-03T07:18:22Z").add(addedDays, 'days'), dailyFrequency) !==
+//                 (((addedDays + 2) % dailyFrequency) === 0)) {
+//                 throw [addedDays, dailyFrequency];
+//             }
+//         }
+//     }
+// }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
