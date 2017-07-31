@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+var _ = require('lodash-joins');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
 var schedulerForCaretakerRequests = require('./scheduler_caretaker_request');
 var logger = require('./logger');
@@ -16,7 +17,6 @@ var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
 var morgan = require('morgan');
 var jwt = require('jsonwebtoken');
-var _ = require('lodash');
 var express     =   require("express");
 var app         =   express();
 var bodyParser  =   require("body-parser");
@@ -661,11 +661,34 @@ function getFeed(req, res) {
 function getCaretakerRequests(req, res) {
     var userid = req.params.userid;
     mongoose.models.Caretaker.find({ $or: [{ patient: userid }, { caretaker: userid }] },
-        function (err, caretakerEntities) {
+        function (err, caretakerRequestEntities) {
             if (err) {
                 res.status(400).json({ error: true, message: err } );
             } else {
-                res.json({ error: false, message: caretakerEntities });
+                mongoose.models.User.find(
+                    { userid: { $in: _.map(caretakerRequestEntities, 'caretaker') } },
+                    function(err, caretakerUsers) {
+                        if (err) {
+                            res.status(500).json({ error: true, message: 'Failed to get details of caretakers.' })
+                        } else {
+                            var joined = _.hashInnerJoin(
+                                _.map(caretakerRequestEntities, c => c.toObject()), e => e.caretaker,
+                                _.map(caretakerUsers, c => c.toObject()), e => e.userid);
+                            res.json({ error: false, message: _.map(
+                                joined,
+                                j => ({
+                                    request_id: j.request_id,
+                                    patient: j.patient,
+                                    status: j.status,
+                                    nfc: j.nfc,
+                                    caretaker: {
+                                        userid: j.userid,
+                                        email: j.email,
+                                        name: j.name }
+                                }))
+                            });
+                        }
+                    });
             }
     });
 }

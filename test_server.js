@@ -596,7 +596,14 @@ function testTweenyCanGetHisRequestToBecomeCaretaker() {
         '/caretakerrequest/' + userIds['tweeny'],
         function (data) {
             logger.info(data);
-            expect(JSON.parse(data).message[0].caretaker).to.equal(userIds['tweeny']);
+            expect(_.isEqual(JSON.parse(data).message[0].caretaker, {
+                email: tweenyEmail,
+                name: tweenyName,
+                userid: userIds['tweeny']
+            })).to.be.true;
+            expect(JSON.parse(data).message[0].nfc).to.be.false;
+            expect(JSON.parse(data).message[0].patient).to.equal(userIds['tuli']);
+            expect(JSON.parse(data).message[0].request_id).to.equal(tweenyCaretakerRequestID);
             expect(JSON.parse(data).message[0].status).to.equal('accepted');
             testTuliCanGetHisRequestToBecomeCaredFor();
         });

@@ -282,7 +282,20 @@ Patients and caretakers can get all caretaker requests which involve them, using
 
     GET /caretakerrequest/:userid
 
-The server will reply with all caretaker requests where patient or caretaker is userid, regardless of status.
+The server will reply with all caretaker requests where patient or caretaker is userid, 
+regardless of status, in the following format:
+
+    [{
+        request_id: ...,
+        patient: <patient's userid>,
+        status: ...,
+        nfc: ...,
+        caretaker: {
+            userid: ...,
+            email: ...,
+            name: ... 
+        }
+    }]
 
 # ScheduledMedicine
 Each scheduled medicine comprises of the following details. Note the difference in identifiers:
