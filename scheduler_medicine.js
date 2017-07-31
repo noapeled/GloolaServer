@@ -125,21 +125,25 @@ function __minutes_to_milliseconds(m) {
     return m * 60 * 1000;
 }
 
-function __checkIfPerDailyFrequency(startTime, dailyFrequency) {
-    return moment().diff(moment(startTime), 'days') % dailyFrequency === 0;
+function __checkIfPerDailyFrequency(now, startTime, dailyFrequency) {
+    return moment(now).diff(moment(startTime), 'days') % dailyFrequency === 0;
 }
+
+// function uniTestCheckIfPerDailyFrequency() {
+//
+// }
 
 function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicineEntity) {
     logger.info('Checking whether to remind patient ' + scheduledMedicineEntity.userid +
         ' about medicine ' + scheduledMedicineEntity.medicine_id);
+    const now = new Date();
     const dailyFrequency = scheduledMedicineEntity.frequency.every_x_days;
-    if (dailyFrequency && (!__checkIfPerDailyFrequency(scheduledMedicineEntity.start_time, dailyFrequency))) {
+    if (dailyFrequency && (!__checkIfPerDailyFrequency(now, scheduledMedicineEntity.start_time, dailyFrequency))) {
         logger.info('Not per daily frequency: every_x_days =' + dailyFrequency +
             ', start_time = ' + scheduledMedicineEntity.start_time);
     } else {
-        var checkTimeframeStart = new Date();
-        var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= checkTimeframeStart);
-        var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= checkTimeframeStart);
+        var isAfterStart = (!scheduledMedicineEntity.start_time) || (scheduledMedicineEntity.start_time <= now);
+        var isBeforeEnd = (!scheduledMedicineEntity.end_time) || (scheduledMedicineEntity.end_time >= now);
         if (!(isAfterStart && isBeforeEnd)) {
             logger.info('Not within time interval for reminding patient ' + scheduledMedicineEntity.userid +
                 ' about medicine ' + scheduledMedicineEntity.medicine_id);
@@ -159,7 +163,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                         mongoose,
                         scheduledMedicineEntity.userid,
                         scheduledMedicineEntity.scheduled_medicine_id,
-                        checkTimeframeStart);
+                        now);
 
                     var nagMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.nag_offset_minutes);
                     timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
@@ -168,7 +172,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                             mongoose,
                             scheduledMedicineEntity.userid,
                             scheduledMedicineEntity.scheduled_medicine_id,
-                            checkTimeframeStart),
+                            now),
                         nagMilliseconds));
                     logger.info('Set nag timer to ' + nagMilliseconds + ' msec from now.');
 
@@ -179,7 +183,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
                             mongoose,
                             scheduledMedicineEntity.userid,
                             scheduledMedicineEntity.scheduled_medicine_id,
-                            checkTimeframeStart),
+                            now),
                         alertMilliseconds
                     ));
                     logger.info('Set alert timer to ' + alertMilliseconds + ' msec from now.');
