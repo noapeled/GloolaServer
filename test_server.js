@@ -707,7 +707,12 @@ function createNewUserAsAdmin(name, email, password, continueCallback) {
         adminToken,
         'PUT',
         '/user',
-        { name: name, email: email, password: password, push_tokens: ['mockPushTokenFor' + name[0]] },
+        {
+            name: name,
+            email: email,
+            password: password,
+            push_tokens: ['mockPushTokenFor' + name[0]]
+        },
         function (chunk) {
             var jsonBody = JSON.parse(chunk);
             logger.info(jsonBody);

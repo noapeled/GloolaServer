@@ -2,6 +2,7 @@
  * Created by noa on 5/23/17.
  */
 
+const getCaretakerUserEntities = require('./models/getCaretakers').getCaretakerUserEntities;
 const moment = require('moment');
 var defaults = require('./models/defaults');
 var logger = require('./logger');
@@ -82,15 +83,16 @@ function __nagPatientIfNeeded(medicineId, mongoose, userid, scheduledMedicineId,
     });
 }
 
-function __alertCaretakersIfNeeded(medicineId, mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
+function __alertCaretakersAboutMedicineNotTakenIfNeeded(medicineId, mongoose, userid, scheduledMedicineId, checkTimeframeStart) {
     __checkIfMedicineTakenSinceTimeframeStart(mongoose, userid, scheduledMedicineId, checkTimeframeStart, function () {
-        mongoose.models.User.find({patients: {$all: [userid]}}, function (err, caretakers) {
-            if (err) {
+            function callbackOnFailure(err) {
                 logger.error('Failed to retrieve caretakers of patient ' + userid +
                     ' for alerting about medicine ' + medicine_id + 'not taken!');
-            } else {
+            }
+
+            function callbackOnSuccess(caretakers) {
                 var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
-                    return {recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens};
+                    return { recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
                 });
                 var elapsed_milliseconds = new Date() - checkTimeframeStart;
                 __getMedicineNames(mongoose, medicineId, function (medicineNames) {
@@ -117,7 +119,8 @@ function __alertCaretakersIfNeeded(medicineId, mongoose, userid, scheduledMedici
                         }
                     });
             }
-        });
+
+            getCaretakerUserEntities(mongoose, userid, callbackOnSuccess, callbackOnFailure);
     });
 }
 
@@ -186,7 +189,7 @@ function __remindPatientAndSetTimersForTakenMedicine(mongoose, scheduledMedicine
 
                     var alertMilliseconds = __minutes_to_milliseconds(scheduledMedicineEntity.alert_offset_minutes);
                     timedNotifications[scheduledMedicineEntity.scheduled_medicine_id].push(setTimeout(
-                        _.partial(__alertCaretakersIfNeeded,
+                        _.partial(__alertCaretakersAboutMedicineNotTakenIfNeeded,
                             scheduledMedicineEntity.medicine_id,
                             mongoose,
                             scheduledMedicineEntity.userid,

@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+const getCaretakerUserEntities = require('./models/getCaretakers').getCaretakerUserEntities;
 var defaults = require('./models/defaults');
 var _ = require('lodash-joins');
 var firebaseNotify = require('./firebaseNotify').firebaseNotify;
@@ -446,25 +447,10 @@ function authorizeCreationOfEntity(req, res, next) {
             message: 'User ' + req.decodedToken.userid + ' is not authorized to create new entities' });
 }
 
-function getCaretakerUserEntities(patientUserid, callbackOnSuccess, callbackOnFailure) {
-    mongoose.models.Caretaker.find({ patient: patientUserid, status: 'accepted' }, function (err, caretakers) {
-        if (err) {
-            callbackOnFailure(err);
-        } else {
-            mongoose.models.User.find({ userid: { $in: _.map(caretakers, 'caretaker') } }, function(err, caretakerUsers) {
-                if (err) {
-                    callbackOnFailure(err);
-                } else {
-                    callbackOnSuccess(caretakerUsers);
-                }
-            });
-        }
-    });
-}
-
 function getCaretakers(req, res) {
     var patientUserid = req.params.patientId;
     getCaretakerUserEntities(
+        mongoose,
         patientUserid,
         function (caretakerUsers) {
             res.json({

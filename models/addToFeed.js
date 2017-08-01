@@ -1,22 +1,7 @@
+const getCaretakerUserEntities = require('./getCaretakers').getCaretakerUserEntities;
 var logger = require('../logger');
 var _ = require('lodash');
 var firebaseNotify = require('../firebaseNotify').firebaseNotify;
-
-function getCaretakerUserEntities(mongoose, patientUserid, callbackOnSuccess, callbackOnFailure) {
-    mongoose.models.Caretaker.find({ patient: patientUserid, status: 'accepted' }, function (err, caretakers) {
-        if (err) {
-            callbackOnFailure(err);
-        } else {
-            mongoose.models.User.find({ userid: { $in: _.map(caretakers, 'caretaker') } }, function(err, caretakerUsers) {
-                if (err) {
-                    callbackOnFailure(err);
-                } else {
-                    callbackOnSuccess(caretakerUsers);
-                }
-            });
-        }
-    });
-}
 
 function __notifyCaretakersAboutNewFeedEvent(mongoose, patientUserId, feedEventBody) {
     getCaretakerUserEntities(
