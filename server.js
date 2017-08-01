@@ -216,43 +216,39 @@ function createNewCaretaker(req, res) {
             } else if (!patientUserEntity) {
                 res.status(400).json({ error: true, message: 'No user with email ' + patientEmail });
             } else {
-                var earliestDateForNfc = new Date(new Date().setSeconds(new Date().getSeconds() -
-                    defaults.default_seconds_until_nfc_caretaker_request_is_considered_expired));
-                mongoose.models.Caretaker.find({ $and: [
-                    { $or: [
-                        { nfc: { $ne: true } },
-                        { creation_date: { $gte: earliestDateForNfc } }
-                    ] },
-                    { patient: patientUserEntity.userid },
-                    { caretaker: caretakerUserid },
-                    { status: { $in: ['pending', 'accepted'] } }
-                ]}, function (err, caretakerRequestEntities) {
-                    if (!_.isEmpty(caretakerRequestEntities)) {
-                        res.status(400).json({
-                            error: 'There are already pending or accepted caretaker requests for same patient and caretaker',
-                            message: caretakerRequestEntities
-                        });
-                    } else {
-                        var newCaretaker = new mongoose.models.Caretaker({
-                            nfc: req.body.nfc || false,
-                            request_id: 'caretakerRequest' + __guid(),
-                            patient: patientUserEntity.userid,
-                            caretaker: caretakerUserid,
-                            status: 'pending'
-                        });
-                        newCaretaker.save(function (err) {
-                            if (err) {
-                                res.status(statusCode(err)).json({
-                                    "error": err,
-                                    "message": "Error creating caretaker for patient " + patientUserEntity.userid
-                                });
-                            } else {
-                                schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
-                                    mongoose, newCaretaker.request_id);
-                                res.json({"error": false, "message": newCaretaker});
-                            }
-                        });
-                    }
+                mongoose.models.Caretaker.find(
+                    {
+                        patient: patientUserEntity.userid,
+                        caretaker: caretakerUserid,
+                        status: { $in: ['pending', 'accepted'] }
+                    },
+                    function (err, caretakerRequestEntities) {
+                        if (!_.isEmpty(caretakerRequestEntities)) {
+                            res.status(400).json({
+                                error: 'There are already pending or accepted caretaker requests for same patient and caretaker',
+                                message: caretakerRequestEntities
+                            });
+                        } else {
+                            var newCaretaker = new mongoose.models.Caretaker({
+                                nfc: req.body.nfc || false,
+                                request_id: 'caretakerRequest' + __guid(),
+                                patient: patientUserEntity.userid,
+                                caretaker: caretakerUserid,
+                                status: 'pending'
+                            });
+                            newCaretaker.save(function (err) {
+                                if (err) {
+                                    res.status(statusCode(err)).json({
+                                        "error": err,
+                                        "message": "Error creating caretaker for patient " + patientUserEntity.userid
+                                    });
+                                } else {
+                                    schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
+                                        mongoose, newCaretaker.request_id);
+                                    res.json({"error": false, "message": newCaretaker});
+                                }
+                            });
+                        }
                 });
             }
         });
