@@ -244,7 +244,7 @@ function createNewCaretaker(req, res) {
                                     });
                                 } else {
                                     schedulerForCaretakerRequests.nagPatientAboutPendingCaretakerRequest(
-                                        mongoose, newCaretaker.request_id);
+                                        newCaretaker.nfc, mongoose, newCaretaker.request_id);
                                     res.json({"error": false, "message": newCaretaker});
                                 }
                             });

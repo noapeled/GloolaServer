@@ -39,7 +39,7 @@ function notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEnt
     });
 }
 
-function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
+function nagPatientAboutPendingCaretakerRequest(skipThisNag, mongoose, requestId) {
     if (timedNotifications[requestId]) {
         clearTimeout(timedNotifications[requestId]);
     }
@@ -50,9 +50,11 @@ function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
             if ((caretakerRequestEntity.hidden) || (caretakerRequestEntity.status !== 'pending')) {
                 logger.info('Request ' + requestId + ' is not pending anymore, nags stopped.');
             } else {
-                notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
+                if (!skipThisNag) {
+                    notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
+                }
                 timedNotifications[requestId] = setTimeout(
-                    _.partial(nagPatientAboutPendingCaretakerRequest, mongoose, requestId),
+                    _.partial(nagPatientAboutPendingCaretakerRequest, false, mongoose, requestId),
                     exports.hackishIsDebug ? 500 : __minutes_to_milliseconds(exports.NAG_INTERVAL_MINUTES)
                 );
             }
@@ -66,7 +68,7 @@ function createInitialTasks(mongoose) {
             logger.error('Failed to obtain all pending caretaker requests for initializing cron tasks');
         } else {
             _.map(pendingCaretakerEntities, function (caretakerEntity) {
-                nagPatientAboutPendingCaretakerRequest(mongoose, caretakerEntity.request_id);
+                nagPatientAboutPendingCaretakerRequest(false, mongoose, caretakerEntity.request_id);
             });
         }
     });
