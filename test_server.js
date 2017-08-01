@@ -3,7 +3,7 @@
  */
 
 const NAG_OFFSET_MINUTES = 1.0 / 60.0;
-const ALERT_OFFSET_MINUTES = 2.0 / 60.0;
+const ALERT_OFFSET_MINUTES = 1.5 / 60.0;
 
 var fs = require('fs');
 var inspect = require('util').inspect;
