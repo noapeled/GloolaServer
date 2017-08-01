@@ -50,13 +50,11 @@ function nagPatientAboutPendingCaretakerRequest(mongoose, requestId) {
             if ((caretakerRequestEntity.hidden) || (caretakerRequestEntity.status !== 'pending')) {
                 logger.info('Request ' + requestId + ' is not pending anymore, nags stopped.');
             } else {
-                if (caretakerRequestEntity.nfc !== true) {
-                    notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
-                    timedNotifications[requestId] = setTimeout(
-                        _.partial(nagPatientAboutPendingCaretakerRequest, mongoose, requestId),
-                        exports.hackishIsDebug ? 500 : __minutes_to_milliseconds(exports.NAG_INTERVAL_MINUTES)
-                    );
-                }
+                notifyPatientAboutPendingCaretakerRequest(mongoose, caretakerRequestEntity);
+                timedNotifications[requestId] = setTimeout(
+                    _.partial(nagPatientAboutPendingCaretakerRequest, mongoose, requestId),
+                    exports.hackishIsDebug ? 500 : __minutes_to_milliseconds(exports.NAG_INTERVAL_MINUTES)
+                );
             }
         }
     });
