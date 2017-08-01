@@ -2,6 +2,9 @@
  * Created by noa on 5/20/17.
  */
 
+const NAG_OFFSET_MINUTES = 1.0 / 60.0;
+const ALERT_OFFSET_MINUTES = 2.0 / 60.0;
+
 var fs = require('fs');
 var inspect = require('util').inspect;
 var logger = require('./logger');
@@ -40,8 +43,8 @@ var scheduledMedicineX777 = {
     medicine_id: "x777",
     dosage_size: 1.11,
     frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" },
-    nag_offset_minutes: 1.0 / 60.0,
-    alert_offset_minutes: 2.0 / 60.0
+    nag_offset_minutes: NAG_OFFSET_MINUTES,
+    alert_offset_minutes: ALERT_OFFSET_MINUTES
 };
 var scheduledMedicineX123 = {
     start_time: new Date(),
@@ -288,8 +291,8 @@ function tuliCanAddMedicineForTestingNoNags() {
             medicine_id: "z66666",
             dosage_size: 2.3,
             frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" },
-            nag_offset_minutes: 1.0 / 60.0,
-            alert_offset_minutes: 2.0 / 60.0
+            nag_offset_minutes: NAG_OFFSET_MINUTES,
+            alert_offset_minutes: ALERT_OFFSET_MINUTES
         },
         function (data) {
             logger.info(data);
@@ -299,7 +302,8 @@ function tuliCanAddMedicineForTestingNoNags() {
                 jwtTokensForNonAdminUsers[tuliEmail],
                 'PUT',
                 '/takenmedicine',
-                { when: new Date(), scheduled_medicine_id: scheduledMedicineIdForTestingNoNags, dosage: 3 }, function (data) {
+                { when: new Date(), scheduled_medicine_id: scheduledMedicineIdForTestingNoNags, dosage: 3 },
+                function (data) {
                     logger.info(data);
                     expect(JSON.parse(data).error).to.be.false;
                     waitForSkippingOfNagsThenRemoveNaggingMedicine();
