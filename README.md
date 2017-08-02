@@ -368,7 +368,7 @@ In all cases, the messages have the following format.
                 name: <patient's name, or null in case of retrieval error>,
                 email: <patient's email, or null in case of retrieval error>,
             },
-            medicine_id: medicine_id,
+            scheduled_medicine_id: <identifier of the scheduled medicine, not of the medicine itself>,
             medicine_names: <array of medicine names, or null in case of retrieval error>,
             timeframe: {
                 start: <the time T when the patient should have taken the medicine>,
