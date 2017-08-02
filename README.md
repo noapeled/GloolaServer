@@ -363,7 +363,11 @@ In all cases, the messages have the following format.
         collapse_key: 'do_not_collapse',
         data: {
             type: <One of: 'reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'>,
-            userid: userid,
+            patient: {
+                userid: <patient's userid>,
+                name: <patient's name, or null in case of retrieval error>,
+                email: <patient's email, or null in case of retrieval error>,
+            },
             medicine_id: medicine_id,
             medicine_names: <array of medicine names, or null in case of retrieval error>,
             timeframe: {

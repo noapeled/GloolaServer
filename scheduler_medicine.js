@@ -18,10 +18,19 @@ exports.hackishIsDebug = false;
 var cronTasks = { };
 var timedNotifications = { };
 
-function __getMedicineNames(mongoose, medicineId, callbackWhichTakesMedicineNames) {
+function __getMedicineNamesAndPatientDetails(patientUserId, mongoose, medicineId, callbackWhichTakesMedicineNamesAndPatientDetails) {
     mongoose.models.Medicine.findOne(
-        { medicine_id: medicineId }, function (err, medicineEntity) {
-            callbackWhichTakesMedicineNames(_.get(medicineEntity, 'medicine_names') || null);
+        { medicine_id: medicineId }, function (medicineRetrievalErr, medicineEntity) {
+            mongoose.models.User.findOne({ userid: patientUserId }, function (patientRetrievalErr, patientUserEntity) {
+                callbackWhichTakesMedicineNamesAndPatientDetails(
+                    _.get(medicineEntity, 'medicine_names') || null,
+                    { patient: {
+                        userid: patientUserId,
+                        name: _.get(patientUserEntity, 'name') || null,
+                        email: _.get(patientUserEntity, 'email') || null,
+                    } }
+                );
+            });
         });
 }
 
@@ -31,17 +40,17 @@ function __pushReminderToPatient(medicineId, mongoose, userid, scheduledMedicine
         if (err || !userEntity) {
             logger.error('Failed to retrieve patient ' + userid + ' about scheduled medicine ' + scheduledMedicineId);
         } else {
-            __getMedicineNames(mongoose, medicineId, function (medicineNames) {
-                firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }], {
+            __getMedicineNamesAndPatientDetails(userid, mongoose, medicineId, function (medicineNames, patientDetails) {
+                firebaseNotify(mongoose, userid, [{ recipientUserid: userid, push_tokens: userEntity.push_tokens }],
+                    _.assign(patientDetails, {
                     medicine_names: medicineNames,
                     type: 'reminder_take_medicine',
-                    userid: userid,
                     scheduled_medicine_id: scheduledMedicineId,
                     timeframe: {
                         start: checkTimeframeStart,
                         elapsed_milliseconds: (new Date() - checkTimeframeStart)
                     }
-                });
+                }));
             });
         }
     });
@@ -66,8 +75,9 @@ function __nagPatientIfNeeded(medicineId, mongoose, userid, scheduledMedicineId,
                 logger.error('Failed to retrieve patient ' + userid +
                     ' for nagging about scheduled medicine ' + scheduledMedicineId + 'not taken!');
             } else {
-                __getMedicineNames(mongoose, medicineId, function (medicineNames) {
-                    firebaseNotify(mongoose, userid, [{recipientUserid: userid, push_tokens: userEntity.push_tokens}], {
+                __getMedicineNamesAndPatientDetails(userid, mongoose, medicineId, function (medicineNames, patientDetails) {
+                    firebaseNotify(mongoose, userid, [{recipientUserid: userid, push_tokens: userEntity.push_tokens}],
+                        _.assign(patientDetails, {
                         medicine_names: medicineNames,
                         type: 'nag_medicine_not_taken',
                         userid: userid,
@@ -76,7 +86,7 @@ function __nagPatientIfNeeded(medicineId, mongoose, userid, scheduledMedicineId,
                             start: checkTimeframeStart,
                             elapsed_milliseconds: (new Date() - checkTimeframeStart)
                         }
-                    });
+                    }));
                 });
             }
         });
@@ -91,33 +101,35 @@ function __alertCaretakersAboutMedicineNotTakenIfNeeded(medicineId, mongoose, us
             }
 
             function callbackOnSuccess(caretakers) {
-                var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
-                    return { recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
-                });
-                var elapsed_milliseconds = new Date() - checkTimeframeStart;
-                __getMedicineNames(mongoose, medicineId, function (medicineNames) {
-                    firebaseNotify(mongoose, userid, caretakersPushTokens, {
-                        medicine_names: medicineNames,
-                        type: 'alert_medicine_not_taken',
-                        userid: userid,
-                        scheduled_medicine_id: scheduledMedicineId,
-                        timeframe: {
-                            start: checkTimeframeStart,
-                            elapsed_milliseconds: elapsed_milliseconds
-                        }
+                mongoose.models.User.findOne({ userid: userid }, function (err, patientUserEntity) {
+                    var caretakersPushTokens = _.map(caretakers, function (careTakerEntity) {
+                        return { recipientUserid: careTakerEntity.userid, push_tokens: careTakerEntity.push_tokens };
                     });
-                });
-                addEventAboutScheduledMedicine(
-                    mongoose,
-                    scheduledMedicineId,
-                    (new Date()).toISOString(),
-                    'scheduled_medicine_not_taken',
-                    {
-                        timeframe: {
-                            start: checkTimeframeStart,
-                            elapsed_milliseconds: elapsed_milliseconds
-                        }
+                    var elapsed_milliseconds = new Date() - checkTimeframeStart;
+                    __getMedicineNamesAndPatientDetails(userid, mongoose, medicineId, function (medicineNames, patientDetails) {
+                        firebaseNotify(mongoose, userid, caretakersPushTokens, _.assign(patientDetails, {
+                            medicine_names: medicineNames,
+                            type: 'alert_medicine_not_taken',
+                            scheduled_medicine_id: scheduledMedicineId,
+                            timeframe: {
+                                start: checkTimeframeStart,
+                                elapsed_milliseconds: elapsed_milliseconds
+                            }
+                        }));
                     });
+                    addEventAboutScheduledMedicine(
+                        mongoose,
+                        scheduledMedicineId,
+                        (new Date()).toISOString(),
+                        'scheduled_medicine_not_taken',
+                        {
+                            timeframe: {
+                                start: checkTimeframeStart,
+                                elapsed_milliseconds: elapsed_milliseconds
+                            }
+                        });
+                });
+
             }
 
             getCaretakerUserEntities(mongoose, userid, callbackOnSuccess, callbackOnFailure);
