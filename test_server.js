@@ -118,14 +118,14 @@ function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatie
             obj => _.includes(
                 ['reminder_take_medicine', 'nag_medicine_not_taken', 'alert_medicine_not_taken'], obj.type));
        expect(SentNotificationsAboutScheduledMedicine).to.not.be.empty;
-       expect(_.every(SentNotificationsAboutScheduledMedicine),
-           notification => notification.medicine_names.length > 0).to.be.true;
-       expect(_.every(SentNotificationsAboutScheduledMedicine),
-           notification => !_.isEmpty(notification.patient.userid)).to.be.true;
-       expect(_.every(SentNotificationsAboutScheduledMedicine),
-           notification => !_.isEmpty(notification.patient.name)).to.be.true;
-       expect(_.every(SentNotificationsAboutScheduledMedicine),
-           notification => !_.isEmpty(notification.patient.email)).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine,
+           notification => notification.medicine_names.length > 0)).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine,
+           notification => !_.isEmpty(notification.patient.userid))).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine,
+           notification => !_.isEmpty(notification.patient.name))).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine,
+           notification => !_.isEmpty(notification.patient.email))).to.be.true;
        allTestsDone();
     });
 }
