@@ -110,7 +110,7 @@ function allTestsDone() {
     logger.info('---------- All tests done ---------');
 }
 
-function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNames() {
+function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatientDetails() {
     getFromServer(adminToken, '/sentnotification', function (data) {
        logger.info(data);
        var SentNotificationsAboutScheduledMedicine = _.filter(
@@ -120,6 +120,12 @@ function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNames() {
        expect(SentNotificationsAboutScheduledMedicine).to.not.be.empty;
        expect(_.every(SentNotificationsAboutScheduledMedicine),
            notification => notification.medicine_names.length > 0).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine),
+           notification => !_.isEmpty(notification.patient.userid)).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine),
+           notification => !_.isEmpty(notification.patient.name)).to.be.true;
+       expect(_.every(SentNotificationsAboutScheduledMedicine),
+           notification => !_.isEmpty(notification.patient.email)).to.be.true;
        allTestsDone();
     });
 }
@@ -133,7 +139,7 @@ function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
         function (data) {
             logger.info(data);
             expect(JSON.parse(data).error).to.equal(false);
-            testAllSentNotificationsAboutScheduledMedicineHaveMedicineNames();
+            testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatientDetails();
         }
     )
 }
