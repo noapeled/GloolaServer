@@ -168,9 +168,9 @@ function testShuntziDoesNotHavePatientTuli() {
     });
 }
 
-function testTuliRemovesCaretakerShuntzi() {
+function testShuntziCanStopHisCaretakerRequest() {
     putOrPostToServer(
-        jwtTokensForNonAdminUsers[tuliEmail],
+        jwtTokensForNonAdminUsers[shuntziEmail],
         'POST',
         '/caretaker/' + shuntziFirstCaretakerRequestId,
         { status: 'rejected' },
@@ -191,7 +191,7 @@ function testShuntziCannotAskAgainWhenCaretakerRequestAccepted() {
             logger.info(data);
             expect(JSON.parse(data).error).to.not.be.false;
             expect(_.map(JSON.parse(data).message, 'request_id')).to.contain(shuntziFirstCaretakerRequestId);
-            testTuliRemovesCaretakerShuntzi();
+            testShuntziCanStopHisCaretakerRequest();
         });
 }
 
