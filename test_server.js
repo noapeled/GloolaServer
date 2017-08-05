@@ -527,13 +527,33 @@ function testTweenyCanAddScheduledMedicineX777ToTuli() {
     );
 }
 
+function testCannotCreateScheduleMedicineWithZeroDosage() {
+    putOrPostToServer(
+        jwtTokensForNonAdminUsers[tweenyEmail],
+        'PUT',
+        '/scheduledmedicine/' + userIds['tuli'],
+        {
+            start_time: new Date(),
+            medicine_id: "y333",
+            dosage_size: 0,
+            frequency: { day_of_week: "*", month_of_year: "*", day_of_month: "*", hour: "*", minute: "*" }
+        },
+        function (data) {
+            logger.info(data);
+            expect(JSON.parse(data).error).to.not.be.false;
+            expect(data).to.contain("must be positive");
+            testTweenyCanAddScheduledMedicineX777ToTuli();
+        }
+    );
+}
+
 function testAdminCanAddImageToMedicine() {
     putOrPostToServer(adminToken, 'POST', '/medicine/x123', {
         images: ['image555']
     }, function (data) {
         logger.info(data);
         expect(JSON.parse(data).error).to.be.false;
-        testTweenyCanAddScheduledMedicineX777ToTuli();
+        testCannotCreateScheduleMedicineWithZeroDosage();
     });
 }
 
