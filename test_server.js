@@ -137,7 +137,7 @@ function testAllPushNotificationsAboutUpdatesToCaretakerRequestsHavePatientEmail
                     _.map(JSON.parse(data).message, obj => obj.message.data),
                 obj => obj.type === 'caretaker_request_updated');
             expect(SentNotificationsAboutUpdatedCaretakerRequests).to.not.be.empty;
-            expect(_.every(_.map(SentNotificationsAboutUpdatedCaretakerRequests, 'request.requested_patient_email'),
+            expect(_.every(_.map(SentNotificationsAboutUpdatedCaretakerRequests, 'request.patient_email'),
                     n => n === tuliEmail)).to.be.true;
             testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatientDetails();
     }) }, 500);
@@ -706,7 +706,7 @@ function testSetTweenyAsCaretakerOfTuli() {
         function (data) {
             logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
-            expect(JSON.parse(data).message.requested_patient_email).to.equal(tuliEmail);
+            expect(JSON.parse(data).message.patient_email).to.equal(tuliEmail);
             expect(JSON.parse(data).message.caretaker).to.equal(userIds['tweeny']);
             expect(JSON.parse(data).message.patient).to.equal(userIds['tuli']);
             expect(JSON.parse(data).message.status).to.equal('pending');

@@ -2,7 +2,7 @@ var data_types = require('./data_types');
 var mongoose = require('mongoose');
 
 var CaretakerSchema = data_types.createSchema({
-    requested_patient_email: { type: String, required: false, nullable: true, default: null },
+    patient_email: { type: String, required: false, nullable: true, default: null },
     nfc: { type: Boolean, required: false, nullable: true, default: false },
     request_id: { type: String, required: true, nullable: false, unique: true },
     caretaker: { type: String, required: true },
