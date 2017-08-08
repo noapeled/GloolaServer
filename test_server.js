@@ -130,6 +130,19 @@ function testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatie
     });
 }
 
+function testAllPushNotificationsAboutUpdatesToCaretakerRequestsHavePatientEmail() {
+    setTimeout(function () {
+        getFromServer(adminToken, '/sentnotification', function (data) {
+            var SentNotificationsAboutUpdatedCaretakerRequests = _.filter(
+                    _.map(JSON.parse(data).message, obj => obj.message.data),
+                obj => obj.type === 'caretaker_request_updated');
+            expect(SentNotificationsAboutUpdatedCaretakerRequests).to.not.be.empty;
+            expect(_.every(_.map(SentNotificationsAboutUpdatedCaretakerRequests, 'request.requested_patient_email'),
+                    n => n === tuliEmail)).to.be.true;
+            testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatientDetails();
+    }) }, 500);
+}
+
 function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
     putOrPostToServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -139,7 +152,7 @@ function testTuliCanDenyTheSecondCaretakerRequestFromShuntzi() {
         function (data) {
             logger.info(data);
             expect(JSON.parse(data).error).to.equal(false);
-            testAllSentNotificationsAboutScheduledMedicineHaveMedicineNamesAndPatientDetails();
+            testAllPushNotificationsAboutUpdatesToCaretakerRequestsHavePatientEmail();
         }
     )
 }
@@ -693,6 +706,7 @@ function testSetTweenyAsCaretakerOfTuli() {
         function (data) {
             logger.info(data);
             expect(JSON.parse(data).error).to.be.false;
+            expect(JSON.parse(data).message.requested_patient_email).to.equal(tuliEmail);
             expect(JSON.parse(data).message.caretaker).to.equal(userIds['tweeny']);
             expect(JSON.parse(data).message.patient).to.equal(userIds['tuli']);
             expect(JSON.parse(data).message.status).to.equal('pending');

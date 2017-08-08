@@ -230,6 +230,7 @@ function createNewCaretaker(req, res) {
                             });
                         } else {
                             var newCaretaker = new mongoose.models.Caretaker({
+                                requested_patient_email: patientEmail,
                                 nfc: req.body.nfc || false,
                                 request_id: 'caretakerRequest' + __guid(),
                                 patient: patientUserEntity.userid,
