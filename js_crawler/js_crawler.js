@@ -1,11 +1,14 @@
+var _ = require('lodash');
 var cheerio = require('cheerio');
 var request = require('request');
 var url = 'https://www.old.health.gov.il/units/pharmacy/trufot/Ycran_ListN.asp?p=1&Letter=a&Sr_Type=T_Name&safa=h';
 
 function doit(error, response, body) {
     const $ = cheerio.load(body);
-    console.log($('tr.RowTabl').length);
-    console.log($('tr.RowDubTabl').length);
+    // $('tr.RowTabl > td').each(function (i, elem) {console.log(i, elem.children)});
+    $('tr.RowTabl').each(function (i, elem) {console.log(i,
+        _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data))});
+    // console.log($('tr.RowDubTabl').length);
 }
 
 var options = {
