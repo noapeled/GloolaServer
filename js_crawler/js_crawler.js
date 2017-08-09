@@ -34,10 +34,8 @@ function test(var1)
 
 
 request(options, function (error, response, body) {
-    console.log('headers:', response.headers); // Print the HTML for the Google homepage.
     const $ = cheerio.load(body);
     eval($('script')[0].children[0].data);
-    console.log(Challenge, ChallengeId, test(Challenge));
     var opts = {
         ciphers: 'DES-CBC3-SHA',
         jar: true,
@@ -50,12 +48,7 @@ request(options, function (error, response, body) {
         }
     };
     function prt(error, response, body) {
-        console.log('error:', error); // Print the error if one occurred
-        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-        console.log('body:', body); // Print the HTML for the Google homepage.
-        console.log('headers:', response.headers); // Print the HTML for the Google homepage.
         const xAaCookieValue = response.headers['x-aa-cookie-value'];
-        console.log('xAaCookieValue is', xAaCookieValue);
         request.get({ url: url, headers: { cookie: xAaCookieValue }, ciphers: 'DES-CBC3-SHA' }, doit);
     }
     request.post(opts, prt);
