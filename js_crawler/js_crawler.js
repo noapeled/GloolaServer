@@ -1,8 +1,8 @@
-var xAaCookieValue = null;
-
 var _ = require('lodash');
 var cheerio = require('cheerio');
 var request = require('request');
+
+var xAaCookieValue = null;
 var url = 'https://www.old.health.gov.il/units/pharmacy/trufot/Ycran_ListN.asp?p=14&Sr_Type=T_Name&Y_Name=&Letter=a&safa=h';
 
 function getImages(str) {
