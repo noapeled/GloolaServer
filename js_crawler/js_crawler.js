@@ -1,3 +1,5 @@
+var xAaCookieValue = null;
+
 var _ = require('lodash');
 var cheerio = require('cheerio');
 var request = require('request');
@@ -10,6 +12,15 @@ function doit(error, response, body) {
         $(`tr.${cls}`).each(function (i, elem) {console.log(i,
             _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data)[2])});
     }
+    const tcod = '052 31 24072 00';
+    const tname = 'ALRIN';
+    var opts = {
+        jar: true,
+        cookie: xAaCookieValue,
+        url: `https://www.old.health.gov.il/units/pharmacy/Trufot/ShowTrufaFoto.asp?TrCod=${tcod}&TrName=${tname}`,
+        ciphers: 'DES-CBC3-SHA',
+    };
+    request(opts, function(erro, resp, body) { console.log(body); });
 }
 
 var options = {
@@ -52,7 +63,7 @@ request(options, function (error, response, body) {
         }
     };
     function prt(error, response, body) {
-        const xAaCookieValue = response.headers['x-aa-cookie-value'];
+        xAaCookieValue = response.headers['x-aa-cookie-value'];
         request.get({ url: url, headers: { cookie: xAaCookieValue }, ciphers: 'DES-CBC3-SHA' }, doit);
     }
     request.post(opts, prt);
