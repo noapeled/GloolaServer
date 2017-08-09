@@ -5,20 +5,27 @@ var cheerio = require('cheerio');
 var request = require('request');
 var url = 'https://www.old.health.gov.il/units/pharmacy/trufot/Ycran_ListN.asp?p=14&Sr_Type=T_Name&Y_Name=&Letter=a&safa=h';
 
+function getImages(str) {
+    var myRegexp = /ShowFotoWinJv\(\'([^,']*)[,' ]*([^']*)/g;
+    var match = myRegexp.exec(str);
+    console.log(match[1], match[2]);
+    console.log();
+}
+
 function doit(error, response, body) {
     const $ = cheerio.load(body);
     for (cls of ['RowTabl', 'RowDubTabl']) {
-        $(`tr.${cls} > td > img`).each(function (i, elem) {console.log(i, elem.attribs.onclick)});
+        $(`tr.${cls} > td > img`).each(function (i, elem) {getImages(elem.attribs.onclick)});
         $(`tr.${cls}`).each(function (i, elem) {console.log(i,
             _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data)[2])});
     }
-    const tcod = '052 31 24072 00';
-    const tname = 'ALRIN';
+    const tcod = '066 56 28192 01';
+    const tname = 'AMBISOME';
     var opts = {
         jar: true,
         cookie: xAaCookieValue,
         url: `https://www.old.health.gov.il/units/pharmacy/Trufot/ShowTrufaFoto.asp?TrCod=${tcod}&TrName=${tname}`,
-        ciphers: 'DES-CBC3-SHA',
+        ciphers: 'DES-CBC3-SHA'
     };
     request(opts, function(erro, resp, body) { console.log(body); });
 }
