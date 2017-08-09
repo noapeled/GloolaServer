@@ -6,10 +6,18 @@ var request = require('request');
 var url = 'https://www.old.health.gov.il/units/pharmacy/trufot/Ycran_ListN.asp?p=14&Sr_Type=T_Name&Y_Name=&Letter=a&safa=h';
 
 function getImages(str) {
+    // TODO: link by registration number, i.e. tcode
     var myRegexp = /ShowFotoWinJv\(\'([^,']*)[,' ]*([^']*)/g;
     var match = myRegexp.exec(str);
-    console.log(match[1], match[2]);
-    console.log();
+    const tcode = match[1];
+    const tname = match[2];
+    var opts = {
+        jar: true,
+        cookie: xAaCookieValue,
+        url: `https://www.old.health.gov.il/units/pharmacy/Trufot/ShowTrufaFoto.asp?TrCod=${tcode}&TrName=${tname}`,
+        ciphers: 'DES-CBC3-SHA'
+    };
+    request(opts, function(erro, resp, body) { console.log(body); });
 }
 
 function doit(error, response, body) {
@@ -19,15 +27,6 @@ function doit(error, response, body) {
         $(`tr.${cls}`).each(function (i, elem) {console.log(i,
             _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data)[2])});
     }
-    const tcod = '066 56 28192 01';
-    const tname = 'AMBISOME';
-    var opts = {
-        jar: true,
-        cookie: xAaCookieValue,
-        url: `https://www.old.health.gov.il/units/pharmacy/Trufot/ShowTrufaFoto.asp?TrCod=${tcod}&TrName=${tname}`,
-        ciphers: 'DES-CBC3-SHA'
-    };
-    request(opts, function(erro, resp, body) { console.log(body); });
 }
 
 var options = {
