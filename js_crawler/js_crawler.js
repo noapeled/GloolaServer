@@ -6,8 +6,8 @@ var url = 'https://www.old.health.gov.il/units/pharmacy/trufot/Ycran_ListN.asp?p
 function doit(error, response, body) {
     const $ = cheerio.load(body);
     // $('tr.RowTabl > td').each(function (i, elem) {console.log(i, elem.children)});
-    $('tr.RowTabl').each(function (i, elem) {console.log(i,
-        _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data))});
+    $('tr.RowDubTabl').each(function (i, elem) {console.log(i,
+        _.map(_.filter(elem.children, c => c.name === 'td'), e => e.children[0].data)[2])});
     // console.log($('tr.RowDubTabl').length);
 }
 
