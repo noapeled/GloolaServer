@@ -276,6 +276,21 @@ function testCreateUserShuntzi() {
     createNewUserAsAdmin(shuntziName, shuntziEmail, shuntziPassword, testLoginAsShuntzi);
 }
 
+function testGetLimitedFeedOfPatient(limit) {
+    getFromServer(
+        jwtTokensForNonAdminUsers[tuliEmail],
+        '/feed/' + userIds['tuli'] + '?limit=' + limit,
+        function (data) {
+            logger.info(inspect(data));
+            var feedEvents = JSON.parse(data).message;
+            expect(feedEvents.length).to.equal(limit);
+            expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
+            expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
+            testCreateUserShuntzi();
+        }
+    );
+}
+
 function testGetFeedOfPatient() {
     getFromServer(
         jwtTokensForNonAdminUsers[tuliEmail],
@@ -286,7 +301,7 @@ function testGetFeedOfPatient() {
             expect(_.isEmpty(feedEvents)).to.be.false;
             expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
             expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
-            testCreateUserShuntzi();
+            testGetLimitedFeedOfPatient(3);
         }
     );
 }
