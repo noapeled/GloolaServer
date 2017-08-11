@@ -653,7 +653,7 @@ function getFeed(req, res) {
             error: err ? err : false,
             message: err ?
                 'Failed to retrieve feed events for ' + userid :
-                _.sortBy(feedEventEntities, 'when').slice(0, limit)
+                _.sortBy(feedEventEntities, 'when').reverse().slice(0, limit)
         });
     });
 }

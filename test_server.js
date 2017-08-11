@@ -284,7 +284,8 @@ function testGetLimitedFeedOfPatient(limit) {
             logger.info(inspect(data));
             var feedEvents = JSON.parse(data).message;
             expect(feedEvents.length).to.equal(limit);
-            expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
+            expect(_.first(feedEvents).when).to.be.greaterThan(_.last(feedEvents).when);
+            expect(_.isEqual(_.map(feedEvents, 'when').sort().reverse(), _.map(feedEvents, 'when'))).to.be.true;
             expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
             testCreateUserShuntzi();
         }
@@ -299,7 +300,8 @@ function testGetFeedOfPatient() {
             logger.info(inspect(data));
             var feedEvents = JSON.parse(data).message;
             expect(_.isEmpty(feedEvents)).to.be.false;
-            expect(_.isEqual(_.map(feedEvents, 'when').sort(), _.map(feedEvents, 'when'))).to.be.true;
+            expect(_.first(feedEvents).when).to.be.greaterThan(_.last(feedEvents).when);
+            expect(_.isEqual(_.map(feedEvents, 'when').sort().reverse(), _.map(feedEvents, 'when'))).to.be.true;
             expect(_.every(_.map(feedEvents, event => !_.isEmpty(event.medicine_names)))).to.be.true;
             testGetLimitedFeedOfPatient(3);
         }
