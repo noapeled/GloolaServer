@@ -406,14 +406,19 @@ Each feed event has the following format.
     }
 
 
-The server sends every new feed event as push notification to all caretakers of the patient.
-
-In addition, the entire feed is accessible through
-
-    GET /feed/:patientid
-    
-To which the server responds with a list of all feed events for the patient, sorted by "when".
 Note that the contents of a single 'scheduled_medicine_updated' event can hold multiple changed fields.
+
+The server sends every new feed event as push notification to all caretakers of the patient.
+Feed events can be accessed through
+
+    GET /feed/:patientid?limit=k
+    
+to which the server responds with a list of the k latest feed events for the patient, sorted by "when".
+If the optional limit parameter is omitted, i.e.
+
+    GET /feed/:patientId
+
+then all feed events are returned.
 
 ## Example Feed
 
