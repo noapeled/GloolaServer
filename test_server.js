@@ -176,7 +176,7 @@ function testShuntziCanAskAgainToBeomeCaretakerOfTuli() {
 function testShuntziDoesNotHavePatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
         logger.info(data);
-        expect(JSON.parse(data).message.patients).to.not.contain(userIds['tuli']);
+        expect(_.map(JSON.parse(data).message.patients, 'userid')).to.not.contain(userIds['tuli']);
         testShuntziCanAskAgainToBeomeCaretakerOfTuli();
     });
 }
@@ -208,10 +208,18 @@ function testShuntziCannotAskAgainWhenCaretakerRequestAccepted() {
         });
 }
 
+function __expect_tuli_in_patients(responseData) {
+    expect(_.some(JSON.parse(responseData).message.patients, {
+        userid: userIds['tuli'],
+        email: tuliEmail,
+        name: tuliName
+    })).to.be.true;
+}
+
 function testShuntziHasPatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[shuntziEmail], '/user/' + userIds['shuntzi'], function (data) {
         logger.info(data);
-        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        __expect_tuli_in_patients(data);
         testShuntziCannotAskAgainWhenCaretakerRequestAccepted();
     });
 }
@@ -677,7 +685,7 @@ function testTweenyCanSeeDetailsOfTuli() {
 function testTweenyHasPatientTuli() {
     getFromServer(jwtTokensForNonAdminUsers[tweenyEmail], '/user/' + userIds['tweeny'], function (data) {
         logger.info(data);
-        expect(JSON.parse(data).message.patients).to.contain(userIds['tuli']);
+        __expect_tuli_in_patients(data);
         testTweenyCanSeeDetailsOfTuli();
     });
 }
