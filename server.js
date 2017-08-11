@@ -5,6 +5,7 @@
 // TODO: Consider using node.js Cluster or other current mechanism for catching errors and restarting the server.
 // TODO: maybe hash user passwords?
 
+const DEFAULT_LIMIT_FEED_RESULTS = require('./models/defaults').DEFAULT_LIMIT_FEED_RESULTS;
 const getCaretakerUserEntities = require('./models/getCaretakers').getCaretakerUserEntities;
 var defaults = require('./models/defaults');
 var _ = require('lodash-joins');
@@ -646,10 +647,13 @@ function createNewScheduledMedicine(req, res) {
 
 function getFeed(req, res) {
     var userid = req.params.userid;
+    const limit = _.get(req.query, 'limit') || DEFAULT_LIMIT_FEED_RESULTS;
     mongoose.models.FeedEvent.find({ userid: userid }, function(err, feedEventEntities) {
         res.status(statusCode(err)).json({
             error: err ? err : false,
-            message: err ? 'Failed to retrieve feed events for ' + userid : _.sortBy(feedEventEntities, 'when')
+            message: err ?
+                'Failed to retrieve feed events for ' + userid :
+                _.sortBy(feedEventEntities, 'when').slice(0, limit)
         });
     });
 }
