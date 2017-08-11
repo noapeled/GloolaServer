@@ -189,7 +189,11 @@ Each actively scheduled medication also indicates when the user last took it.
         name: [forname, middlename0, middlename1, ..., surname],
         password: ascii128 encoded,
         email: <<<UNIQUE among users>>>  RFC 822 address,
-        patients: [{ userid, email, name }],
+        patients: [{ 
+            userid: <patient's userid>, 
+            email: <patient's email, or null in case of retrieval error>,
+            name: <patient's name, or null in case of retrieval error>
+        }],
         medical_info: {
             medication: [{
                     <details of scheduled medicine (see below)>,

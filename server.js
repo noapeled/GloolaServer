@@ -521,18 +521,11 @@ function __addPatients(userEntityObject, req, res) {
         userEntityObject.userid,
         function (patientUserIds) {
             mongoose.models.User.find({ userid: { $in: patientUserIds }}, function(err, patientUserEntities) {
-                if (err) {
-                    res.status(statusCode(err)).json({
-                        error: err,
-                        message: 'Failed to retrieve personal details for patients of ' + userEntityObject.userid
-                    });
-                } else {
-                    __addScheduledMedicineDetails(_.merge(userEntityObject, {
-                        patients: _.hashLeftOuterJoin(
-                            _.map(patientUserIds, u => ({ userid: u })), e => e.userid,
-                            _.map(patientUserEntities, e => _.pick(e, ['userid', 'email', 'name'])), e => e.userid)
-                    }), req, res);
-                }
+                __addScheduledMedicineDetails(_.merge(userEntityObject, {
+                    patients: _.hashLeftOuterJoin(
+                        _.map(patientUserIds, u => ({ userid: u, email: null, name: null })), e => e.userid,
+                        _.map(patientUserEntities, e => _.pick(e, ['userid', 'email', 'name'])), e => e.userid)
+                }), req, res);
             });
         },
         function (err) {
